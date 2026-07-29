@@ -1,0 +1,32 @@
+---
+export interface Props {
+  articles: { slug: string; title: string; description: string; category?: string; readTime?: string }[];
+  title?: string;
+}
+const { articles, title = 'Related articles' } = Astro.props;
+---
+<section class="articles-block">
+  {title && <h2>{title}</h2>}
+  <div class="article-grid">
+    {articles.map(a => (
+      <a class="card article" href={`/articles/${a.slug}`}>
+        {a.category && <span class="cat">{a.category}</span>}
+        <h3>{a.title}</h3>
+        <p>{a.description}</p>
+        {a.readTime && <span class="rt">{a.readTime}</span>}
+      </a>
+    ))}
+  </div>
+</section>
+<style>
+  .articles-block { margin: 30px 0; }
+  .article-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px) { .article-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .article-grid { grid-template-columns: 1fr; } }
+  .article { padding: 18px; }
+  .article:hover { border-color: var(--brand); text-decoration: none; }
+  .article h3 { font-size: 15px; margin-bottom: 6px; }
+  .article p { font-size: 13px; color: var(--fg-soft); margin: 0 0 8px; }
+  .cat { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brand); font-weight: 600; margin-bottom: 6px; }
+  .rt { font-size: 11px; color: var(--fg-muted); }
+</style>

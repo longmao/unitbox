@@ -1,0 +1,168 @@
+---
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { getAllCategories, getUnitsByCategory } from '~/lib/units';
+import { articles } from '~/data/articles';
+
+// Top categories for landing — first 12 (all of them right now)
+const categories = getAllCategories();
+const heroFromSlug = 'meter';
+const heroToSlug = 'foot';
+
+// Popular 36 pairs to surface — first 3 from each category
+const popularPairs = [
+  'meter-to-foot', 'foot-to-meter', 'kilometer-to-mile', 'mile-to-kilometer',
+  'inch-to-centimeter', 'centimeter-to-inch', 'mile-to-foot', 'yard-to-meter',
+  'kilogram-to-pound', 'pound-to-kilogram', 'gram-to-ounce', 'ounce-to-gram',
+  'celsius-to-fahrenheit', 'fahrenheit-to-celsius', 'celsius-to-kelvin',
+  'liter-to-gallon-us', 'gallon-us-to-liter', 'liter-to-milliliter',
+  'square-meter-to-square-foot', 'square-foot-to-square-meter', 'hectare-to-acre', 'acre-to-hectare',
+  'kilometer-per-hour-to-mile-per-hour', 'mile-per-hour-to-kilometer-per-hour',
+  'knot-to-mile-per-hour', 'knot-to-kilometer-per-hour', 'mach-to-kilometer-per-hour',
+  'hour-to-minute', 'minute-to-second', 'day-to-hour', 'week-to-day', 'year-to-day',
+  'byte-to-kilobyte', 'kilobyte-to-byte', 'kilobyte-to-kibibyte', 'kibibyte-to-kilobyte',
+  'gigabyte-to-megabyte', 'terabyte-to-gigabyte', 'megabyte-to-mebibyte', 'gigabyte-to-gibibyte',
+];
+
+const faq = [
+  { q: 'What is unit.now?', a: 'unit.now is a network of unit-conversion pages: every popular unit gets a detail page, and every popular pair gets a converter. Length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy.' },
+  { q: 'How accurate are the conversions?', a: 'All conversions use the standard SI conversion factors. For mass, length, time, the values match NIST to the precision shown. Temperature uses the affine offset/scale formulas; the precision is 2 decimal places by default.' },
+  { q: 'What is the difference between KB and KiB?', a: 'KB (kilobyte) = 1000 bytes — the SI decimal prefix. KiB (kibibyte) = 1024 bytes — the binary prefix designed to remove ambiguity. Disk drives advertise KB; RAM and operating systems often show KiB. For more, see the learn page on data units.' },
+  { q: 'How do you handle fuel economy?', a: 'We treat fuel-economy as a reciprocal quantity. The base unit is L/100 km (lower is better); MPG-US, MPG-UK, and km/L are stored as reciprocals. Converting 30 MPG-US gives 7.84 L/100km.' },
+  { q: 'Does this work offline?', a: 'Yes — every page is statically generated. Once loaded, the converter widget runs without a network roundtrip. Bookmark any pair page.' },
+];
+
+const featuredArticles = articles.slice(0, 4);
+---
+<Base title="Convert Any Unit — Length, Mass, Temperature, and More" description="Live converters and reference tables for length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel economy. The complete unit-conversion network.">
+
+  <!-- LAYER 1: hero with live converter -->
+  <section class="hero">
+    <div class="hero-inner card">
+      <h1>Convert any unit, instantly</h1>
+      <p class="hero-sub">{categories.length} categories · 100+ units · 200+ conversion pairs. Pick a popular conversion below or use the live calculator.</p>
+      <ConverterWidget fromSlug={heroFromSlug} toSlug={heroToSlug} mode="full" defaultValue={1} />
+      <div class="hero-eg">
+        Try:
+        <a href="/kilogram-to-pound">1 kg → lb</a> ·
+        <a href="/celsius-to-fahrenheit">0 °C → °F</a> ·
+        <a href="/gigabyte-to-megabyte">1 GB → MB</a> ·
+        <a href="/mpg-us-to-liter-per-100km">30 MPG → L/100km</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYER 2: categories directory -->
+  <section class="section">
+    <h2 class="section-title">Browse by category</h2>
+    <p class="section-subtitle">Every unit on this site belongs to one of these categories. Each unit page explains where it comes from, gives a conversion table, and links to popular pair pages.</p>
+    <div class="grid grid-4">
+      {categories.map(cat => {
+        const catUnits = getUnitsByCategory(cat.slug);
+        return (
+          <a class="card category-card" href={`/category/${cat.slug}`}>
+            <div class="cat-name">{cat.name}</div>
+            <div class="cat-base">{catUnits.length} units · base: <span class="code">{cat.baseSymbol}</span></div>
+            <div class="cat-desc">{cat.description}</div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- LAYER 3: popular conversion cards -->
+  <section class="section">
+    <h2 class="section-title">Popular conversions</h2>
+    <p class="section-subtitle">The most-searched unit pairs. Click for a full conversion table, the math, and an FAQ.</p>
+    <div class="grid grid-3">
+      {popularPairs.map(slug => {
+        const [fromSlug, , toSlug] = slug.split('-');
+        const fromUnit = fromSlug.replace(/-/g, ' ');
+        const toUnit = toSlug.replace(/-/g, ' ');
+        return (
+          <a class="card pair-card" href={`/${slug}`}>
+            <span class="from">{fromUnit}</span>
+            <span class="arrow">→</span>
+            <span class="to">{toUnit}</span>
+          </a>
+        );
+      })}
+    </div>
+    <p style="text-align:center; margin-top:18px;">
+      <a href="/compare" class="btn btn-outline">Browse all conversion pairs</a>
+    </p>
+  </section>
+
+  <!-- LAYER 4: tools + extra entry points -->
+  <section class="section">
+    <h2 class="section-title">Tools &amp; calculators</h2>
+    <div class="grid grid-4">
+      <a class="card tool-card" href="/calculator"><div class="tool-icon">✦</div><div class="tool-name">Unit Calculator</div><div class="tool-desc">Pick any two units from any category and convert freely.</div></a>
+      <a class="card tool-card" href="/category/length"><div class="tool-icon">📏</div><div class="tool-name">Length Converter</div><div class="tool-desc">metres, feet, inches, miles, nautical miles, light-years.</div></a>
+      <a class="card tool-card" href="/category/temperature"><div class="tool-icon">🌡</div><div class="tool-name">Temperature Converter</div><div class="tool-desc">Celsius, Fahrenheit, Kelvin, Rankine, Réaumur.</div></a>
+      <a class="card tool-card" href="/category/data"><div class="tool-icon">💾</div><div class="tool-name">Data Size Converter</div><div class="tool-desc">KB vs KiB, MB vs MiB, GB vs GiB.</div></a>
+    </div>
+  </section>
+
+  <!-- LAYER 5: articles / knowledge base -->
+  <section class="section">
+    <h2 class="section-title">Articles &amp; explainers</h2>
+    <ArticlesBlock articles={featuredArticles} title="" />
+    <p style="text-align: center; margin-top: 16px;">
+      <a href="/articles" class="btn btn-outline">Read all articles</a>
+    </p>
+  </section>
+
+  <section class="section">
+    <FaqBlock items={faq} title="FAQ" />
+  </section>
+
+  <!-- KEYWORD FOOTPRINT — matches all the long-tail keywords the article mentioned -->
+  <section class="section keyword-footprint">
+    <h2 class="section-title">People also ask</h2>
+    <div class="grid grid-3">
+      <a class="pill" href="/meter-to-foot">metres to feet</a>
+      <a class="pill" href="/celsius-to-fahrenheit">celsius to fahrenheit</a>
+      <a class="pill" href="/kilogram-to-pound">kg to lbs</a>
+      <a class="pill" href="/mile-to-kilometer">miles to km</a>
+      <a class="pill" href="/liter-to-gallon-us">litres to gallons</a>
+      <a class="pill" href="/inch-to-centimeter">inches to cm</a>
+      <a class="pill" href="/gigabyte-to-megabyte">GB to MB</a>
+      <a class="pill" href="/hour-to-minute">hours to minutes</a>
+      <a class="pill" href="/psi-to-bar">psi to bar</a>
+      <a class="pill" href="/joule-to-calorie">joules to calories</a>
+      <a class="pill" href="/hectare-to-acre">hectares to acres</a>
+      <a class="pill" href="/kelvin-to-celsius">kelvin to celsius</a>
+      <a class="pill" href="/knot-to-mile-per-hour">knots to mph</a>
+      <a class="pill" href="/degree-to-radian">degrees to radians</a>
+      <a class="pill" href="/mpg-us-to-liter-per-100km">mpg to l/100km</a>
+    </div>
+  </section>
+
+</Base>
+
+<style>
+  .hero { margin: 8px 0 28px; }
+  .hero-inner { padding: 36px 32px; background: linear-gradient(135deg, #0b1736 0%, #11224a 100%); color: #fff; border: 0; }
+  .hero-inner h1 { color: #fff; font-size: 38px; margin-bottom: 8px; }
+  .hero-sub { color: #c5cee5; font-size: 16px; margin-bottom: 24px; max-width: 720px; }
+  .hero-eg { margin-top: 18px; color: #c5cee5; font-size: 13px; }
+  .hero-eg a { color: #fbbf24; margin: 0 4px; }
+  .category-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .category-card .cat-name { font-weight: 800; font-size: 17px; }
+  .category-card .cat-base { font-size: 12px; color: var(--fg-muted); }
+  .category-card .cat-base .code { font-family: ui-monospace, monospace; font-weight: 700; }
+  .category-card .cat-desc { font-size: 13px; color: var(--fg-soft); }
+  .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
+  .pair-card .arrow { color: var(--brand); font-weight: 800; }
+  .tool-card .tool-icon { font-size: 28px; }
+  .tool-card .tool-name { font-weight: 700; margin-top: 6px; }
+  .tool-card .tool-desc { font-size: 13px; color: var(--fg-soft); margin-top: 4px; }
+  .keyword-footprint .pill { font-weight: 600; padding: 8px 14px; font-size: 13px; }
+  @media (max-width: 700px) {
+    .hero-inner h1 { font-size: 30px; }
+  }
+</style>

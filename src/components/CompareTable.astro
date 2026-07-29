@@ -1,0 +1,36 @@
+---
+export interface Props {
+  title?: string;
+  rows: { label: string; lhs: string; rhs: string }[];
+  lhsLabel: string;
+  rhsLabel: string;
+}
+const { title, rows, lhsLabel, rhsLabel } = Astro.props;
+---
+<section class="compare-table">
+  {title && <h2>{title}</h2>}
+  <div class="ctable">
+    <table>
+      <thead>
+        <tr><th>Aspect</th><th>{lhsLabel}</th><th>{rhsLabel}</th></tr>
+      </thead>
+      <tbody>
+        {rows.map(r => (
+          <tr>
+            <td><strong>{r.label}</strong></td>
+            <td>{r.lhs}</td>
+            <td>{r.rhs}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+<style>
+  .compare-table { margin: 30px 0; }
+  .ctable { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { background: #f6f7fb; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-muted); }
+  tbody tr:last-child td { border-bottom: 0; }
+</style>

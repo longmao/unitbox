@@ -1,0 +1,22 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { compareTopics } from '~/data/compare';
+
+const items = compareTopics.map(c => ({
+  slug: c.slug,
+  title: c.title,
+  description: c.description,
+  category: c.category,
+  readTime: '5–7 min',
+}));
+---
+<Base title="Compare — unit vs unit" description="Side-by-side comparisons of common conversion pair options. Pick the right unit for the right job.">
+
+<div class="breadcrumbs"><a href="/">Home</a> › <span>Compare</span></div>
+<h1>Compare</h1>
+<p class="muted">Side-by-side comparisons to help you pick the right unit (or scale) for the right job.</p>
+
+<ArticlesBlock articles={items} title="All comparisons" />
+
+</Base>

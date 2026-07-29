@@ -1,0 +1,22 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { learnTopics } from '~/data/learn';
+
+const topics = learnTopics.map(t => ({
+  slug: t.slug,
+  title: t.title,
+  description: t.description,
+  category: t.category,
+  readTime: t.readTime,
+}));
+---
+<Base title="Learn — articles and reference" description="Educational articles on metric units, conversion math, and standards.">
+
+<div class="breadcrumbs"><a href="/">Home</a> › <span>Learn</span></div>
+<h1>Learn</h1>
+<p class="muted">Educational articles on the math and history of unit conversion.</p>
+
+<ArticlesBlock articles={topics} title="All topics" />
+
+</Base>

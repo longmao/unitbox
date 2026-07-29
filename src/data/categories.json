@@ -1,0 +1,14 @@
+[
+  { "slug": "length", "name": "Length", "description": "Distance, height, width — anything that measures how long something is. SI base unit: the metre (m).", "baseSymbol": "m", "kind": "linear" },
+  { "slug": "mass", "name": "Mass", "description": "How much matter is in something. Differs from weight (which is force). SI base: kilogram (kg).", "baseSymbol": "kg", "kind": "linear" },
+  { "slug": "temperature", "name": "Temperature", "description": "How hot or cold something is. Conversions are affine — there is an offset, not just a multiplier.", "baseSymbol": "K", "kind": "affine" },
+  { "slug": "area", "name": "Area", "description": "Size of a 2-D surface. SI base: square metre (m²).", "baseSymbol": "m²", "kind": "linear" },
+  { "slug": "volume", "name": "Volume", "description": "Space occupied by a 3-D object. SI base: litre (L) for everyday use; cubic metre (m³) for SI.", "baseSymbol": "L", "kind": "linear" },
+  { "slug": "speed", "name": "Speed", "description": "Distance per unit time. SI: metre per second (m/s).", "baseSymbol": "m/s", "kind": "linear" },
+  { "slug": "time", "name": "Time", "description": "Duration. SI base: the second (s).", "baseSymbol": "s", "kind": "linear" },
+  { "slug": "data", "name": "Data", "description": "Digital information size. SI: the byte (B). Note the difference between decimal (KB=1000) and binary (KiB=1024) prefixes.", "baseSymbol": "B", "kind": "linear" },
+  { "slug": "energy", "name": "Energy", "description": "Capacity to do work. SI base: joule (J). Also commonly expressed as calories, kWh, BTU.", "baseSymbol": "J", "kind": "linear" },
+  { "slug": "pressure", "name": "Pressure", "description": "Force per unit area. SI base: pascal (Pa).", "baseSymbol": "Pa", "kind": "linear" },
+  { "slug": "angle", "name": "Angle", "description": "Rotation or turning. SI base: radian (rad).", "baseSymbol": "rad", "kind": "linear" },
+  { "slug": "fuel-economy", "name": "Fuel Economy", "description": "Distance per unit of fuel, or its reciprocal (fuel per distance). Base: litres per 100 km.", "baseSymbol": "L/100km", "kind": "reciprocal" }
+]

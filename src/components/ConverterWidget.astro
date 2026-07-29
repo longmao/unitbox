@@ -1,0 +1,138 @@
+---
+// Live unit-conversion widget. Renders inside a pair page or any unit-detail page.
+// `mode` controls layout: 'full' (input + result + swap) or 'mini' (single value display).
+import { getUnit, convert, formatNumber } from '~/lib/units';
+
+interface Props {
+  fromSlug: string;
+  toSlug: string;
+  mode?: 'full' | 'mini';
+  defaultValue?: number;
+}
+
+const { fromSlug, toSlug, mode = 'full', defaultValue = 1 } = Astro.props;
+const from = getUnit(fromSlug);
+const to = getUnit(toSlug);
+if (!from || !to) throw new Error(`ConverterWidget: missing unit "${fromSlug}" or "${toSlug}"`);
+
+const preview = convert(defaultValue, fromSlug, toSlug);
+const precision = Math.max(2, Math.min(8, Math.min(from.precision || 4, to.precision || 4)));
+---
+{mode === 'full' && (
+  <section class="cw card">
+    <div class="cw-row">
+      <div class="cw-cell">
+        <label for="cw-from-input">From <span class="cw-symbol">{from.symbol}</span></label>
+        <input id="cw-from-input" class="cw-input" type="number" value={defaultValue} step="any" data-from={fromSlug} data-to={toSlug} data-initial={defaultValue} />
+        <div class="cw-unit-label">{from.name}</div>
+      </div>
+      <button class="cw-swap" type="button" id="cw-swap" aria-label="Swap">⇄</button>
+      <div class="cw-cell">
+        <label for="cw-to-input">To <span class="cw-symbol">{to.symbol}</span></label>
+        <input id="cw-to-input" class="cw-input" type="number" value={formatNumber(preview, precision)} step="any" data-side="to" />
+        <div class="cw-unit-label">{to.name}</div>
+      </div>
+    </div>
+    <div class="cw-formula" id="cw-formula">1 {from.symbol} = {formatNumber(convert(1, fromSlug, toSlug), precision)} {to.symbol}</div>
+  </section>
+)}
+
+{mode === 'mini' && (
+  <div class="cw-mini">
+    {defaultValue} {from.symbol} = <strong>{formatNumber(preview, precision)}</strong> {to.symbol}
+  </div>
+)}
+
+<script is:inline define:vars={{ fromSlug, toSlug, precision }}>
+  (function () {
+    const card = document.querySelector('.cw');
+    if (!card) return;
+    const fromInput = card.querySelector('#cw-from-input');
+    const toInput = card.querySelector('#cw-to-input');
+    const swap = card.querySelector('#cw-swap');
+    const formula = card.querySelector('#cw-formula');
+
+    // Static lookup table: {from, to, kind, factor/slope/offset, ...}.
+    // We embed these at build time so the converter works without a server.
+    const units = window.__UNIT_DATA__ || null;
+
+    function conv(value, fs, ts) {
+      if (!units) return null;
+      const a = units[fs], b = units[ts];
+      if (!a || !b) return null;
+      const kind = a.category === b.category ? getCategoryKind(a.category) : null;
+      if (!kind) return null;
+      if (kind === 'linear') return (value * a.factor) / b.factor;
+      if (kind === 'affine') {
+        const base = value * a.slope + a.offset;
+        return (base - b.offset) / b.slope;
+      }
+      if (kind === 'reciprocal') {
+        const av = a.reciprocal ? a.baseValue : a.factor;
+        const bv = b.reciprocal ? b.baseValue : b.factor;
+        const inBase = av / value;
+        return bv / inBase;
+      }
+      return null;
+    }
+    function getCategoryKind(slug) {
+      // mirror the categories array (linear|affine|reciprocal)
+      return ({
+        length: 'linear', mass: 'linear', area: 'linear', volume: 'linear',
+        speed: 'linear', time: 'linear', data: 'linear', energy: 'linear',
+        pressure: 'linear', angle: 'linear', 'fuel-economy': 'reciprocal',
+        temperature: 'affine',
+      })[slug] || 'linear';
+    }
+
+    function fmt(n) {
+      if (!Number.isFinite(n)) return '—';
+      const abs = Math.abs(n);
+      if (abs >= 1e12 || (abs > 0 && abs < 1e-3)) return n.toExponential(Math.max(0, precision - 2));
+      const f = Math.pow(10, precision);
+      return (Math.round(n * f) / f).toLocaleString('en-US', { maximumFractionDigits: precision });
+    }
+
+    function recalc(source) {
+      const fs = fromInput.dataset.from, ts = fromInput.dataset.to;
+      if (source === 'from') {
+        const v = parseFloat(fromInput.value);
+        if (Number.isFinite(v)) toInput.value = fmt(conv(v, fs, ts));
+      } else {
+        const v = parseFloat(toInput.value);
+        if (Number.isFinite(v)) fromInput.value = fmt(conv(v, ts, fs));
+      }
+      formula.textContent = `1 ${fromInput.dataset.fromSymbol || fs} = ${fmt(conv(1, fs, ts))} ${toInput.dataset.toSymbol || ts}`;
+    }
+
+    fromInput.addEventListener('input', () => recalc('from'));
+    toInput.addEventListener('input', () => recalc('to'));
+    swap.addEventListener('click', () => {
+      const a = fromInput.dataset.from, b = fromInput.dataset.to;
+      fromInput.dataset.from = b; fromInput.dataset.to = a;
+      // swap the symbols too
+      const sa = fromInput.dataset.fromSymbol, sb = toInput.dataset.toSymbol;
+      fromInput.dataset.fromSymbol = sb; toInput.dataset.toSymbol = sa;
+      fromInput.value = '1';
+      recalc('from');
+      // Reload location so the URL reflects direction (optional — skip for ergonomics)
+    });
+  })();
+</script>
+
+<style>
+  .cw { padding: 24px; display: grid; gap: 14px; }
+  .cw-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: end; }
+  .cw-cell { display: flex; flex-direction: column; gap: 6px; }
+  .cw-cell label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-muted); }
+  .cw-symbol { color: var(--brand); font-weight: 700; }
+  .cw-input { font-size: 22px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-variant-numeric: tabular-nums; font-weight: 600; width: 100%; }
+  .cw-unit-label { font-size: 12px; color: var(--fg-muted); }
+  .cw-swap { font-size: 22px; padding: 10px 14px; background: var(--bg-soft); color: #fff; border-radius: 10px; border: 0; cursor: pointer; transition: transform 120ms ease; }
+  .cw-swap:hover { transform: rotate(180deg); }
+  .cw-formula { background: var(--bg-soft); color: #fff; padding: 12px 16px; border-radius: 8px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+  @media (max-width: 700px) {
+    .cw-row { grid-template-columns: 1fr; }
+    .cw-swap { transform: rotate(90deg); }
+  }
+</style>

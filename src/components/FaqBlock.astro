@@ -1,0 +1,26 @@
+---
+export interface Props {
+  items: { q: string; a: string }[];
+  title?: string;
+}
+const { items, title = 'Frequently Asked Questions' } = Astro.props;
+---
+<section class="faq-block">
+  {title && <h2>{title}</h2>}
+  <div class="faq-list">
+    {items.map((it, i) => (
+      <details open={i === 0}>
+        <summary>{it.q}</summary>
+        <p>{it.a}</p>
+      </details>
+    ))}
+  </div>
+</section>
+<style>
+  .faq-block { margin: 30px 0; }
+  .faq-list { display: grid; gap: 10px; }
+  details { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  summary::-webkit-details-marker { color: var(--brand); }
+  details[open] p { margin-top: 10px; color: var(--fg-soft); }
+</style>

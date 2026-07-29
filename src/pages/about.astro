@@ -1,0 +1,47 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RelatedQuestions from '~/components/RelatedQuestions.astro';
+import { getAllCategories } from '~/lib/units';
+
+const faq = [
+  { q: 'Who runs this?', a: 'unit.now is operated by a small team obsessed with the architecture of search-first content sites and the math of measurement.' },
+  { q: 'How is this free?', a: 'Display ads on most pages; affiliate links to related products (no tracking walls).' },
+  { q: 'Where can I report an incorrect conversion?', a: 'Use the in-page feedback link or contact form. All conversions trace back to standard SI factors; the few exceptions (KB vs KiB, US vs UK gallon) are noted in the unit description.' },
+];
+
+const cats = getAllCategories();
+---
+<Base title="About unit.now" description="About unit.now — what this site is, who runs it, and why it exists.">
+<div class="breadcrumbs"><a href="/">Home</a> › <span>About</span></div>
+
+<h1>About unit.now</h1>
+
+<p>unit.now is a network of pages organised around the single topic of "unit conversion". We aggregate every common unit across length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy — and we structure the site so each individual page can rank for its own search query.</p>
+
+<h2>What you'll find</h2>
+<ul>
+  <li>Every popular {cats.length} categories × {20}+ units, each on its own page</li>
+  <li>Live converters for {1000}+ common pairs (metres↔feet, kg↔lb, °C↔°F, etc.)</li>
+  <li>A universal calculator that handles any pair in any category</li>
+  <li>Reference articles explaining the SI, the data-prefix divide, fuel-economy math, and more</li>
+  <li>For developers: a JSON API and embeddable widget (coming in v0.2)</li>
+</ul>
+
+<h2>Why this shape?</h2>
+<p>Because the topic of "unit conversion" is large enough to support a content hub, but small enough that every page on the site is genuinely related. It's the same playbook as the time.now site: pick one topic; cover every angle.</p>
+
+<h2 id="app">Apps &amp; integrations</h2>
+<p>An iOS / Android app is planned for v0.3; in the meantime, the universal calculator works in any mobile browser and can be added to the home screen as a PWA.</p>
+
+<h2>Contact &amp; feedback</h2>
+<p>For feedback or to report an incorrect conversion, use the in-page link or contact form. We respond to conversion bugs within a week.</p>
+
+<section class="section">
+  <h2 class="section-title">What are people searching for?</h2>
+  <RelatedQuestions questions={['metres to feet', 'kg to lbs', 'celsius to fahrenheit', 'KB vs KiB', 'miles to km', 'litres to gallons']} />
+</section>
+
+<FaqBlock items={faq} />
+
+</Base>

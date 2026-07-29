@@ -1,0 +1,33 @@
+---
+export interface Props {
+  title?: string;
+  intro?: string;
+  items: { name: string; href?: string; description: string; meta?: string }[];
+}
+const { title = 'Recommended', intro, items } = Astro.props;
+---
+<section class="recommended">
+  {title && <h2>{title}</h2>}
+  {intro && <p class="muted">{intro}</p>}
+  <div class="rec-grid">
+    {items.map((it, i) => (
+      <a class="card rec" href={it.href || '#'}>
+        <span class="rank">#{i + 1}</span>
+        <div class="rec-name">{it.name}</div>
+        {it.meta && <div class="rec-meta">{it.meta}</div>}
+        <p>{it.description}</p>
+      </a>
+    ))}
+  </div>
+</section>
+<style>
+  .recommended { margin: 30px 0; }
+  .rec-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 700px) { .rec-grid { grid-template-columns: 1fr; } }
+  .rec { padding: 18px; position: relative; }
+  .rec:hover { border-color: var(--brand); text-decoration: none; }
+  .rank { position: absolute; top: 12px; right: 14px; font-size: 12px; color: var(--fg-muted); font-weight: 700; }
+  .rec-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; padding-right: 32px; }
+  .rec-meta { font-size: 12px; color: var(--brand); font-weight: 600; margin-bottom: 6px; }
+  .rec p { font-size: 13px; color: var(--fg-soft); margin: 0; }
+</style>

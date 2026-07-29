@@ -1,0 +1,22 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { articles } from '~/data/articles';
+
+const items = articles.map(a => ({
+  slug: a.slug,
+  title: a.title,
+  description: a.description,
+  category: a.category,
+  readTime: a.readTime,
+}));
+---
+<Base title="Articles — explainers and reference" description="Long-form articles on unit conversion, metric system history, and measurement standards.">
+
+<div class="breadcrumbs"><a href="/">Home</a> › <span>Articles</span></div>
+<h1>Articles</h1>
+<p class="muted">Long-form content for queries that aren't answered by a converter page.</p>
+
+<ArticlesBlock articles={items} title="All articles" />
+
+</Base>

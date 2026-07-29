@@ -1,0 +1,88 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import { getAllCategories, getCategory, getUnitsByCategory } from '~/lib/units';
+
+export async function getStaticPaths() {
+  return getAllCategories().map(c => ({ params: { category: c.slug }, props: { slug: c.slug } }));
+}
+
+const { slug } = Astro.props;
+const cat = getCategory(slug)!;
+const units = getUnitsByCategory(slug);
+
+// Build a popular-pairs grid for this category — top promoted × top promoted
+const promoted = units.slice(0, 8);
+const pairs = [] as { from: string; to: string; url: string }[];
+for (let i = 0; i < promoted.length; i++) {
+  for (let j = 0; j < promoted.length; j++) {
+    if (i === j) continue;
+    pairs.push({ from: promoted[i].slug, to: promoted[j].slug, url: `${promoted[i].slug}-to-${promoted[j].slug}` });
+  }
+}
+
+const faq = [
+  { q: `What is the SI base unit of ${cat.name.toLowerCase()}?`, a: `The SI base ${cat.slug} unit is ${cat.baseSymbol}. Most conversions factor through it, except temperature which is affine and fuel-economy which is reciprocal.` },
+  { q: `Which unit systems are represented?`, a: `${cat.name} includes both metric and imperial units (where they exist in this category). For mass and length, both metric (kg, m) and US customary (lb, ft) are listed. For temperature, the three most-common scales (Celsius, Fahrenheit, Kelvin) plus Rankine and Réaumur.` },
+  { q: 'How accurate are these conversions?', a: 'Conversions use the standard SI factors (NIST values where applicable). Where two slightly different definitions exist (e.g. KB vs KiB, US vs UK gallon), they are listed as separate units rather than auto-rounded.' },
+];
+
+const title = `${cat.name} conversions — every ${cat.slug} unit`;
+const subtitle = `All ${units.length} ${cat.name.toLowerCase()} units and pair converters.`;
+---
+<Base title={title} description={subtitle}>
+
+<div class="breadcrumbs">
+  <a href="/">Home</a> ›
+  <span>{cat.name}</span>
+</div>
+
+<h1>{cat.name}</h1>
+<p class="muted">{cat.description}</p>
+
+<section class="section">
+  <h2 class="section-title">All {cat.name.toLowerCase()} units ({units.length})</h2>
+  <div class="grid grid-3">
+    {units.map(u => (
+      <a class="card unit-card" href={`/${u.slug}`}>
+        <div class="u-name">{u.name}</div>
+        <div class="u-sym">{u.symbol}</div>
+        <div class="u-desc">{u.description ?? `${u.name} is a unit of ${cat.name}.`}</div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">Popular {cat.name.toLowerCase()} conversions</h2>
+  <div class="grid grid-3">
+    {pairs.map(p => (
+      <a class="card pair-card" href={`/${p.url}`}>
+        <span class="from">{p.from.replace(/-/g, ' ')}</span>
+        <span class="arrow">→</span>
+        <span class="to">{p.to.replace(/-/g, ' ')}</span>
+      </a>
+    ))}
+  </div>
+</section>
+
+<FaqBlock items={faq} />
+
+<RecommendedList title="Other categories" items={getAllCategories().filter(c => c.slug !== slug).map(c => ({
+  name: c.name,
+  description: `${c.description}`.slice(0, 100) + (c.description.length > 100 ? '…' : ''),
+  meta: `/category/${c.slug}`,
+}))} />
+
+</Base>
+
+<style>
+  .unit-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .u-name { font-weight: 800; font-size: 16px; }
+  .u-sym { font-family: ui-monospace, monospace; font-size: 13px; color: var(--brand); font-weight: 700; }
+  .u-desc { font-size: 12px; color: var(--fg-soft); line-height: 1.5; }
+  .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
+  .pair-card .arrow { color: var(--brand); font-weight: 800; }
+</style>

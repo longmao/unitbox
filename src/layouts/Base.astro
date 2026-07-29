@@ -1,0 +1,111 @@
+---
+import { SITE, NAV_GROUPS } from '~/lib/site';
+import { getAllUnits } from '~/lib/units';
+import '~/styles/global.css';
+export interface Props {
+  title?: string;
+  description?: string;
+  pageClass?: string;
+  noindex?: boolean;
+}
+const { title = SITE.tagline, description = SITE.description, pageClass, noindex } = Astro.props;
+const fullTitle = title.includes(SITE.name) ? title : `${title} — ${SITE.name}`;
+
+// Compact unit lookup table, used by ConverterWidget for instant client-side conversion
+const unitData = Object.fromEntries(
+  getAllUnits().map(u => [
+    u.slug,
+    {
+      name: u.name,
+      symbol: u.symbol,
+      category: u.category,
+      factor: (u as any).factor,
+      slope: (u as any).slope,
+      offset: (u as any).offset,
+      reciprocal: (u as any).reciprocal,
+      baseValue: (u as any).baseValue,
+    },
+  ])
+);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <meta name="theme-color" content="#0b1736" />
+  {noindex && <meta name="robots" content="noindex" />}
+  <title>{fullTitle}</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" />
+  <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />
+</head>
+<body class={pageClass}>
+  <header class="site-header">
+    <div class="container header-row">
+      <a href="/" class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="6" width="18" height="12" rx="2" stroke="#fff" stroke-width="2"/>
+          <path d="M7 10h10M7 14h10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="logo-text">unit.now</span>
+      </a>
+      <nav class="primary-nav" aria-label="primary">
+        <a href="/">Home</a>
+        <a href="/category/length">Length</a>
+        <a href="/category/mass">Mass</a>
+        <a href="/category/temperature">Temperature</a>
+        <a href="/category/volume">Volume</a>
+        <a href="/category/data">Data</a>
+        <a href="/calculator">Calculator</a>
+        <a href="/articles">Articles</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page">
+    <div class="container">
+      <slot />
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        {NAV_GROUPS.map(group => (
+          <div>
+            <h4>{group.title}</h4>
+            <ul>
+              {group.links.map(l => <li><a href={l.href}>{l.label}</a></li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div class="footer-bottom">
+        <span>{SITE.legalName} · Fast, accurate conversions for any unit.</span>
+        <span>© {new Date().getFullYear()}</span>
+      </div>
+    </div>
+  </footer>
+  <slot name="scripts" />
+</body>
+</html>
+<style>
+  .site-header { background: var(--bg); color: #fff; padding: 14px 0; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 8px rgba(0,0,0,0.15); }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 18px; }
+  .logo:hover { text-decoration: none; }
+  .primary-nav { display: flex; flex-wrap: wrap; gap: 18px; }
+  .primary-nav a { color: #d9e1f5; font-size: 14px; font-weight: 500; }
+  .primary-nav a:hover { color: #fff; text-decoration: none; }
+  .site-footer { background: var(--bg); color: #c5cee5; padding: 40px 0 24px; margin-top: 60px; }
+  .footer-grid { display: grid; gap: 32px; grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+  .site-footer h4 { color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .site-footer ul { list-style: none; padding: 0; margin: 0; }
+  .site-footer li { margin-bottom: 6px; }
+  .site-footer a { color: #c5cee5; font-size: 13px; }
+  .site-footer a:hover { color: #fff; }
+  .footer-bottom { display: flex; justify-content: space-between; padding-top: 24px; margin-top: 24px; border-top: 1px solid #1a2d5a; font-size: 12px; color: #8a95ad; }
+  @media (max-width: 600px) { .footer-bottom { flex-direction: column; gap: 4px; } }
+</style>

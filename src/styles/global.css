@@ -1,0 +1,81 @@
+/* Global utility + layout classes — shared across all .astro pages & components.
+   Pulled out of Base.astro so they escape the per-file scoped-style wrapping
+   that Astro applies by default to <style> blocks. */
+
+:root {
+  --bg: #0b1736;
+  --bg-soft: #11224a;
+  --bg-card: #ffffff;
+  --fg: #0b1736;
+  --fg-soft: #5a6680;
+  --fg-muted: #8a95ad;
+  --border: #e6e9f0;
+  --brand: #2563eb;
+  --brand-soft: #dbeafe;
+  --accent: #fbbf24;
+  --success: #10b981;
+  --warn: #f59e0b;
+  --error: #ef4444;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--fg);
+  background: #f6f7fb;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.page { padding: 28px 0 80px; min-height: 60vh; }
+
+h1, h2, h3, h4 { color: var(--fg); font-weight: 700; line-height: 1.2; }
+h1 { font-size: 32px; margin: 0 0 12px; }
+h2 { font-size: 22px; margin: 28px 0 12px; }
+h3 { font-size: 18px; margin: 22px 0 10px; }
+p { margin: 0 0 14px; }
+
+.btn {
+  display: inline-block; padding: 10px 18px; border-radius: 8px;
+  background: var(--brand); color: #fff; font-weight: 600; border: 0; cursor: pointer; font-family: inherit; font-size: 14px;
+  transition: filter 120ms;
+}
+.btn:hover { filter: brightness(0.95); text-decoration: none; }
+.btn-outline { background: transparent; border: 1.5px solid var(--brand); color: var(--brand); }
+
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 20px; transition: border-color 120ms;
+}
+
+.muted { color: var(--fg-muted); font-size: 13px; }
+.pill { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 600; text-decoration: none; transition: filter 120ms; }
+.pill:hover { filter: brightness(0.95); text-decoration: none; }
+
+.grid { display: grid; gap: 14px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+@media (max-width: 900px) {
+  .grid-3, .grid-4, .grid-6 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .grid-3, .grid-4, .grid-6 { grid-template-columns: 1fr; }
+  h1 { font-size: 26px; }
+}
+
+.breadcrumbs { color: var(--fg-muted); font-size: 13px; margin-bottom: 12px; }
+.breadcrumbs a { color: var(--fg-soft); }
+.breadcrumbs span { color: var(--fg); font-weight: 500; }
+
+.section { margin: 36px 0; }
+.section-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.section-subtitle { color: var(--fg-muted); font-size: 14px; margin-bottom: 18px; }
