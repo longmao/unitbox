@@ -216,4 +216,5 @@ export const ZH_HANS: Record<string, string> = {
 
   'testimonial.title': '使用者怎么说',
   'testimonial.cta': '分享你的体验',
+  'nav.testimonials': '用户评价',
 };

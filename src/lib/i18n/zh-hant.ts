@@ -216,4 +216,5 @@ export const ZH_HANT: Record<string, string> = {
 
   'testimonial.title': '使用者怎麼說',
   'testimonial.cta': '分享你的體驗',
+  'nav.testimonials': '使用者評語',
 };

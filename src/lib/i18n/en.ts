@@ -230,4 +230,5 @@ export const EN: Record<string, string> = {
 
   'testimonial.title': 'What people are saying',
   'testimonial.cta': 'Share your experience',
+  'nav.testimonials': 'Testimonials',
 };

@@ -1,0 +1,80 @@
+name: 💬 Share your unitbox experience
+description: Tell us what you used unitbox for and what you liked. Selected quotes appear on the testimonials page (with your name + role, unless you ask to be anonymous).
+title: "[Testimonial] "
+labels: ["testimonial"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for using unitbox! 🎉
+
+        If you have 60 seconds, your honest feedback helps other people discover the site.
+        Selected quotes (with your name or a one-line role) appear on
+        [unitbox.online/testimonials](https://unitbox.online/en/testimonials/).
+
+        We won't add testimonials that read like ads or that we can't verify.
+
+  - type: input
+    id: name
+    attributes:
+      label: Your name (or alias)
+      description: How you'd like to be credited. e.g. "Wei", "Wei L.", or "anonymous".
+      placeholder: Wei
+    validations:
+      required: true
+
+  - type: input
+    id: role
+    attributes:
+      label: One-line role
+      description: e.g. "frontend engineer", "student", "home cook", "translator".
+      placeholder: frontend engineer
+    validations:
+      required: false
+
+  - type: dropdown
+    id: used
+    attributes:
+      label: What did you use unitbox for?
+      multiple: true
+      options:
+        - Length conversion (m↔ft, cm↔in)
+        - Mass conversion (kg↔lb, g↔oz)
+        - Temperature (°C↔°F)
+        - Data size (KB↔MB, GB↔TB, KB↔KiB)
+        - Fuel economy (MPG↔L/100km)
+        - PNG compressor
+        - Universal calculator
+        - Reading an article / learning
+        - Embedding unitbox on my own site
+        - Using the API / building something with it
+        - Other
+
+  - type: textarea
+    id: quote
+    attributes:
+      label: Your quote
+      description: 1-3 sentences in plain language. What did you use it for, and what did you like?
+      placeholder: I needed to convert a recipe from grams to ounces and unitbox gave me the exact answer with no ads and no signup. The KB vs KiB page also cleared up a confusion I've had for years.
+    validations:
+      required: true
+
+  - type: input
+    id: contact
+    attributes:
+      label: Optional contact (email or social)
+      description: Only if you want us to reach you about a follow-up. Not shown publicly.
+      placeholder: wei@example.com
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Permission
+      options:
+        - label: OK to publish my quote with my name + role on unitbox.online/testimonials
+          required: true
+        - label: OK to publish my quote anonymously (no name)
+          required: false

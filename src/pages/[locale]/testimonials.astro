@@ -1,0 +1,71 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const faq = [
+  { q: 'How are testimonials collected?', a: 'Via a public GitHub issue template. We do not collect emails and do not run ads. Anyone can submit, but we only publish quotes we can verify or that read like real user feedback.' },
+  { q: 'Can I submit anonymously?', a: 'Yes. Check the "publish anonymously" box on the form.' },
+  { q: 'Will you edit my quote?', a: 'Only for length (trim) and never for meaning. We will not change your words.' },
+];
+
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const title = t('testimonial.title', locale);
+const homeLabel = t('pair.breadcrumb-home', locale);
+const navAbout = t('nav.about', locale);
+---
+<Base title={title} description={t('testimonial.title', locale)} locale={locale} noBreadcrumb>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{navAbout}</span> › <span>{title}</span></div>
+
+<h1>{title}</h1>
+
+<section class="card" style="margin-bottom: 24px; background: var(--brand-soft); border-color: var(--brand);">
+  <h2 style="margin-top: 0;">{t('testimonial.cta', locale)} →</h2>
+  <p>Submit takes about 60 seconds. The form opens a pre-filled GitHub issue — no signup, no email, no tracking.</p>
+  <p>
+    <a class="btn" href="https://github.com/longmao/unitbox/issues/new?template=testimonial.yml" rel="noopener">
+      {t('testimonial.cta', locale)}
+    </a>
+  </p>
+</section>
+
+<h2>Selected feedback</h2>
+<p class="muted">We're early. Real testimonials will appear here as people submit them.</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <p style="font-style: italic; color: var(--fg-soft); margin-bottom: 8px;">
+      "Your testimonial could be here. Submit via the button above — takes 60 seconds, no email required."
+    </p>
+    <p style="margin: 0; font-size: 13px; color: var(--fg-muted);">— unitbox team</p>
+  </div>
+</div>
+
+<h2 style="margin-top: 32px;">How we handle submissions</h2>
+<ul>
+  <li>Quotes appear with the submitter's name + one-line role, unless anonymous was requested.</li>
+  <li>We won't publish anything that reads like an ad or that we can't verify.</li>
+  <li>No email harvesting. GitHub is the only channel.</li>
+  <li>Submissions become part of the public conversation on GitHub — fully transparent.</li>
+</ul>
+
+<FaqBlock items={faq} />
+
+</Base>
