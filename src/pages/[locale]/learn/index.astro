@@ -1,0 +1,38 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { learnTopics } from '~/data/learn';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const topics = learnTopics.map(t => ({
+  slug: t.slug,
+  title: t.title,
+  description: t.description,
+  category: t.category,
+  readTime: t.readTime,
+}));
+
+const homeLabel = t('pair.breadcrumb-home', locale);
+const learnLabel = t('learn.h1', locale);
+const subtitle = t('learn.subtitle', locale);
+const allLabel = t('learn.all', locale);
+---
+<Base title={`${learnLabel} — articles and reference`} description={subtitle} locale={locale}>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{learnLabel}</span></div>
+<h1>{learnLabel}</h1>
+<p class="muted">{subtitle}</p>
+
+<ArticlesBlock articles={topics} title={allLabel} pathPrefix="/learn" locale={locale} />
+
+</Base>

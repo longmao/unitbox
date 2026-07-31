@@ -68,10 +68,13 @@ const precision = Math.max(2, Math.min(8, Math.min(from.precision || 4, to.preci
         return (base - b.offset) / b.slope;
       }
       if (kind === 'reciprocal') {
-        const av = a.reciprocal ? a.baseValue : a.factor;
-        const bv = b.reciprocal ? b.baseValue : b.factor;
-        const inBase = av / value;
-        return bv / inBase;
+        // Direction-aware: same direction (distance↔distance or fuel↔fuel) is linear;
+        // cross direction uses (from.K × to.K) / value.
+        if (a.direction && b.direction && a.direction === b.direction) {
+          return (value * a.factor) / b.factor;
+        }
+        if (typeof a.K === 'number' && typeof b.K === 'number') return (a.K * b.K) / value;
+        return null;
       }
       return null;
     }
@@ -109,13 +112,12 @@ const precision = Math.max(2, Math.min(8, Math.min(from.precision || 4, to.preci
     toInput.addEventListener('input', () => recalc('to'));
     swap.addEventListener('click', () => {
       const a = fromInput.dataset.from, b = fromInput.dataset.to;
-      fromInput.dataset.from = b; fromInput.dataset.to = a;
-      // swap the symbols too
-      const sa = fromInput.dataset.fromSymbol, sb = toInput.dataset.toSymbol;
-      fromInput.dataset.fromSymbol = sb; toInput.dataset.toSymbol = sa;
+      fromInput.dataset.from = b;
+      fromInput.dataset.to = a;
+      // (dataset.fromSymbol / dataset.toSymbol are not set on SSR — they fall back to the
+      // slug via the `||` fallback in recalc, so no manual swap needed here.)
       fromInput.value = '1';
       recalc('from');
-      // Reload location so the URL reflects direction (optional — skip for ergonomics)
     });
   })();
 </script>
@@ -132,7 +134,19 @@ const precision = Math.max(2, Math.min(8, Math.min(from.precision || 4, to.preci
   .cw-swap:hover { transform: rotate(180deg); }
   .cw-formula { background: var(--bg-soft); color: #fff; padding: 12px 16px; border-radius: 8px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
   @media (max-width: 700px) {
-    .cw-row { grid-template-columns: 1fr; }
-    .cw-swap { transform: rotate(90deg); }
+    /* On mobile stack inputs vertically; swap button sits between as a small icon-only chip. */
+    .cw-row { grid-template-columns: 1fr; gap: 10px; }
+    .cw-swap {
+      justify-self: center;
+      width: 44px;
+      height: 36px;
+      padding: 6px 0;
+      font-size: 18px;
+      background: transparent;
+      color: var(--brand);
+      border: 1.5px solid var(--brand);
+    }
+    .cw-swap:hover { transform: none; background: var(--brand-soft); }
+    .cw-input { font-size: 18px; padding: 12px 14px; }
   }
 </style>

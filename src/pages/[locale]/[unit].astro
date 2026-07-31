@@ -1,0 +1,166 @@
+---
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import {
+  getAllUnits,
+  getUnit,
+  getUnitsByCategory,
+  getCategory,
+  convert,
+} from '~/lib/units';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const units = getAllUnits();
+  const out: Array<{ params: { locale: string; unit: string }; props: { locale: Locale; slug: string } }> = [];
+  for (const locale of LOCALES) {
+    for (const u of units) {
+      out.push({
+        params: { locale, unit: u.slug },
+        props: { locale, slug: u.slug },
+      });
+    }
+  }
+  return out;
+}
+
+const { locale, slug } = Astro.props as { locale: Locale; slug: string };
+const unit = getUnit(slug);
+if (!unit) throw new Error(`Unit page requested unknown unit: ${slug}`);
+const cat = getCategory(unit.category);
+const sameCat = getUnitsByCategory(unit.category);
+// Siblings to show as converter cards — skip self.
+const featured = sameCat.filter(s => s.slug !== slug).slice(0, 3);
+
+// Pair pages linking to every sibling in the category (forward direction).
+const relatedPairs = sameCat.filter(s => s.slug !== slug).slice(0, 8).map(s => ({
+  from: slug,
+  to: s.slug,
+  url: `${slug}-to-${s.slug}`,
+  label: `${unit.symbol} → ${s.symbol}`,
+}));
+
+const table = sameCat.filter(s => s.slug !== slug).map(s => ({
+  to: s,
+  forward: convert(1, slug, s.slug) as number | null,
+  reverse: convert(1, s.slug, slug) as number | null,
+}));
+
+const faq = [
+  { q: `What does ${unit.symbol} stand for?`, a: `${unit.name} (${unit.symbol}) is a unit of ${cat?.name ?? unit.category}.` },
+  {
+    q: `How many ${unit.symbol} are in 1 ${cat?.baseSymbol ?? unit.symbol}?`,
+    a: cat?.kind === 'linear' && typeof (unit as any).factor === 'number'
+      ? `1 ${cat?.baseSymbol} = ${formatNumber((unit as any).factor, 6, locale)} ${unit.symbol}, so 1 ${unit.symbol} = ${formatNumber(1 / ((unit as any).factor), 6, locale)} ${cat?.baseSymbol}.`
+      : cat?.kind === 'affine'
+      ? `Temperature is an affine scale — the relationship is linear with an offset. See the table below.`
+      : `See the conversion table below.`,
+  },
+  {
+    q: 'Is this the SI base unit?',
+    a: typeof (unit as any).factor === 'number' && (unit as any).factor === 1
+      ? `Yes — ${unit.name} is the SI base unit for ${cat?.name ?? unit.category}.`
+      : `No. ${unit.name} is one of several units in the ${cat?.name ?? unit.category} category. The SI base is ${cat?.baseSymbol}.`,
+  },
+];
+
+const title = `The ${unit.name} (${unit.symbol}) — definition & conversions`;
+const subtitle = unit.description ?? `A reference page for ${unit.name} (${unit.symbol}): definition, conversion table, related converters, and FAQs.`;
+
+const homeLabel = t('pair.breadcrumb-home', locale);
+const noteLabel = t('pair.note', locale);
+const quickConvertTitle = tFmt('unit.quick-convert', locale, { unit: unit.name });
+const quickConvertSub = t('unit.quick-convert-sub', locale);
+const conversionTableTitle = tFmt('unit.conv-table', locale, { unit: unit.name, cat: cat?.name ?? '' });
+const conversionTableSub = tFmt('unit.conv-table-sub', locale, { symbol: unit.symbol });
+const commonTitle = tFmt('unit.common', locale, { unit: unit.name });
+const keepTitle = t('pair.keep', locale);
+const toFromHeader = t('unit.to-from', locale);
+const forwardHeader = tFmt('unit.forward-h', locale, { symbol: unit.symbol });
+const reverseHeader = tFmt('unit.reverse-h', locale, { symbol: unit.symbol });
+
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+---
+<Base title={title} description={subtitle} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+<div class="breadcrumbs">
+  <a href={route(locale, '/')}>{homeLabel}</a> ›
+  <a href={route(locale, `/category/${unit.category}/`)}>{cat?.name ?? unit.category}</a> ›
+  <span>{unit.name}</span>
+</div>
+
+<h1>{unit.name} <span class="sym-pill">{unit.symbol}</span></h1>
+<p class="muted">{subtitle}</p>
+
+{unit.note && <p class="callout"><strong>{noteLabel}</strong> {unit.note}</p>}
+
+<section class="section">
+  <h2 class="section-title">{quickConvertTitle}</h2>
+  <p class="section-subtitle">{quickConvertSub}</p>
+  <div class="cw-grid">
+    {featured.map(s => (
+      <ConverterWidget fromSlug={slug} toSlug={s.slug} mode="full" defaultValue={1} />
+    ))}
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">{conversionTableTitle}</h2>
+  <p class="section-subtitle">{conversionTableSub}</p>
+  <table class="conv-table">
+    <thead>
+      <tr>
+        <th>{toFromHeader}</th>
+        <th>{forwardHeader}</th>
+        <th>{reverseHeader}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {table.map(row => (
+        <tr>
+          <td><a href={route(locale, `/${row.to.slug}-to-${slug}/`)}>{row.to.name} ({row.to.symbol})</a></td>
+          <td><strong>{formatNumber(row.forward, 8, locale)}</strong> {row.to.symbol}</td>
+          <td><strong>{formatNumber(row.reverse, 8, locale)}</strong> {unit.symbol}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</section>
+
+<FaqBlock items={faq} />
+
+<RecommendedList title={commonTitle} items={relatedPairs.map(p => ({
+  name: `${unit.name} (${unit.symbol}) → ${p.to.replace(/-/g, ' ')} (${getUnit(p.to)?.symbol ?? ''})`,
+  description: `Convert ${unit.name} (${unit.symbol}) to ${p.to.replace(/-/g, ' ')}.`,
+  href: route(locale, `/${p.url}/`),
+}))} />
+
+<section class="section">
+  <h2 class="section-title">{keepTitle}</h2>
+  <RecommendedList title="" items={[
+    { name: `All ${cat?.name ?? ''} units`, description: `Browse the full ${cat?.name ?? ''} table.`, href: route(locale, `/category/${unit.category}/`) },
+    { name: 'Open the universal calculator', description: 'Pick any two units from any category and convert freely.', href: route(locale, '/calculator/') },
+    { name: 'See related articles', description: `Background on ${cat?.name ?? ''} units and conversion standards.`, href: route(locale, '/articles/') },
+  ]} />
+</section>
+
+</Base>
+
+<style>
+  .sym-pill { display: inline-block; font-family: ui-monospace, monospace; background: var(--bg); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 0.6em; vertical-align: middle; margin-left: 8px; }
+  .callout { background: #fff8e6; border-left: 4px solid var(--brand); padding: 12px 16px; border-radius: 6px; }
+  .cw-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px) { .cw-grid { grid-template-columns: 1fr; } }
+  .conv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .conv-table th { background: var(--bg); color: #fff; padding: 12px 14px; text-align: left; font-size: 13px; }
+  .conv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .conv-table a { color: var(--brand); font-weight: 600; }
+</style>

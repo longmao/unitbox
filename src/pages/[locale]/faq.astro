@@ -1,0 +1,49 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+// NOTE: FAQ content below is intentionally kept in English in v0.4. The
+// hard rule says: do not add new locale keys. These strings live here as
+// page-local data until they earn a key in en.ts / zh-hant.ts / zh-hans.ts.
+const faqs = [
+  { q: 'What is unitbox?', a: 'A network of pages organized around the topic of "unit conversion": every popular unit gets a detail page, and every popular pair gets a live converter. Plus a universal calculator and a knowledge base.' },
+  { q: 'Is this site a single tool?', a: 'No. It is many pages — unit detail pages, pair pages, category pages, comparison pages, articles — that share a common theme. Each page ranks for its own cluster of search queries.' },
+  { q: 'How accurate are the conversions?', a: 'Every conversion uses the standard SI factors (NIST values where applicable). For the temperature scale, we use the affine formula; for fuel-economy, we convert through the reciprocal. The numeric precision is up to 8 digits where the input scale allows.' },
+  { q: 'Why is there a KB and a KiB?', a: 'KB is the SI decimal prefix (1000 bytes). KiB is the IEC binary prefix (1024 bytes). They are different units, both in common use, and the discrepancy is precisely why the IEC standardised the binary prefixes in 1998. See the article on data units.' },
+  { q: 'What is the difference between US and UK gallons?', a: 'A US gallon is 3.785 L; a UK (imperial) gallon is 4.546 L. They are about 20% apart. We list them separately so you can convert exactly to whichever you need.' },
+  { q: 'Why does temperature use a different formula?', a: 'Because temperature is an affine quantity: 0 °C is not "twice" 0 °F — the two scales have different zero points. The conversion is linear (scale by 5/9 or 9/5) PLUS an offset (32 or 273.15).' },
+  { q: 'Can I embed a converter on my site?', a: 'Yes — see /llms.txt for the OpenAPI spec and recommended integration patterns. Full widget API is in v0.4.' },
+  { q: 'Can I use this on a phone?', a: 'Yes — every page is mobile-optimised; the converter widget works in mobile Safari and Chrome. Add it to your home screen as a PWA.' },
+  { q: 'Why is my unit not listed?', a: 'We add units based on search volume. If yours is missing and you would use it, open an issue on GitHub or use the contact form.' },
+];
+
+const faqLd = buildFaqPage(faqs, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+
+const title = t('faq.h1', locale);
+const description = t('faq.subtitle', locale);
+const homeLabel = t('pair.breadcrumb-home', locale);
+const faqLabel = t('nav.faq', locale);
+---
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{faqLabel}</span></div>
+<h1>{title}</h1>
+<p class="muted">{description}</p>
+<FaqBlock items={faqs} />
+</Base>

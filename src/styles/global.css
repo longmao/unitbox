@@ -70,6 +70,9 @@ p { margin: 0 0 14px; }
 @media (max-width: 600px) {
   .grid-3, .grid-4, .grid-6 { grid-template-columns: 1fr; }
   h1 { font-size: 26px; }
+  .container { padding: 0 16px; }
+  .card { padding: 14px 16px; }
+  .btn { padding: 12px 20px; font-size: 15px; }
 }
 
 .breadcrumbs { color: var(--fg-muted); font-size: 13px; margin-bottom: 12px; }

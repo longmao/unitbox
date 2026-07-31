@@ -1,0 +1,294 @@
+---
+// PngCompressor — client-side PNG compression via canvas re-encoding.
+// 100% in-browser: file never leaves the device. No backend, no upload.
+
+export interface Props {
+  /** Pre-resolved i18n strings (computed server-side). */
+  i18n: Record<string, string>;
+  /** Max file size in bytes. */
+  maxBytes?: number;
+  /** Compression mode. */
+  mode?: 'lossless' | 'lossy';
+}
+
+const { i18n, maxBytes = 25 * 1024 * 1024, mode = 'lossless' } = Astro.props as Props;
+const i18nJson = JSON.stringify(i18n);
+---
+<section class="png-compressor" data-max-bytes={maxBytes} data-mode={mode} data-i18n={i18nJson}>
+  <div class="privacy-banner">
+    <span class="pill">🔒 {i18n.privacy1 ?? ''}</span>
+    <span class="pill">🚫 {i18n.privacy2 ?? ''}</span>
+    <span class="pill">👁️ {i18n.privacy3 ?? ''}</span>
+  </div>
+
+  <div class="dropzone" id="png-drop">
+    <input type="file" id="png-input" accept="image/png" multiple hidden />
+    <div class="dropzone-icon" aria-hidden="true">📁</div>
+    <p class="dropzone-text">{i18n.dropzone}</p>
+    <p class="dropzone-sub">{i18n.dropzoneSub}</p>
+    <label for="png-input" class="browse-btn">{i18n.browse}</label>
+  </div>
+
+  <div class="results" id="png-results" aria-live="polite">
+    <p class="empty-state" id="png-empty">{i18n.emptyState}</p>
+  </div>
+
+  <div class="actions" id="png-actions" hidden>
+    <button type="button" id="png-clear-all" class="btn-secondary">{i18n.clear}</button>
+    <button type="button" id="png-download-all" class="btn-primary">{i18n.downloadAll}</button>
+  </div>
+</section>
+
+<script>
+  // upng-js is loaded as an ES module (npm package, ~30 KB, MIT).
+  import * as UPNG from 'upng-js';
+
+  const root = document.querySelector('.png-compressor') as HTMLElement | null;
+  if (!root) {
+    // Component not present on this page; nothing to do.
+  } else {
+    const i18n = JSON.parse(root.dataset.i18n ?? '{}');
+    const maxBytes = Number(root.dataset.maxBytes ?? 25 * 1024 * 1024);
+    const mode = (root.dataset.mode ?? 'lossless') as 'lossless' | 'lossy';
+
+    type Item = { id: string; name: string; originalSize: number; blob: Blob; url: string };
+    const state: { items: Item[] } = { items: [] };
+
+    function formatBytes(n: number): string {
+      if (n < 1024) return `${n} B`;
+      if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+      return `${(n / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    function renderEmpty() {
+      const empty = document.getElementById('png-empty');
+      const results = document.getElementById('png-results');
+      const actions = document.getElementById('png-actions');
+      if (!empty || !results || !actions) return;
+      if (state.items.length === 0) {
+        empty.hidden = false;
+        results.querySelectorAll('.card').forEach(n => n.remove());
+        actions.hidden = true;
+      } else {
+        empty.hidden = true;
+        actions.hidden = false;
+      }
+    }
+
+    function renderItem(item: Item): HTMLElement {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.id = item.id;
+      const savings = item.originalSize > 0 ? Math.round((1 - item.blob.size / item.originalSize) * 100) : 0;
+      const savingsText = (i18n.savingsTpl ?? 'Saved {pct}%').replace('{pct}', String(savings));
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="card-name"></span>
+          <button type="button" class="card-remove" aria-label="remove">×</button>
+        </div>
+        <div class="card-body">
+          <div class="card-row">
+            <span class="card-label">${i18n.before}</span>
+            <span class="card-size">${formatBytes(item.originalSize)}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">${i18n.after}</span>
+            <span class="card-size">${formatBytes(item.blob.size)}</span>
+          </div>
+          <div class="card-savings">${savingsText}</div>
+        </div>
+        <div class="card-actions">
+          <a class="btn-primary" download="${item.name}">${i18n.download}</a>
+        </div>
+      `;
+      (card.querySelector('.card-name') as HTMLElement).textContent = item.name;
+      const dl = card.querySelector('a.btn-primary') as HTMLAnchorElement;
+      dl.href = item.url;
+      card.querySelector('.card-remove')!.addEventListener('click', () => removeItem(item.id));
+      return card;
+    }
+
+    function addItem(item: Item) {
+      state.items.push(item);
+      const results = document.getElementById('png-results');
+      if (results) results.appendChild(renderItem(item));
+      renderEmpty();
+    }
+
+    function removeItem(id: string) {
+      const idx = state.items.findIndex(i => i.id === id);
+      if (idx === -1) return;
+      const item = state.items[idx];
+      URL.revokeObjectURL(item.url);
+      state.items.splice(idx, 1);
+      document.querySelector(`.card[data-id="${id}"]`)?.remove();
+      renderEmpty();
+    }
+
+    function clearAll() {
+      state.items.forEach(i => URL.revokeObjectURL(i.url));
+      state.items.length = 0;
+      document.querySelectorAll('.card').forEach(n => n.remove());
+      renderEmpty();
+    }
+
+    async function compressFile(file: File): Promise<{ blob: Blob; width: number; height: number }> {
+      const img = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas 2d context unavailable');
+      ctx.drawImage(img, 0, 0);
+
+      // Strategy: try three encoders and pick the smallest valid PNG.
+      // 1. UPNG lossless (cnum=0) — full RGBA, optimal Zlib + delta filters
+      // 2. UPNG lossy (cnum=256) — palette quantize to 256 colors, ~30-70% smaller on photos
+      // 3. canvas.toBlob — browser native (works for already-optimal PNGs)
+      // Pick the smallest valid PNG.
+      const imageData = ctx.getImageData(0, 0, img.width, img.height);
+      const rgba = new Uint8Array(imageData.data.buffer);
+
+      const candidates: Array<{ source: string; blob: Blob }> = [];
+
+      // UPNG lossless
+      try {
+        const buf = (UPNG as any).encode([rgba.buffer], img.width, img.height, 0);
+        if (buf && buf.byteLength > 0) {
+          candidates.push({ source: 'upng-lossless', blob: new Blob([buf], { type: 'image/png' }) });
+        }
+      } catch (err) {
+        console.warn('UPNG lossless failed', err);
+      }
+
+      // UPNG lossy (palette 256)
+      try {
+        const buf = (UPNG as any).encode([rgba.buffer], img.width, img.height, 256);
+        if (buf && buf.byteLength > 0) {
+          candidates.push({ source: 'upng-lossy-256', blob: new Blob([buf], { type: 'image/png' }) });
+        }
+      } catch (err) {
+        console.warn('UPNG lossy failed', err);
+      }
+
+      // canvas.toBlob fallback
+      const canvasBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob returned null'))), 'image/png');
+      });
+      candidates.push({ source: 'canvas', blob: canvasBlob });
+
+      // Verify PNG signature (first 8 bytes = 89 50 4E 47 0D 0A 1A 0A)
+      const PNG_SIG = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+      const verified = await Promise.all(candidates.map(async c => {
+        const ab = await c.blob.arrayBuffer();
+        const u8 = new Uint8Array(ab);
+        const ok = PNG_SIG.every((b, i) => u8[i] === b);
+        return ok ? { source: c.source, size: ab.byteLength, blob: c.blob } : null;
+      }));
+      const valid = verified.filter(Boolean) as Array<{ source: string; size: number; blob: Blob }>;
+      if (valid.length === 0) throw new Error('All encoders produced invalid PNGs');
+      valid.sort((a, b) => a.size - b.size);
+      // eslint-disable-next-line no-console
+      console.log(`PNG compressor: picked ${valid[0].source} (${valid[0].size} B); alternatives:`, valid.map(v => `${v.source}=${v.size}B`));
+      return { blob: valid[0].blob, width: img.width, height: img.height };
+    }
+
+    async function handleFiles(fileList: FileList | File[]) {
+      for (const file of Array.from(fileList)) {
+        if (file.type !== 'image/png') {
+          alert(i18n.errorUnsupported ?? 'Please drop a PNG file.');
+          continue;
+        }
+        if (file.size > maxBytes) {
+          alert(i18n.errorTooLarge ?? 'File too large.');
+          continue;
+        }
+        try {
+          const { blob } = await compressFile(file);
+          const url = URL.createObjectURL(blob);
+          const id = `png-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          addItem({
+            id,
+            name: file.name.replace(/\.png$/i, '-min.png'),
+            originalSize: file.size,
+            blob,
+            url,
+          });
+        } catch (err) {
+          console.error('compress failed', err);
+        }
+      }
+    }
+
+    // Drag-and-drop
+    const drop = document.getElementById('png-drop');
+    if (drop) {
+      ['dragenter', 'dragover'].forEach(evt => drop.addEventListener(evt, e => {
+        e.preventDefault();
+        drop.classList.add('dragover');
+      }));
+      ['dragleave', 'drop'].forEach(evt => drop.addEventListener(evt, e => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+      }));
+      drop.addEventListener('drop', e => {
+        const files = Array.from(e.dataTransfer?.files ?? []);
+        if (files.length) handleFiles(files);
+      });
+    }
+    const input = document.getElementById('png-input') as HTMLInputElement | null;
+    if (input) input.addEventListener('change', e => {
+      const files = Array.from((e.target as HTMLInputElement).files ?? []);
+      if (files.length) handleFiles(files);
+      input.value = '';
+    });
+    document.getElementById('png-clear-all')?.addEventListener('click', clearAll);
+    document.getElementById('png-download-all')?.addEventListener('click', () => {
+      state.items.forEach((item, i) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = item.url;
+          a.download = item.name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }, i * 150);
+      });
+    });
+
+    // Test hook: signal to BDD that the component is wired up
+    (window as any).__PNG_COMPRESSOR_READY__ = true;
+
+    renderEmpty();
+  }
+</script>
+
+<style>
+  .png-compressor { margin: 24px 0; }
+  .privacy-banner { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .privacy-banner .pill { background: #eef2ff; color: #1e3a8a; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .dropzone { border: 2px dashed #94a3b8; border-radius: 16px; padding: 48px 24px; text-align: center; background: #f8fafc; transition: all 120ms; cursor: pointer; }
+  .dropzone.dragover { border-color: #2563eb; background: #eff6ff; }
+  .dropzone-icon { font-size: 48px; margin-bottom: 12px; }
+  .dropzone-text { font-size: 18px; font-weight: 600; margin: 0 0 6px; color: #0f172a; }
+  .dropzone-sub { font-size: 13px; color: #64748b; margin: 0 0 16px; }
+  .browse-btn { display: inline-block; background: #2563eb; color: #fff; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 14px; }
+  .browse-btn:hover { background: #1d4ed8; }
+  .results { display: grid; gap: 12px; margin-top: 24px; }
+  .empty-state { text-align: center; color: #94a3b8; padding: 24px; font-size: 14px; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; }
+  .card-name { font-weight: 600; font-size: 14px; color: #0f172a; word-break: break-all; }
+  .card-remove { background: transparent; border: 0; cursor: pointer; color: #94a3b8; font-size: 18px; padding: 4px 8px; }
+  .card-remove:hover { color: #ef4444; }
+  .card-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+  .card-row:last-child { border-bottom: 0; }
+  .card-label { color: #64748b; font-size: 13px; }
+  .card-size { font-weight: 600; font-variant-numeric: tabular-nums; font-size: 14px; }
+  .card-savings { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; align-self: start; }
+  .card-actions { display: flex; gap: 8px; }
+  .btn-primary { background: #2563eb; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; border: 0; }
+  .btn-primary:hover { background: #1d4ed8; color: #fff; }
+  .btn-secondary { background: #f1f5f9; color: #0f172a; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 0; cursor: pointer; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+</style>

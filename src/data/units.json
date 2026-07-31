@@ -115,8 +115,8 @@
   { "slug": "second-of-arc", "name": "second of arc", "symbol": "″", "aliases": ["arc second", "arcseconds"], "category": "angle", "factor": 4.84813681109536e-6, "precision": 4, "description": "1/3600 degree. Astronomy." },
   { "slug": "turn", "name": "turn", "symbol": "tr", "aliases": ["revolution", "rev", "cycles"], "category": "angle", "factor": 6.283185307179586, "precision": 4, "description": "One full rotation." },
 
-  { "slug": "mpg-us", "name": "US miles per gallon", "symbol": "MPG (US)", "aliases": ["mpg"], "category": "fuel-economy", "reciprocal": true, "baseValue": 235.214583, "precision": 3, "description": "Miles per US gallon. Converted via L/100 km as base." },
-  { "slug": "mpg-uk", "name": "UK miles per gallon", "symbol": "MPG (UK)", "aliases": ["imperial mpg"], "category": "fuel-economy", "reciprocal": true, "baseValue": 282.481, "precision": 3, "description": "Miles per imperial gallon." },
-  { "slug": "liter-per-100km", "name": "litre per 100 km", "symbol": "L/100km", "aliases": ["l/100km", "L/100 km"], "category": "fuel-economy", "factor": 1, "precision": 3, "description": "Standard fuel consumption metric (EU, China). Lower is better." },
-  { "slug": "km-per-liter", "name": "kilometre per litre", "symbol": "km/L", "aliases": ["kml"], "category": "fuel-economy", "reciprocal": true, "baseValue": 2.35214583, "precision": 3, "description": "Distance per litre of fuel. Higher is better." }
+  { "slug": "mpg-us", "name": "US miles per gallon", "symbol": "MPG (US)", "aliases": ["mpg"], "category": "fuel-economy", "direction": "distance", "factor": 0.425143707, "K": 235.214583, "precision": 3, "description": "Miles per US gallon. Converted via L/100 km as base." },
+  { "slug": "mpg-uk", "name": "UK miles per gallon", "symbol": "MPG (UK)", "aliases": ["imperial mpg"], "category": "fuel-economy", "direction": "distance", "factor": 0.354006042, "K": 282.481, "precision": 3, "description": "Miles per imperial gallon." },
+  { "slug": "liter-per-100km", "name": "litre per 100 km", "symbol": "L/100km", "aliases": ["l/100km", "L/100 km"], "category": "fuel-economy", "direction": "fuel", "factor": 1, "K": 1, "precision": 3, "description": "Standard fuel consumption metric (EU, China). Lower is better." },
+  { "slug": "km-per-liter", "name": "kilometre per litre", "symbol": "km/L", "aliases": ["kml"], "category": "fuel-economy", "direction": "distance", "factor": 1, "K": 100, "precision": 3, "description": "Distance per litre of fuel. Higher is better." }
 ]

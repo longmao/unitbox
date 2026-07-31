@@ -1,0 +1,115 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import { compareTopics } from '~/data/compare';
+import { formatInline } from '~/lib/format';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string; slug: string }; props: { locale: Locale; slug: string } }> = [];
+  for (const locale of LOCALES) {
+    for (const topic of compareTopics) {
+      out.push({
+        params: { locale, slug: topic.slug },
+        props: { locale, slug: topic.slug },
+      });
+    }
+  }
+  return out;
+}
+
+const { locale, slug } = Astro.props as { locale: Locale; slug: string };
+const topic = compareTopics.find(c => c.slug === slug);
+if (!topic) throw new Error(`Compare topic not found: ${slug}`);
+
+const paragraphs = topic.body.split(/\n\n+/);
+
+const optionALabel = t('compare.option-a', locale);
+const optionBLabel = t('compare.option-b', locale);
+const openALabel = t('compare.open-a', locale);
+const openBLabel = t('compare.open-b', locale);
+const keepExploringLabel = t('pair.keep', locale);
+
+const homeLabel = t('nav.home', locale);
+const compareLabel = t('compare.h1', locale);
+
+const faq = [
+  { q: 'Which should I use?', a: topic.verdict.pickA },
+  { q: 'When is the alternative better?', a: topic.verdict.pickB },
+  { q: 'How is the conversion calculated?', a: 'Every conversion is a single factor (or an affine formula). The math is identical either direction; the difference is context.' },
+];
+
+const recommended = [
+  { name: 'Try the live calculator', description: 'Pick any two units and convert freely.', href: route(locale, '/calculator/') },
+  { name: 'Browse all categories', description: 'Find units in every measurement domain.', href: route(locale, '/category/all/') },
+];
+---
+<Base title={topic.title} description={topic.description} locale={locale}>
+
+<div class="breadcrumbs">
+  <a href={route(locale, '/')}>{homeLabel}</a> ›
+  <a href={route(locale, '/compare/')}>{compareLabel}</a> ›
+  <span>{topic.title}</span>
+</div>
+
+<article class="cmp">
+  <header>
+    <h1>{topic.title}</h1>
+    <p class="lead">{topic.description}</p>
+  </header>
+
+  <section class="cards">
+    <a class="card cmp-card" href={route(locale, `/${topic.pairA.url}/`)}>
+      <div class="cat">{optionALabel}</div>
+      <h2>{topic.pairA.summary}</h2>
+      <div class="ar">{openALabel}</div>
+    </a>
+    <a class="card cmp-card" href={route(locale, `/${topic.pairB.url}/`)}>
+      <div class="cat">{optionBLabel}</div>
+      <h2>{topic.pairB.summary}</h2>
+      <div class="ar">{openBLabel}</div>
+    </a>
+  </section>
+
+  <div class="body">
+    {paragraphs.map(p => {
+      if (p.startsWith('### ')) return <h3>{p.slice(4)}</h3>;
+      if (p.startsWith('## ')) return <h2>{p.slice(3)}</h2>;
+      if (p.startsWith('|')) return <pre class="tbl">{p}</pre>;
+      const segments = formatInline(p);
+      return (
+        <p>
+          {segments.map((seg, i) =>
+            typeof seg === 'string'
+              ? <span set:html={seg} />
+              : <span class="math" set:html={seg.html} />
+          )}
+        </p>
+      );
+    })}
+  </div>
+
+  <FaqBlock items={faq} />
+
+  <RecommendedList title={keepExploringLabel} items={recommended} />
+</article>
+
+</Base>
+
+<style>
+  .cmp { max-width: 880px; margin: 0 auto; }
+  .lead { font-size: 17px; color: var(--fg-soft); margin-top: 4px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 24px 0; }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+  .cmp-card { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .cmp-card .cat { font-size: 11px; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .cmp-card h2 { font-size: 17px; }
+  .cmp-card .ar { font-weight: 600; color: var(--brand); font-size: 13px; }
+  .body p { font-size: 16px; line-height: 1.7; margin: 14px 0; }
+  .body h2 { font-size: 22px; margin-top: 26px; }
+  .body h3 { font-size: 18px; margin-top: 22px; }
+  .math { font-family: ui-monospace, monospace; background: var(--bg-soft); color: #fff; padding: 14px 18px; border-radius: 8px; }
+  .tbl { background: var(--bg-soft); color: #fff; padding: 14px 18px; border-radius: 8px; font-family: ui-monospace, monospace; font-size: 13px; white-space: pre-wrap; }
+</style>

@@ -1,0 +1,144 @@
+---
+import Base from '~/layouts/Base.astro';
+import PngCompressor from '~/components/PngCompressor.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+
+export async function getStaticPaths() {
+  const out = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const title = `${t('png.h1', locale)} — unitbox`;
+const subtitle = t('png.subtitle', locale);
+const canonical = canonicalUrl(Astro.url.pathname);
+
+const faq = [
+  { q: t('png.faq-1.q', locale), a: t('png.faq-1.a', locale) },
+  { q: t('png.faq-2.q', locale), a: t('png.faq-2.a', locale) },
+  { q: t('png.faq-3.q', locale), a: t('png.faq-3.a', locale) },
+  { q: t('png.faq-4.q', locale), a: t('png.faq-4.a', locale) },
+  { q: t('png.faq-5.q', locale), a: t('png.faq-5.a', locale) },
+  { q: t('png.faq-6.q', locale), a: t('png.faq-6.a', locale) },
+];
+
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const howtoLd = buildHowTo({
+  name: t('png.howto.title', locale),
+  description: subtitle,
+  step1Name: t('png.howto.s1.title', locale),
+  step1Text: t('png.howto.s1.body', locale),
+  step2Name: t('png.howto.s2.title', locale),
+  step2Text: t('png.howto.s2.body', locale),
+  toolName: 'PNG Compressor',
+  canonicalUrl: canonical,
+});
+
+// SoftwareApplication schema for the tool itself
+const softwareApp = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'unitbox PNG Compressor',
+  applicationCategory: 'MultimediaApplication',
+  applicationSubCategory: 'Image Compression',
+  operatingSystem: 'Any (browser-based)',
+  description: subtitle,
+  url: canonical,
+  inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  isAccessibleForFree: true,
+};
+
+// Inject i18n strings into the component
+const compressorI18n = {
+  privacy1: t('png.privacy.line1', locale),
+  privacy2: t('png.privacy.line2', locale),
+  privacy3: t('png.privacy.line3', locale),
+  dropzone: t('png.dropzone', locale),
+  dropzoneSub: t('png.dropzone-sub', locale),
+  dropzoneOr: t('png.dropzone-or', locale),
+  browse: t('png.browse', locale),
+  processing: t('png.processing', locale),
+  before: t('png.result.before', locale),
+  after: t('png.result.after', locale),
+  savingsTpl: t('png.result.savings', locale),
+  sizeTpl: t('png.result.size', locale),
+  download: t('png.result.download', locale),
+  downloadAll: t('png.result.download-all', locale),
+  remove: t('png.result.remove', locale),
+  clear: t('png.result.clear', locale),
+  errorUnsupported: t('png.error.unsupported', locale),
+  errorTooLarge: t('png.error.too-large', locale),
+  emptyState: t('png.empty-state', locale),
+};
+---
+<Base title={title} description={subtitle} ogType="website" locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={softwareApp} />
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+  <div class="breadcrumbs">
+    <a href={route(locale, '/')}>{t('nav.home', locale)}</a> ›
+    <span>{t('png.h1', locale)}</span>
+  </div>
+
+  <h1>{t('png.h1', locale)}</h1>
+  <p class="lede">{subtitle}</p>
+
+  <PngCompressor i18n={compressorI18n} />
+
+  <section class="section">
+    <h2 class="section-title">{t('png.howto.title', locale)}</h2>
+    <ol class="howto">
+      <li><strong>{t('png.howto.s1.title', locale)}</strong> — <span>{t('png.howto.s1.body', locale)}</span></li>
+      <li><strong>{t('png.howto.s2.title', locale)}</strong> — <span>{t('png.howto.s2.body', locale)}</span></li>
+      <li><strong>{t('png.howto.s3.title', locale)}</strong> — <span>{t('png.howto.s3.body', locale)}</span></li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{t('png.faq-title', locale)}</h2>
+    <FaqBlock items={faq} />
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{t('png.cta.related', locale)}</h2>
+    <ul class="related-list">
+      <li><a href={route(locale, '/meter-to-foot')}>{t('home.popular', locale)}</a></li>
+      <li><a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a></li>
+      <li><span class="muted">{t('png.cta.related.coming', locale)}</span></li>
+    </ul>
+  </section>
+
+  <p class="back-link"><a href={route(locale, '/')}>{t('png.cta.back', locale)}</a></p>
+</Base>
+
+<style>
+  .breadcrumbs { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+  .breadcrumbs a { color: #64748b; }
+  .breadcrumbs span { color: #0f172a; }
+  .lede { font-size: 17px; color: #475569; margin: 0 0 20px; max-width: 60ch; }
+  .howto { list-style: decimal; padding-left: 24px; line-height: 1.6; }
+  .howto li { margin-bottom: 12px; }
+  .related-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+  .related-list li { background: #f1f5f9; padding: 8px 16px; border-radius: 8px; }
+  .related-list a { color: #2563eb; font-weight: 600; text-decoration: none; }
+  .related-list a:hover { text-decoration: underline; }
+  .muted { color: #94a3b8; font-size: 13px; }
+  .back-link { margin-top: 32px; }
+  .back-link a { color: #2563eb; font-weight: 600; }
+</style>

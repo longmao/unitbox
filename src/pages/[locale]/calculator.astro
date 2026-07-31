@@ -1,0 +1,171 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllCategories, getUnitsByCategory, getUnit, convert } from '~/lib/units';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, formatNumber, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const categories = getAllCategories();
+const faq = [
+  { q: t('calc.faq-1.q', locale), a: t('calc.faq-1.a', locale) },
+  { q: t('calc.faq-2.q', locale), a: t('calc.faq-2.a', locale) },
+  { q: t('calc.faq-3.q', locale), a: t('calc.faq-3.a', locale) },
+];
+const defaultCategory = 'length';
+const defaultFrom = 'meter';
+const defaultTo = 'foot';
+const preview = convert(1, defaultFrom, defaultTo);
+const fromSym = getUnit(defaultFrom)?.symbol ?? defaultFrom;
+const toSym = getUnit(defaultTo)?.symbol ?? defaultTo;
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+
+const title = t('calc.h1', locale);
+const description = t('calc.subtitle', locale);
+const homeLabel = t('pair.breadcrumb-home', locale);
+const calcLabel = t('nav.calculator', locale);
+---
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{calcLabel}</span></div>
+<h1>{title}</h1>
+<p class="muted">{t('calc.subtitle', locale)}</p>
+
+<section class="section">
+  <div class="card calc">
+    <div class="calc-row">
+      <div>
+        <label>{t('calc.category', locale)}</label>
+        <select id="cat" class="ctl">
+          {categories.map(c => <option value={c.slug}>{c.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label>{t('calc.from', locale)}</label>
+        <select id="from" class="ctl">
+          {getUnitsByCategory(defaultCategory).map(u => <option value={u.slug} selected={u.slug === defaultFrom}>{u.name} ({u.symbol})</option>)}
+        </select>
+      </div>
+      <div>
+        <label>{t('calc.to', locale)}</label>
+        <select id="to" class="ctl">
+          {getUnitsByCategory(defaultCategory).map(u => <option value={u.slug} selected={u.slug === defaultTo}>{u.name} ({u.symbol})</option>)}
+        </select>
+      </div>
+    </div>
+    <div class="calc-row">
+      <input id="in" class="big" type="number" value="1" step="any" />
+      <span class="eq">=</span>
+      <input id="out" class="big" type="number" value={formatNumber(preview, 6, locale)} step="any" />
+    </div>
+    <div id="formula" class="formula card muted">1 {fromSym} = {formatNumber(preview, 6, locale)} {toSym}</div>
+  </div>
+</section>
+
+<FaqBlock items={faq} />
+
+</Base>
+
+<script is:inline set:html={`window.__UNIT_CATS__=${JSON.stringify(categories.map(c => c.slug))};`} />
+
+<script>
+  type U = { name: string; symbol: string; category: string; factor?: number; slope?: number; offset?: number; direction?: 'distance' | 'fuel'; K?: number };
+  function getCategoryKind(slug: string) {
+    return ({
+      length: 'linear', mass: 'linear', area: 'linear', volume: 'linear',
+      speed: 'linear', time: 'linear', data: 'linear', energy: 'linear',
+      pressure: 'linear', angle: 'linear', 'fuel-economy': 'reciprocal',
+      temperature: 'affine',
+    } as Record<string, 'linear' | 'affine' | 'reciprocal'>)[slug] || 'linear';
+  }
+  function conv(v: number, a: U, b: U): number | null {
+    const kind = getCategoryKind(a.category);
+    if (kind === 'linear') return v * (a.factor || 1) / (b.factor || 1);
+    if (kind === 'affine') return (v * (a.slope || 1) + (a.offset || 0) - (b.offset || 0)) / (b.slope || 1);
+    if (kind === 'reciprocal') {
+      if (a.direction && b.direction && a.direction === b.direction) {
+        return v * (a.factor || 1) / (b.factor || 1);
+      }
+      if (typeof a.K === 'number' && typeof b.K === 'number') return (a.K * b.K) / v;
+      return null;
+    }
+    return null;
+  }
+  const units = (window as any).__UNIT_DATA__ as Record<string, U>;
+
+  const cat = document.getElementById('cat') as HTMLSelectElement;
+  const fromSel = document.getElementById('from') as HTMLSelectElement;
+  const toSel = document.getElementById('to') as HTMLSelectElement;
+  const ipt = document.getElementById('in') as HTMLInputElement;
+  const out = document.getElementById('out') as HTMLInputElement;
+  const formula = document.getElementById('formula') as HTMLDivElement;
+
+  function populateUnits(category: string) {
+    const opts = Object.values(units)
+      .filter(u => u.category === category)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    [fromSel, toSel].forEach((sel, idx) => {
+      sel.innerHTML = opts.map((u, i) => `<option value="${getSlug(u)}" ${idx === 0 && i === 0 ? 'selected' : ''}>${u.name} (${u.symbol})</option>`).join('');
+    });
+  }
+  function getSlug(u: U): string {
+    return Object.entries(units).find(([_, v]) => v === u)?.[0] ?? '';
+  }
+  function fmt(n: number): string {
+    if (!Number.isFinite(n)) return '—';
+    const abs = Math.abs(n);
+    if (abs >= 1e12 || (abs > 0 && abs < 1e-3)) return n.toExponential(4);
+    const f = Math.pow(10, 8);
+    return (Math.round(n * f) / f).toLocaleString('en-US', { maximumFractionDigits: 8 });
+  }
+  function recalc(src: 'in' | 'out') {
+    const fs = fromSel.value, ts = toSel.value;
+    const a = units[fs], b = units[ts];
+    if (!a || !b) return;
+    if (src === 'in') {
+      const v = parseFloat(ipt.value);
+      out.value = fmt(conv(v, a, b) ?? NaN);
+    } else {
+      const v = parseFloat(out.value);
+      ipt.value = fmt(conv(v, b, a) ?? NaN);
+    }
+    formula.textContent = `1 ${a.symbol} = ${fmt(conv(1, a, b) ?? NaN)} ${b.symbol}`;
+  }
+
+  cat.addEventListener('change', () => {
+    populateUnits(cat.value);
+    recalc('in');
+  });
+  [fromSel, toSel].forEach(s => s.addEventListener('change', () => recalc('in')));
+  ipt.addEventListener('input', () => recalc('in'));
+  out.addEventListener('input', () => recalc('out'));
+</script>
+
+<style>
+  .calc { padding: 28px; display: grid; gap: 18px; }
+  .calc-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: end; }
+  .calc-row:nth-of-type(2) { grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .calc label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ctl, .big { padding: 12px 14px; font-size: 16px; border: 1px solid var(--border); border-radius: 8px; background: #fff; width: 100%; }
+  .big { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
+  .eq { font-size: 26px; font-weight: 800; color: var(--brand); padding: 12px 0; text-align: center; }
+  .formula { padding: 14px 18px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; font-size: 18px; }
+  @media (max-width: 700px) {
+    .calc-row, .calc-row:nth-of-type(2) { grid-template-columns: 1fr; }
+    .eq { padding: 4px; }
+  }
+</style>

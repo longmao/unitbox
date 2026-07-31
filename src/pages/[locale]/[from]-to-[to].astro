@@ -1,0 +1,179 @@
+---
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, getCategory } from '~/lib/units';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+import { LOCALES, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const popular = getPopularPairs();
+  const generated = getAllPairs();
+  const seen = new Set<string>();
+  const all = [] as { from: string; to: string; url: string }[];
+  for (const p of [...popular, ...generated]) {
+    if (seen.has(p.url)) continue;
+    seen.add(p.url);
+    all.push(p);
+  }
+  const out: Array<{ params: { locale: string; from: string; to: string }; props: { locale: Locale; from: string; to: string } }> = [];
+  for (const locale of LOCALES) {
+    for (const p of all) {
+      out.push({
+        params: { locale, from: p.from, to: p.to },
+        props: { locale, from: p.from, to: p.to },
+      });
+    }
+  }
+  return out;
+}
+
+const { locale, from: fromSlug, to: toSlug } = Astro.props as { locale: Locale; from: string; to: string };
+const from = getUnit(fromSlug);
+const to = getUnit(toSlug);
+if (!from || !to) {
+  throw new Error(`Pair page requested unknown units: ${fromSlug} -> ${toSlug}`);
+}
+
+const sampleValues = [0.001, 0.01, 0.1, 0.5, 1, 2, 5, 10, 100, 1000];
+const table = sampleValues.map(v => ({
+  input: v,
+  output: convert(v, fromSlug, toSlug) as number,
+}));
+
+const categorySlugs = getUnitsByCategory(from.category).map(u => u.slug);
+const siblings = categorySlugs.filter(s => s !== fromSlug && s !== toSlug);
+const relatedPairs = siblings.slice(0, 8).map(s => ({
+  from: fromSlug, to: s, url: `${fromSlug}-to-${s}`,
+})).concat(
+  siblings.slice(0, 8).map(s => ({ from: s, to: fromSlug, url: `${s}-to-${fromSlug}` })),
+);
+
+const reverseUrl = `${toSlug}-to-${fromSlug}`;
+
+const title = `${from.name} to ${to.name} converter`;
+const subtitle = `Live ${from.name} (${from.symbol}) to ${to.name} (${to.symbol}) converter. Plus a 10-value reference table and FAQs.`;
+
+const faq = [
+  { q: `How do I convert ${from.name} to ${to.name}?`, a: `Multiply the ${from.name} value by ${formatNumber(convert(1, fromSlug, toSlug), 6, locale)} to get it in ${to.name}. For example, 10 ${from.symbol} = ${formatNumber(convert(10, fromSlug, toSlug), 4, locale)} ${to.symbol}.` },
+  { q: `What is 1 ${from.symbol} in ${to.symbol}?`, a: `1 ${from.symbol} = ${formatNumber(convert(1, fromSlug, toSlug), 6, locale)} ${to.symbol}.` },
+  { q: `What is 100 ${from.symbol} in ${to.symbol}?`, a: `100 ${from.symbol} = ${formatNumber(convert(100, fromSlug, toSlug), 4, locale)} ${to.symbol}.` },
+  { q: `What is the formula?`, a: from.category === 'temperature'
+    ? `Temperature is an affine quantity. The formula depends on the source and target scales; ${from.symbol} → ${to.symbol} uses: T(${to.symbol}) = T(${from.symbol}) × ${formatNumber((from as any).slope, 6, locale)} + ${formatNumber((from as any).offset - ((to as any).offset / (to as any).slope), 6, locale)}, then applies the inverse on the other side.`
+    : from.category === 'fuel-economy'
+    ? `Fuel-economy is reciprocal. The conversion passes through L/100 km as the base, then inverts.`
+    : `Linear: multiply by ${formatNumber(convert(1, fromSlug, toSlug), 6, locale)} (the unit factor ratio).` },
+];
+
+const recommended = [
+  { name: 'Convert the other direction', description: `Use the reverse converter: ${to.name} → ${from.name}`, href: route(locale, `${reverseUrl}/`) },
+  { name: 'Browse all units in this category', description: `${getCategory(from.category)?.name ?? 'Category'} has ${categorySlugs.length} units.`, href: route(locale, `/category/${from.category}/`) },
+  { name: 'All units converter', description: `Free-form calculator that handles any pair in any category.`, href: route(locale, '/calculator/') },
+];
+
+const canonical = canonicalUrl(Astro.url.pathname);
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const howtoLd = buildHowTo({
+  name: `How to convert ${from.name} to ${to.name}`,
+  description: subtitle,
+  step1Name: `Enter a ${from.name} value`,
+  step1Text: `Type the value in the ${from.name} (${from.symbol}) field above.`,
+  step2Name: `Read the ${to.name} result`,
+  step2Text: `The converter immediately shows the value in ${to.name} (${to.symbol}).`,
+  toolName: `${from.name} to ${to.name} converter`,
+  canonicalUrl: canonical,
+});
+
+const tableTitle = t('pair.table-title', locale);
+const tableSub = tFmt('pair.table-sub', locale, { from: from.name, to: to.name });
+const faqTitle = t('pair.faq-title', locale);
+const relatedTitle = t('pair.related', locale);
+const keepTitle = t('pair.keep', locale);
+const noteLabel = t('pair.note', locale);
+const fromLabel = tFmt('pair.about-from', locale, { unit: from.name });
+const toLabel = tFmt('pair.about-to', locale, { unit: to.name });
+const homeLabel = t('pair.breadcrumb-home', locale);
+---
+<Base title={title} description={subtitle} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+<div class="breadcrumbs">
+  <a href={route(locale, '/')}>{homeLabel}</a> ›
+  <a href={route(locale, `/category/${from.category}`)}>{getCategory(from.category)?.name ?? from.category}</a> ›
+  <span>{from.name} → {to.name}</span>
+</div>
+
+<h1>{from.name} to {to.name}</h1>
+<p class="muted">{subtitle}</p>
+
+<div id="converter">
+  <ConverterWidget fromSlug={fromSlug} toSlug={toSlug} mode="full" defaultValue={1} />
+</div>
+
+<section class="section">
+  <h2 class="section-title">{tableTitle}</h2>
+  <p class="section-subtitle">{tableSub}</p>
+  <table class="conv-table">
+    <thead>
+      <tr><th>{from.name} ({from.symbol})</th><th>→</th><th>{to.name} ({to.symbol})</th></tr>
+    </thead>
+    <tbody>
+      {table.map(row => (
+        <tr>
+          <td><strong>{formatNumber(row.input, 4, locale)}</strong> {from.symbol}</td>
+          <td class="ar">→</td>
+          <td><strong>{formatNumber(row.output, 6, locale)}</strong> {to.symbol}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</section>
+
+<section class="section two-col">
+  <div>
+    <h3>{fromLabel}</h3>
+    <p>{from.description ?? `${from.name} (${from.symbol}) is a unit of ${getCategory(from.category)?.name ?? from.category}.`}</p>
+    {from.note && <p class="muted small"><strong>{noteLabel}</strong> {from.note}</p>}
+  </div>
+  <div>
+    <h3>{toLabel}</h3>
+    <p>{to.description ?? `${to.name} (${to.symbol}) is a unit of ${getCategory(to.category)?.name ?? to.category}.`}</p>
+    {to.note && <p class="muted small"><strong>{noteLabel}</strong> {to.note}</p>}
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">{faqTitle}</h2>
+  <FaqBlock items={faq} />
+</section>
+
+<RecommendedList title={relatedTitle} items={relatedPairs.map(p => ({
+  name: `${p.from.replace(/-/g, ' ')} → ${p.to.replace(/-/g, ' ')}`,
+  description: `Convert ${p.from.replace(/-/g, ' ')} to ${p.to.replace(/-/g, ' ')}`,
+  href: route(locale, `${p.url}/`),
+}))} />
+
+<section class="section">
+  <h2 class="section-title">{keepTitle}</h2>
+  <RecommendedList title="" items={recommended} />
+</section>
+
+</Base>
+
+<style>
+  .conv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .conv-table th { background: var(--bg); color: #fff; padding: 12px 14px; text-align: left; font-size: 13px; }
+  .conv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .conv-table td.ar { color: var(--brand); text-align: center; font-weight: 800; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .two-col h3 { font-size: 18px; margin-bottom: 6px; }
+  .two-col p { margin-top: 6px; }
+  .small { font-size: 13px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>

@@ -1,11 +1,14 @@
 // Centralized site config + helpers
 export const SITE = {
-  name: 'unit.now',
+  name: 'unitbox',
+  legalName: 'unitbox',
   tagline: 'Convert any unit — and everything related to it',
   description:
     'Conversion tables and live calculators for length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy. Plus a knowledge base on units, history, and standards.',
-  url: 'https://unit-now.local',
-  legalName: 'unit.now network',
+  url: 'https://unitbox.online',
+  ogImage: '/og-default.png',
+  locale: 'en_US',
+  twitterHandle: '@unitbox',
 };
 
 export const NAV_GROUPS = [

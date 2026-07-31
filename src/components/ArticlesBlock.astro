@@ -1,15 +1,23 @@
 ---
+import { DEFAULT_LOCALE, type Locale } from '~/lib/i18n/locales';
+import { route } from '~/lib/i18n/routes';
+
 export interface Props {
   articles: { slug: string; title: string; description: string; category?: string; readTime?: string }[];
   title?: string;
+  /** Path prefix for each article href. Default: '/articles'. */
+  pathPrefix?: string;
+  /** Optional explicit locale; falls back to Astro.params.locale, then DEFAULT_LOCALE. */
+  locale?: Locale;
 }
-const { articles, title = 'Related articles' } = Astro.props;
+const { articles, title = 'Related articles', pathPrefix = '/articles', locale: localeProp } = Astro.props;
+const locale: Locale = (localeProp ?? (Astro.params.locale as Locale | undefined)) ?? DEFAULT_LOCALE;
 ---
 <section class="articles-block">
   {title && <h2>{title}</h2>}
   <div class="article-grid">
     {articles.map(a => (
-      <a class="card article" href={`/articles/${a.slug}`}>
+      <a class="card article" href={route(locale, `${pathPrefix}/${a.slug}`)}>
         {a.category && <span class="cat">{a.category}</span>}
         <h3>{a.title}</h3>
         <p>{a.description}</p>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1736"/>
+      <stop offset="100%" stop-color="#11224a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(80, 200)">
+    <rect x="0" y="0" width="84" height="84" rx="12" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <path d="M16 24h52M16 42h52M16 60h52" stroke="#fbbf24" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <text x="200" y="280" fill="#ffffff" font-family="Inter, system-ui, sans-serif" font-size="92" font-weight="800">unitbox</text>
+  <text x="80" y="380" fill="#c5cee5" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="500">Convert any unit, instantly.</text>
+  <text x="80" y="430" fill="#8a95ad" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="400">110+ units · 1,135 conversion pairs · open API for AI agents</text>
+  <text x="80" y="560" fill="#fbbf24" font-family="ui-monospace, monospace" font-size="22" font-weight="600">unitbox.online</text>
+</svg>

@@ -1,0 +1,35 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { compareTopics } from '~/data/compare';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const items = compareTopics.map(c => ({
+  slug: c.slug,
+  title: c.title,
+  description: c.description,
+  category: c.category,
+  readTime: '5–7 min',
+}));
+
+const subtitle = t('compare.subtitle', locale);
+const allTitle = t('compare.all', locale);
+const homeLabel = t('nav.home', locale);
+const compareLabel = t('compare.h1', locale);
+---
+<Base title="Compare — unit vs unit" description="Side-by-side comparisons of common conversion pair options. Pick the right unit for the right job." locale={locale}>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{compareLabel}</span></div>
+<h1>{compareLabel}</h1>
+<p class="muted">{subtitle}</p>
+
+<ArticlesBlock articles={items} title={allTitle} locale={locale} pathPrefix="/compare" />
+
+</Base>

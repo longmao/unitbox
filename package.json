@@ -10,16 +10,21 @@
     "build": "astro check && astro build",
     "preview": "astro preview --host 0.0.0.0",
     "gen:articles": "node scripts/gen-articles.mjs",
-    "sitemap": "node scripts/build-sitemap.mjs"
+    "sitemap": "node scripts/build-sitemap.mjs",
+    "postbuild": "node scripts/build-sitemap.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/sitemap": "^3.2.1",
     "astro": "^4.16.18",
     "luxon": "^3.5.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "upng-js": "^2.1.0"
   },
   "devDependencies": {
-    "@types/luxon": "^3.7.2"
+    "@types/luxon": "^3.7.2",
+    "@vitest/ui": "^4.1.10",
+    "opencc-js": "^1.4.1",
+    "vitest": "^4.1.10"
   }
 }

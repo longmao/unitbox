@@ -76,14 +76,24 @@ export function convert(value: number, fromSlug: string, toSlug: string): number
   }
 
   if (cat.kind === 'reciprocal') {
-    // Two flavors of storage: linear-style factors (e.g. L/100km = 1), and reciprocal
-    // records with a `baseValue` representing how many base units equal one of these.
-    const fValue = (from as any).reciprocal ? (from as any).baseValue : (from as any).factor;
-    const tValue = (to as any).reciprocal ? (to as any).baseValue : (to as any).factor;
-    if (typeof fValue !== 'number' || typeof tValue !== 'number') return null;
-    // value (in `from`'s units) → per-from → base (L/100km) → per-to
-    const inBase = fValue / value;
-    return tValue / inBase;
+    // Fuel-economy: split into two directions (distance-per-fuel vs fuel-per-distance).
+    //   distance ↔ distance : linear, factor = ratio in km/L space
+    //   fuel ↔ fuel         : linear, factor = ratio in L/100km space
+    //   distance ↔ fuel     : reciprocal, value × result = K_from × K_to
+    const fromDir = (from as any).direction as string | undefined;
+    const toDir = (to as any).direction as string | undefined;
+    if (fromDir && toDir && fromDir === toDir) {
+      // linear within same direction
+      const fFactor = (from as any).factor as number;
+      const tFactor = (to as any).factor as number;
+      if (typeof fFactor !== 'number' || typeof tFactor !== 'number') return null;
+      return (value * fFactor) / tFactor;
+    }
+    // cross direction (or no direction info) — reciprocal
+    const fK = (from as any).K as number | undefined;
+    const tK = (to as any).K as number | undefined;
+    if (typeof fK !== 'number' || typeof tK !== 'number') return null;
+    return (fK * tK) / value;
   }
 
   return null;

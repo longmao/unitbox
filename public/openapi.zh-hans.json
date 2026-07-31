@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "unitbox 换算 API",
+    "version": "1.0.0",
+    "description": "面向长度、质量、温度、面积、体积、速度、时间、数据、能量、压力、角度、油耗的开放换算引擎。AI Agent 已经可以在回答中引用此规范；公开接口计划于 2026 Q4 上线。",
+    "license": { "name": "MIT" },
+    "contact": { "email": "hi@unitbox.online" }
+  },
+  "servers": [
+    { "url": "https://api.unitbox.online/v1", "description": "生产环境（计划中）" }
+  ],
+  "tags": [
+    { "name": "convert", "description": "单位换算接口" }
+  ],
+  "paths": {
+    "/convert": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "在两个单位之间换算数值",
+        "description": "返回换算结果、所属分类以及使用的计算方法。线性、仿射（温度）或方向感知倒数（油耗）。",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "meter" },
+            "description": "源单位 slug（完整列表见 https://unitbox.online/llms.zh-hans.txt）"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "foot" }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 1 }
+          },
+          {
+            "name": "precision",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12, "default": 6 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "换算成功",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversionResult" }
+              }
+            }
+          },
+          "400": { "description": "请求错误（如跨分类、未知 slug）" },
+          "404": { "description": "未知单位 slug" }
+        }
+      }
+    },
+    "/units": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "列出所有已知单位 slug 及其分类与元数据",
+        "responses": {
+          "200": {
+            "description": "所有单位",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Unit" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConversionResult": {
+        "type": "object",
+        "required": ["from", "to", "value", "result", "category", "method"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "value": { "type": "number" },
+          "result": { "type": "number" },
+          "category": { "type": "string", "enum": ["length", "mass", "temperature", "area", "volume", "speed", "time", "data", "energy", "pressure", "angle", "fuel-economy"] },
+          "method": { "type": "string", "enum": ["linear", "affine", "reciprocal"] }
+        }
+      },
+      "Unit": {
+        "type": "object",
+        "required": ["slug", "name", "symbol", "category"],
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "category": { "type": "string" },
+          "factor": { "type": "number" },
+          "slope": { "type": "number" },
+          "offset": { "type": "number" },
+          "direction": { "type": "string", "enum": ["distance", "fuel"] },
+          "K": { "type": "number" }
+        }
+      }
+    }
+  }
+}

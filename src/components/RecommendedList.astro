@@ -2,7 +2,7 @@
 export interface Props {
   title?: string;
   intro?: string;
-  items: { name: string; href?: string; description: string; meta?: string }[];
+  items: { name: string; href: string; description: string; meta?: string }[];
 }
 const { title = 'Recommended', intro, items } = Astro.props;
 ---
@@ -11,7 +11,7 @@ const { title = 'Recommended', intro, items } = Astro.props;
   {intro && <p class="muted">{intro}</p>}
   <div class="rec-grid">
     {items.map((it, i) => (
-      <a class="card rec" href={it.href || '#'}>
+      <a class="card rec" href={it.href}>
         <span class="rank">#{i + 1}</span>
         <div class="rec-name">{it.name}</div>
         {it.meta && <div class="rec-meta">{it.meta}</div>}

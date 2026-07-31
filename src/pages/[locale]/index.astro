@@ -1,0 +1,316 @@
+---
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllCategories, getUnitsByCategory } from '~/lib/units';
+import { articles } from '~/data/articles';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const categories = getAllCategories();
+const heroFromSlug = 'meter';
+const heroToSlug = 'foot';
+
+// 4 hero chips: 3 categories + the viral PNG compressor tool (v0.4 launch).
+type HeroChip = { kind: 'category' | 'tool'; slug: string; label: string; meta: string; emoji?: string };
+const featuredChips: HeroChip[] = [
+  { kind: 'category', slug: 'length', label: 'Length', meta: '13 units' },
+  { kind: 'category', slug: 'temperature', label: 'Temperature', meta: '5 scales' },
+  { kind: 'category', slug: 'data', label: 'Data', meta: '12 prefixes' },
+  { kind: 'tool', slug: 'tools/png-compressor', label: 'PNG compressor', meta: 'no upload', emoji: '🖼️' },
+];
+
+// Popular 36 pairs to surface — first 3 from each category
+const popularPairs = [
+  'meter-to-foot', 'foot-to-meter', 'kilometer-to-mile', 'mile-to-kilometer',
+  'inch-to-centimeter', 'centimeter-to-inch', 'mile-to-foot', 'yard-to-meter',
+  'kilogram-to-pound', 'pound-to-kilogram', 'gram-to-ounce', 'ounce-to-gram',
+  'celsius-to-fahrenheit', 'fahrenheit-to-celsius', 'celsius-to-kelvin',
+  'liter-to-gallon-us', 'gallon-us-to-liter', 'liter-to-milliliter',
+  'square-meter-to-square-foot', 'square-foot-to-square-meter', 'hectare-to-acre', 'acre-to-hectare',
+  'kilometer-per-hour-to-mile-per-hour', 'mile-per-hour-to-kilometer-per-hour',
+  'knot-to-mile-per-hour', 'knot-to-kilometer-per-hour', 'mach-to-kilometer-per-hour',
+  'hour-to-minute', 'minute-to-second', 'day-to-hour', 'week-to-day', 'year-to-day',
+  'byte-to-kilobyte', 'kilobyte-to-byte', 'kilobyte-to-kibibyte', 'kibibyte-to-kilobyte',
+  'gigabyte-to-megabyte', 'terabyte-to-gigabyte', 'megabyte-to-mebibyte', 'gigabyte-to-gibibyte',
+];
+
+// Home page FAQ is page-local English content for v0.4. The "Build-Time
+// assertion" rule (no new dict keys) keeps it page-local until they earn
+// keys in en/zh-hant/zh-hans.
+const faq = [
+  { q: 'What is unitbox?', a: 'unitbox is a network of unit-conversion pages: every popular unit gets a detail page, and every popular pair gets a converter. Length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy.' },
+  { q: 'How accurate are the conversions?', a: 'All conversions use the standard SI conversion factors. For mass, length, time, the values match NIST to the precision shown. Temperature uses the affine offset/scale formulas; the precision is 2 decimal places by default.' },
+  { q: 'What is the difference between KB and KiB?', a: 'KB (kilobyte) = 1000 bytes — the SI decimal prefix. KiB (kibibyte) = 1024 bytes — the binary prefix designed to remove ambiguity. Disk drives advertise KB; RAM and operating systems often show KiB. For more, see the learn page on data units.' },
+  { q: 'How do you handle fuel economy?', a: 'We treat fuel-economy as a reciprocal quantity. The base unit is L/100 km (lower is better); MPG-US, MPG-UK, and km/L are stored as reciprocals. Converting 30 MPG-US gives 7.84 L/100km.' },
+  { q: 'Does this work offline?', a: 'Yes — every page is statically generated. Once loaded, the converter widget runs without a network roundtrip. Bookmark any pair page.' },
+  { q: 'Can AI agents cite unitbox?', a: 'Yes — point your agent at https://unitbox.online/llms.txt and /openapi.json. The site is built to be AI-friendly by default: JSON-LD, schema.org, and a machine-readable product brief.' },
+];
+
+const featuredArticles = articles.slice(0, 4);
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+
+const title = 'Convert Any Unit — Length, Mass, Temperature, and More';
+const description = `${categories.length} categories · 110+ units · 1,135 conversion pairs. Pick a popular conversion below or use the live calculator.`;
+---
+<Base title={title} description={description} locale={locale} noBreadcrumb>
+
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+  <!-- LAYER 1: hero with live converter (openfate-aligned) -->
+  <section class="hero">
+    <div class="hero-inner card">
+      <h1>{t('home.h1', locale)}</h1>
+      <p class="hero-sub">{t('home.subtitle', locale)}</p>
+      <ConverterWidget fromSlug={heroFromSlug} toSlug={heroToSlug} mode="full" defaultValue={1} />
+      <div class="hero-eg">
+        <span>{t('home.try', locale)}</span>
+        <a href={route(locale, '/kilogram-to-pound')}>1 kg → lb</a> ·
+        <a href={route(locale, '/celsius-to-fahrenheit')}>0 °C → °F</a> ·
+        <a href={route(locale, '/gigabyte-to-megabyte')}>1 GB → MB</a> ·
+        <a href={route(locale, '/mpg-us-to-liter-per-100km')}>30 MPG → L/100km</a>
+      </div>
+      <p class="trust-band">{t('home.trustBand', locale)}</p>
+      <div class="hero-chips">
+        {featuredChips.map(c => {
+          const href = c.kind === 'category'
+            ? route(locale, `/category/${c.slug}`)
+            : route(locale, `/${c.slug}`);
+          return (
+            <a class={`hero-chip ${c.kind === 'tool' ? 'hero-chip-tool' : ''}`} href={href}>
+              {c.emoji && <span class="chip-emoji" aria-hidden="true">{c.emoji}</span>}
+              <span class="chip-label">{c.label}</span>
+              <span class="chip-meta">{c.meta}</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYER 2: 3-step how-it-works -->
+  <section class="section">
+    <h2 class="section-title">{t('home.steps.title', locale)}</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-num">1</div>
+        <h3 class="step-title">{t('home.steps.s1.title', locale)}</h3>
+        <p>{t('home.steps.s1.body', locale)}</p>
+      </li>
+      <li class="step">
+        <div class="step-num">2</div>
+        <h3 class="step-title">{t('home.steps.s2.title', locale)}</h3>
+        <p>{t('home.steps.s2.body', locale)}</p>
+      </li>
+      <li class="step">
+        <div class="step-num">3</div>
+        <h3 class="step-title">{t('home.steps.s3.title', locale)}</h3>
+        <p>{t('home.steps.s3.body', locale)}</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- LAYER 2.5: Tools (v0.4 launch — viral PNG compressor above the fold category grid) -->
+  <section class="section tools-section">
+    <h2 class="section-title">{t('home.tools-section.title', locale)}</h2>
+    <p class="section-subtitle">{t('home.tools-section.sub', locale)}</p>
+    <div class="grid grid-2 tools-grid">
+      <a class="card tool-card tool-card-png" href={route(locale, '/tools/png-compressor')}>
+        <div class="tool-card-head">
+          <span class="tool-emoji" aria-hidden="true">🖼️</span>
+          <span class="tool-badge">v0.4</span>
+        </div>
+        <h3 class="tool-title">{t('home.tools-section.tool-png.title', locale)}</h3>
+        <p class="tool-body">{t('home.tools-section.tool-png.body', locale)}</p>
+        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
+      </a>
+      <a class="card tool-card" href={route(locale, '/calculator')}>
+        <div class="tool-card-head">
+          <span class="tool-emoji" aria-hidden="true">🧮</span>
+        </div>
+        <h3 class="tool-title">{t('home.tools-section.tool-calc.title', locale)}</h3>
+        <p class="tool-body">{t('home.tools-section.tool-calc.body', locale)}</p>
+        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- LAYER 3: category matrix -->
+  <section class="section">
+    <h2 class="section-title">{t('home.browse-by-cat', locale)}</h2>
+    <p class="section-subtitle">{t('home.browse-by-cat-sub', locale)}</p>
+    <div class="grid grid-4">
+      {categories.map(cat => {
+        const catUnits = getUnitsByCategory(cat.slug);
+        return (
+          <a class="card category-card" href={route(locale, `/category/${cat.slug}`)}>
+            <div class="cat-name">{cat.name}</div>
+            <div class="cat-base">{catUnits.length} units · base: <span class="code">{cat.baseSymbol}</span></div>
+            <div class="cat-desc">{cat.description}</div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- LAYER 4: popular conversion cards -->
+  <section class="section">
+    <h2 class="section-title">{t('home.popular', locale)}</h2>
+    <p class="section-subtitle">{t('home.popular-sub', locale)}</p>
+    <div class="grid grid-3">
+      {popularPairs.map(slug => {
+        const [fromSlug, , toSlug] = slug.split('-');
+        const fromUnit = fromSlug.replace(/-/g, ' ');
+        const toUnit = toSlug.replace(/-/g, ' ');
+        return (
+          <a class="card pair-card" href={route(locale, `/${slug}`)}>
+            <span class="from">{fromUnit}</span>
+            <span class="arrow">→</span>
+            <span class="to">{toUnit}</span>
+          </a>
+        );
+      })}
+    </div>
+    <p style="text-align:center; margin-top:18px;">
+      <a href={route(locale, '/compare')} class="btn btn-outline">{t('home.all-pairs', locale)}</a>
+    </p>
+  </section>
+
+  <!-- LAYER 5: articles / knowledge base -->
+  <section class="section">
+    <h2 class="section-title">{t('home.articles', locale)}</h2>
+    <ArticlesBlock articles={featuredArticles} title="" />
+    <p style="text-align: center; margin-top: 16px;">
+      <a href={route(locale, '/articles')} class="btn btn-outline">{t('home.all-articles', locale)}</a>
+    </p>
+  </section>
+
+  <!-- LAYER 6: FAQ -->
+  <section class="section">
+    <FaqBlock items={faq} title={t('home.faq-title', locale)} />
+  </section>
+
+  <!-- LAYER 7: KEYWORD FOOTPRINT -->
+  <section class="section keyword-footprint">
+    <h2 class="section-title">{t('home.also-ask', locale)}</h2>
+    <div class="grid grid-3">
+      <a class="pill" href={route(locale, '/meter-to-foot')}>metres to feet</a>
+      <a class="pill" href={route(locale, '/celsius-to-fahrenheit')}>celsius to fahrenheit</a>
+      <a class="pill" href={route(locale, '/kilogram-to-pound')}>kg to lbs</a>
+      <a class="pill" href={route(locale, '/mile-to-kilometer')}>miles to km</a>
+      <a class="pill" href={route(locale, '/liter-to-gallon-us')}>litres to gallons</a>
+      <a class="pill" href={route(locale, '/inch-to-centimeter')}>inches to cm</a>
+      <a class="pill" href={route(locale, '/gigabyte-to-megabyte')}>GB to MB</a>
+      <a class="pill" href={route(locale, '/hour-to-minute')}>hours to minutes</a>
+      <a class="pill" href={route(locale, '/psi-to-bar')}>psi to bar</a>
+      <a class="pill" href={route(locale, '/joule-to-calorie')}>joules to calories</a>
+      <a class="pill" href={route(locale, '/hectare-to-acre')}>hectares to acres</a>
+      <a class="pill" href={route(locale, '/kelvin-to-celsius')}>kelvin to celsius</a>
+      <a class="pill" href={route(locale, '/knot-to-mile-per-hour')}>knots to mph</a>
+      <a class="pill" href={route(locale, '/degree-to-radian')}>degrees to radians</a>
+      <a class="pill" href={route(locale, '/mpg-us-to-liter-per-100km')}>mpg to l/100km</a>
+    </div>
+  </section>
+
+  <!-- LAYER 8: Open Conversion API (openfate MCP-style attribution-first section) -->
+  <section class="api-section">
+    <span class="api-chip">{t('home.api.chip', locale)}</span>
+    <h2 class="api-h2">{t('home.api.h2', locale)}</h2>
+    <p class="api-body">{t('home.api.body', locale)}</p>
+    <pre class="api-mock"><code>$ curl 'https://api.unitbox.online/v1/convert?from=meter&amp;to=foot&amp;value=1'</code><button class="copy-btn" type="button" data-copy="curl 'https://api.unitbox.online/v1/convert?from=meter&to=foot&value=1'">Copy</button></pre>
+    <div class="api-trust">
+      <span class="trust-pill">{t('home.api.spec', locale)}</span>
+      <span class="trust-pill">MIT licensed</span>
+      <span class="trust-pill">{t('home.api.uptime', locale)}</span>
+    </div>
+    <div class="api-ctas">
+      <a class="api-cta" href="https://github.com/longmao/unitbox" rel="noopener">{t('home.api.cta.github', locale)}</a>
+      <a class="api-cta" href="https://www.npmjs.com/~longmao" rel="noopener">{t('home.api.cta.npm', locale)}</a>
+      <a class="api-cta" href="/openapi.json">{t('home.api.cta.openapi', locale)}</a>
+      <a class="api-cta" href={route(locale, '/llms')}>{t('home.api.cta.docs', locale)}</a>
+    </div>
+  </section>
+
+</Base>
+
+<script is:inline>
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.matches && t.matches('button.copy-btn[data-copy]')) {
+      navigator.clipboard?.writeText(t.getAttribute('data-copy') || '').then(() => {
+        const orig = t.textContent;
+        t.textContent = 'Copied';
+        setTimeout(() => { t.textContent = orig; }, 1200);
+      });
+    }
+  });
+</script>
+
+<style>
+  .hero { margin: 8px 0 28px; }
+  .hero-inner { padding: 36px 32px; background: linear-gradient(135deg, #0b1736 0%, #11224a 100%); color: #fff; border: 0; }
+  .hero-inner h1 { color: #fff; font-size: 38px; margin-bottom: 8px; }
+  .hero-sub { color: #c5cee5; font-size: 16px; margin-bottom: 24px; max-width: 720px; }
+  .hero-eg { margin-top: 18px; color: #c5cee5; font-size: 13px; }
+  .hero-eg a { color: #fbbf24; margin: 0 4px; }
+  .trust-band { color: #8a95ad; font-size: 13px; margin-top: 22px; letter-spacing: .03em; }
+  .hero-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .hero-chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #fff; font-weight: 600; }
+  .hero-chip:hover { border-color: var(--brand); text-decoration: none; }
+  .hero-chip .chip-meta { color: #8a95ad; font-size: 12px; font-weight: 500; }
+
+  /* 3-step */
+  .steps { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); padding: 0; list-style: none; margin: 16px 0; }
+  .step { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px 22px 20px; }
+  .step-num { display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; margin-bottom: 10px; }
+  .step-title { font-size: 18px; margin-bottom: 6px; }
+  .step p { color: var(--fg-soft); font-size: 14px; line-height: 1.5; }
+  @media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
+
+  /* category + pair cards */
+  .category-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .category-card .cat-name { font-weight: 800; font-size: 17px; }
+  .category-card .cat-base { font-size: 12px; color: var(--fg-muted); }
+  .category-card .cat-base .code { font-family: ui-monospace, monospace; font-weight: 700; }
+  .category-card .cat-desc { font-size: 13px; color: var(--fg-soft); }
+  .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
+  .pair-card .arrow { color: var(--brand); font-weight: 800; }
+  .keyword-footprint .pill { font-weight: 600; padding: 8px 14px; font-size: 13px; }
+
+  /* API section (openfate-style dark) */
+  .api-section { margin: 60px 0 40px; padding: 48px 36px; background: linear-gradient(180deg, #08132c 0%, #0b1736 100%); border-radius: 18px; color: #fff; text-align: center; }
+  .api-chip { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(251,191,36,0.12); color: #fbbf24; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .api-h2 { color: #fff; font-size: 30px; margin: 14px 0 10px; }
+  .api-body { color: #c5cee5; max-width: 640px; margin: 0 auto 22px; font-size: 16px; line-height: 1.55; }
+  .api-mock { background: #061025; color: #c5cee5; padding: 16px 18px; border-radius: 10px; font-family: ui-monospace, monospace; font-size: 14px; max-width: 640px; margin: 0 auto 18px; text-align: left; overflow-x: auto; position: relative; }
+  .api-mock code { white-space: nowrap; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.08); color: #c5cee5; border: 0; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+  .api-trust { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .trust-pill { padding: 4px 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #c5cee5; font-size: 13px; }
+  .api-ctas { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .api-cta { padding: 10px 18px; background: #fbbf24; color: #08132c; border-radius: 8px; font-weight: 700; }
+  .api-cta:hover { text-decoration: none; background: #fff; }
+
+  @media (max-width: 700px) {
+    .hero-inner h1 { font-size: 30px; }
+    .api-section { padding: 36px 22px; }
+    .api-h2 { font-size: 24px; }
+  }
+</style>

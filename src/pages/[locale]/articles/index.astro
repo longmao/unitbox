@@ -1,0 +1,35 @@
+---
+import Base from '~/layouts/Base.astro';
+import ArticlesBlock from '~/components/ArticlesBlock.astro';
+import { articles } from '~/data/articles';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const items = articles.map(a => ({
+  slug: a.slug,
+  title: a.title,
+  description: a.description,
+  category: a.category,
+  readTime: a.readTime,
+}));
+
+const subtitle = t('articles.subtitle', locale);
+const allTitle = t('articles.all', locale);
+const homeLabel = t('nav.home', locale);
+const articlesLabel = t('nav.articles', locale);
+---
+<Base title="Articles — explainers and reference" description="Long-form articles on unit conversion, metric system history, and measurement standards." locale={locale}>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{articlesLabel}</span></div>
+<h1>{articlesLabel}</h1>
+<p class="muted">{subtitle}</p>
+
+<ArticlesBlock articles={items} title={allTitle} locale={locale} />
+
+</Base>

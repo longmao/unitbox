@@ -1,17 +1,50 @@
 ---
-import { SITE, NAV_GROUPS } from '~/lib/site';
+import { SITE } from '~/lib/site';
 import { getAllUnits } from '~/lib/units';
+import { t, OG_LOCALE, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { LOCALES, DEFAULT_LOCALE, LOCALE_LABELS } from '~/lib/i18n/locales';
+import { globalGraph, buildBreadcrumb, canonicalUrl } from '~/lib/seo';
+import { route, hreflangTags, stripLocale } from '~/lib/i18n/routes';
+import JsonLd from '~/components/JsonLd.astro';
 import '~/styles/global.css';
+
 export interface Props {
   title?: string;
   description?: string;
   pageClass?: string;
   noindex?: boolean;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  /** When true, suppress the page-level breadcrumb schema (used by home + landing-style pages). */
+  noBreadcrumb?: boolean;
+  /** Locale for this page. Required — every page under [locale]/ passes its params.locale. */
+  locale?: Locale;
 }
-const { title = SITE.tagline, description = SITE.description, pageClass, noindex } = Astro.props;
-const fullTitle = title.includes(SITE.name) ? title : `${title} — ${SITE.name}`;
 
-// Compact unit lookup table, used by ConverterWidget for instant client-side conversion
+const {
+  title = SITE.tagline,
+  description = SITE.description,
+  pageClass,
+  noindex,
+  ogType = 'website',
+  ogImage = SITE.ogImage,
+  noBreadcrumb = false,
+  locale: localeProp,
+} = Astro.props;
+
+// Resolve locale: prefer prop, then Astro.params (for [locale]/... pages), then default.
+const locale: Locale =
+  localeProp ??
+  ((Astro.params.locale as Locale | undefined) ?? DEFAULT_LOCALE);
+
+const fullTitle = title.includes(SITE.name) ? title : `${title} — ${SITE.name}`;
+const canonical = canonicalUrl(Astro.url.pathname);
+const ogImageAbs = ogImage.startsWith('http') ? ogImage : `${SITE.url}${ogImage}`;
+const ogLocaleAlt = LOCALES
+  .filter(l => l !== locale)
+  .map(l => OG_LOCALE[l]);
+
+// Direction-aware compact unit lookup table for client-side ConverterWidget / calculator.
 const unitData = Object.fromEntries(
   getAllUnits().map(u => [
     u.slug,
@@ -22,46 +55,100 @@ const unitData = Object.fromEntries(
       factor: (u as any).factor,
       slope: (u as any).slope,
       offset: (u as any).offset,
-      reciprocal: (u as any).reciprocal,
-      baseValue: (u as any).baseValue,
+      direction: (u as any).direction,
+      K: (u as any).K,
     },
   ])
 );
+
+// Locale-aware hreflang alternates + canonical
+const hreflangs = hreflangTags(Astro.url.pathname);
+const suffixPath = stripLocale(Astro.url.pathname);
+
+// Base-level structured data: WebSite + Organization + (BreadcrumbList if not suppressed)
+const baseSchemas: unknown[] = [
+  globalGraph({ description, inLanguage: [IN_LANGUAGE[locale], ...LOCALES.map(l => IN_LANGUAGE[l])] }),
+];
+if (!noBreadcrumb) {
+  baseSchemas.push(buildBreadcrumb(Astro.url.pathname, { title }));
+}
+
+// The "current path" used to build the language switcher links
+const switcher = LOCALES.map(l => ({
+  locale: l,
+  href: route(l, suffixPath),
+  label: LOCALE_LABELS[l],
+  active: l === locale,
+}));
 ---
 <!doctype html>
-<html lang="en">
+<html lang={IN_LANGUAGE[locale]}>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {hreflangs.map(h => (
+    <link rel="alternate" hreflang={h.hreflang} href={h.href} />
+  ))}
+  <meta property="og:type" content={ogType} />
+  <meta property="og:site_name" content={SITE.name} />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImageAbs} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content={OG_LOCALE[locale]} />
+  {ogLocaleAlt.map(alt => (
+    <meta property="og:locale:alternate" content={alt} />
+  ))}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageAbs} />
   <meta name="theme-color" content="#0b1736" />
   {noindex && <meta name="robots" content="noindex" />}
-  <title>{fullTitle}</title>
   <link rel="icon" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
-  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" />
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" />
   <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />
+  {baseSchemas.map((s) => <JsonLd data={s} />)}
+  <slot name="head" />
 </head>
 <body class={pageClass}>
   <header class="site-header">
     <div class="container header-row">
-      <a href="/" class="logo">
+      <a href={route(locale, '/')} class="logo">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="3" y="6" width="18" height="12" rx="2" stroke="#fff" stroke-width="2"/>
           <path d="M7 10h10M7 14h10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span class="logo-text">unit.now</span>
+        <span class="logo-text">unitbox</span>
       </a>
+      {/* CSS-only hamburger nav (zero JS). checkbox hack collapses nav on mobile. */}
+      <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="toggle menu" />
+      <label for="nav-toggle" class="nav-toggle-label" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
       <nav class="primary-nav" aria-label="primary">
-        <a href="/">Home</a>
-        <a href="/category/length">Length</a>
-        <a href="/category/mass">Mass</a>
-        <a href="/category/temperature">Temperature</a>
-        <a href="/category/volume">Volume</a>
-        <a href="/category/data">Data</a>
-        <a href="/calculator">Calculator</a>
-        <a href="/articles">Articles</a>
+        <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
+        <a href={route(locale, '/category/length')}>{t('nav.length', locale)}</a>
+        <a href={route(locale, '/category/mass')}>{t('nav.mass', locale)}</a>
+        <a href={route(locale, '/category/temperature')}>{t('nav.temperature', locale)}</a>
+        <a href={route(locale, '/category/volume')}>{t('nav.volume', locale)}</a>
+        <a href={route(locale, '/category/data')}>{t('nav.data', locale)}</a>
+        <a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a>
+        <a href={route(locale, '/articles')}>{t('nav.articles', locale)}</a>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="language">
+        {switcher.map(s => (
+          <a href={s.href} class={`lang-link ${s.active ? 'active' : ''}`} hreflang={IN_LANGUAGE[s.locale]} aria-current={s.active ? 'true' : undefined}>
+            {s.label}
+          </a>
+        ))}
+      </div>
     </div>
   </header>
   <main class="page">
@@ -72,21 +159,57 @@ const unitData = Object.fromEntries(
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
-        {NAV_GROUPS.map(group => (
-          <div>
-            <h4>{group.title}</h4>
-            <ul>
-              {group.links.map(l => <li><a href={l.href}>{l.label}</a></li>)}
-            </ul>
-          </div>
-        ))}
+        <div>
+          <h4>{t('footer.col.products', locale)}</h4>
+          <ul>
+            <li><a href={route(locale, '/tools/png-compressor')}>🖼️ <strong>{t('png.h1', locale).split(' — ')[0]}</strong></a></li>
+            <li><a href={route(locale, '/meter-to-foot')}>meter → foot</a></li>
+            <li><a href={route(locale, '/celsius-to-fahrenheit')}>°C → °F</a></li>
+            <li><a href={route(locale, '/kilogram-to-pound')}>kg → pound</a></li>
+            <li><a href={route(locale, '/mpg-us-to-liter-per-100km')}>MPG → L/100km</a></li>
+            <li><a href={route(locale, '/liter-to-gallon-us')}>liter → gallon (US)</a></li>
+            <li><a href={route(locale, '/psi-to-bar')}>psi → bar</a></li>
+            <li><a href={route(locale, '/km-per-liter-to-mpg-us')}>km/L → MPG (US)</a></li>
+            <li><a href={route(locale, '/kilobyte-to-kibibyte')}>KB → KiB</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>{t('footer.col.learn', locale)}</h4>
+          <ul>
+            <li><a href={route(locale, '/learn')}>{t('learn.h1', locale)}</a></li>
+            <li><a href={route(locale, '/faq')}>{t('nav.faq', locale)}</a></li>
+            <li><a href={route(locale, '/compare')}>{t('home.all-pairs', locale)}</a></li>
+            <li><a href={route(locale, '/articles')}>{t('nav.articles', locale)}</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>{t('footer.col.about', locale)}</h4>
+          <ul>
+            <li><a href={route(locale, '/about')}>{t('nav.about', locale)}</a></li>
+            <li><a href="/sitemap-index.xml">Sitemap</a></li>
+            <li><a href="/llms.txt">LLMs.txt</a></li>
+            <li><a href={route(locale, '/llms')}>{t('llms.h1', locale)}</a></li>
+            <li><a href="/openapi.json">OpenAPI spec</a></li>
+            <li><a href="/robots.txt">robots.txt</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>{t('footer.col.open', locale)}</h4>
+          <ul>
+            <li><a href="https://github.com/longmao/unitbox" rel="noopener">GitHub</a></li>
+            <li><a href="https://www.npmjs.com/~longmao" rel="noopener">npm</a></li>
+            <li><a href="/openapi.json">OpenAPI 3.0</a></li>
+            <li><a href="/llms.txt">AI / LLM guide</a></li>
+          </ul>
+        </div>
       </div>
       <div class="footer-bottom">
-        <span>{SITE.legalName} · Fast, accurate conversions for any unit.</span>
-        <span>© {new Date().getFullYear()}</span>
+        <span>{t('footer.tagline', locale)}</span>
+        <span>{t('footer.legal', locale)}</span>
       </div>
     </div>
   </footer>
+
   <slot name="scripts" />
 </body>
 </html>
@@ -98,14 +221,52 @@ const unitData = Object.fromEntries(
   .primary-nav { display: flex; flex-wrap: wrap; gap: 18px; }
   .primary-nav a { color: #d9e1f5; font-size: 14px; font-weight: 500; }
   .primary-nav a:hover { color: #fff; text-decoration: none; }
+  .lang-toggle { display: inline-flex; gap: 4px; padding: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; }
+  .lang-link { color: #d9e1f5; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; }
+  .lang-link:hover { color: #fff; text-decoration: none; }
+  .lang-link.active { background: var(--brand); color: #fff; }
+
+  /* Hamburger nav toggle (CSS-only, zero JS). Hidden on desktop, shown on mobile. */
+  .nav-toggle-input { display: none; }
+  .nav-toggle-label { display: none; cursor: pointer; width: 36px; height: 36px; padding: 8px; flex-direction: column; justify-content: space-between; }
+  .nav-toggle-label span { display: block; height: 2.5px; background: #fff; border-radius: 2px; transition: transform 200ms, opacity 200ms; }
+
+  /* Mobile (≤768px): collapse nav into hamburger menu */
+  @media (max-width: 768px) {
+    .header-row { flex-wrap: wrap; gap: 12px; }
+    .nav-toggle-label { display: flex; }
+    .primary-nav {
+      display: none;
+      order: 3;
+      flex-basis: 100%;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 12px;
+      margin-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .primary-nav a { padding: 10px 4px; font-size: 15px; }
+    .lang-toggle { margin-left: auto; }
+    /* When checkbox checked, show nav and animate hamburger into X */
+    .nav-toggle-input:checked ~ .primary-nav { display: flex; }
+    .nav-toggle-input:checked ~ .nav-toggle-label span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .nav-toggle-input:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
+    .nav-toggle-input:checked ~ .nav-toggle-label span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+  }
+  @media (max-width: 380px) {
+    .lang-toggle { padding: 2px; }
+    .lang-link { padding: 4px 8px; font-size: 12px; }
+  }
+
   .site-footer { background: var(--bg); color: #c5cee5; padding: 40px 0 24px; margin-top: 60px; }
   .footer-grid { display: grid; gap: 32px; grid-template-columns: repeat(4, 1fr); }
   @media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; gap: 20px; } }
   .site-footer h4 { color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
   .site-footer ul { list-style: none; padding: 0; margin: 0; }
   .site-footer li { margin-bottom: 6px; }
   .site-footer a { color: #c5cee5; font-size: 13px; }
   .site-footer a:hover { color: #fff; }
-  .footer-bottom { display: flex; justify-content: space-between; padding-top: 24px; margin-top: 24px; border-top: 1px solid #1a2d5a; font-size: 12px; color: #8a95ad; }
+  .footer-bottom { display: flex; justify-content: space-between; padding-top: 24px; margin-top: 24px; border-top: 1px solid #1a2d5a; font-size: 12px; color: #8a95ad; gap: 12px; }
   @media (max-width: 600px) { .footer-bottom { flex-direction: column; gap: 4px; } }
 </style>
