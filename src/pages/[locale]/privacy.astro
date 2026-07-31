@@ -1,0 +1,63 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const faq = [
+  { q: 'Do you set cookies?', a: 'No. unitbox runs zero cookies — no session cookie, no analytics cookie, no preference cookie.' },
+  { q: 'Do you log my conversion inputs?', a: 'No. Every conversion happens client-side in your browser. Your inputs never reach a server.' },
+  { q: 'Do you run ads?', a: 'No. No ad networks, no sponsored links, no affiliate redirects.' },
+  { q: 'What about Cloudflare logs?', a: 'Cloudflare (our CDN) keeps edge access logs for 24 hours, then deletes them. These are used for security/abuse detection only.' },
+];
+
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const title = t('privacy.h1', locale);
+const description = t('privacy.subtitle', locale);
+const homeLabel = t('pair.breadcrumb-home', locale);
+const navAbout = t('nav.about', locale);
+---
+<Base title={title} description={description} locale={locale} noBreadcrumb>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{navAbout}</span> › <span>{title}</span></div>
+
+<h1>{title}</h1>
+<p class="muted">{description}</p>
+
+<h2>{t('privacy.s1.h', locale)}</h2>
+<p>{t('privacy.s1.p', locale)}</p>
+
+<h2>{t('privacy.s2.h', locale)}</h2>
+<ul>
+  <li>{t('privacy.s2.li1', locale)}</li>
+  <li>{t('privacy.s2.li2', locale)}</li>
+  <li>{t('privacy.s2.li3', locale)}</li>
+</ul>
+
+<h2>{t('privacy.s3.h', locale)}</h2>
+<ul>
+  <li>{t('privacy.s3.li1', locale)}</li>
+  <li>{t('privacy.s3.li2', locale)}</li>
+</ul>
+
+<h2>{t('privacy.s4.h', locale)}</h2>
+<p>{t('privacy.s4.p', locale)}</p>
+
+<FaqBlock items={faq} />
+
+</Base>

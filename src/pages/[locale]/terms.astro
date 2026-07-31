@@ -1,0 +1,55 @@
+---
+import Base from '~/layouts/Base.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const faq = [
+  { q: 'Do I need an account?', a: 'No. unitbox is fully open — no login, no signup, no email.' },
+  { q: 'Can I use unitbox commercially?', a: 'Yes. MIT (code) + CC BY 4.0 (content) — use freely with attribution.' },
+  { q: 'Can I trust conversions for medical / aviation use?', a: 'For life-critical use, always verify against a primary source. Our factors come from NIST and BIPM but bugs happen.' },
+];
+
+const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const title = t('terms.h1', locale);
+const description = t('terms.subtitle', locale);
+const homeLabel = t('pair.breadcrumb-home', locale);
+const navAbout = t('nav.about', locale);
+---
+<Base title={title} description={description} locale={locale} noBreadcrumb>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+  </Fragment>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{navAbout}</span> › <span>{title}</span></div>
+
+<h1>{title}</h1>
+<p class="muted">{description}</p>
+
+<h2>{t('terms.s1.h', locale)}</h2>
+<p>{t('terms.s1.p', locale)}</p>
+
+<h2>{t('terms.s2.h', locale)}</h2>
+<p>{t('terms.s2.p', locale)}</p>
+
+<h2>{t('terms.s3.h', locale)}</h2>
+<p>{t('terms.s3.p', locale)}</p>
+
+<h2>{t('terms.s4.h', locale)}</h2>
+<p>{t('terms.s4.p', locale)}</p>
+
+<FaqBlock items={faq} />
+
+</Base>

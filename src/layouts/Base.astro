@@ -186,6 +186,9 @@ const switcher = LOCALES.map(l => ({
           <h4>{t('footer.col.about', locale)}</h4>
           <ul>
             <li><a href={route(locale, '/about')}>{t('nav.about', locale)}</a></li>
+            <li><a href={route(locale, '/methodology')}>{t('nav.methodology', locale)}</a></li>
+            <li><a href={route(locale, '/privacy')}>{t('nav.privacy', locale)}</a></li>
+            <li><a href={route(locale, '/terms')}>{t('nav.terms', locale)}</a></li>
             <li><a href="/sitemap-index.xml">Sitemap</a></li>
             <li><a href="/llms.txt">LLMs.txt</a></li>
             <li><a href={route(locale, '/llms')}>{t('llms.h1', locale)}</a></li>
