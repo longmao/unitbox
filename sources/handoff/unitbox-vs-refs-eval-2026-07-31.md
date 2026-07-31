@@ -95,3 +95,89 @@
 **真正差距不是 SEO 基建（unitbox 反而强），而是产品深度 + social proof + 变现路径。** 单位换算的「工具属性」决定了用户用完即走，单次访问价值低，需要 1 个 viral 钩子（PNG compressor）+ 1 个留存机制（MCP API + 月度 newsletter）+ 1 个变现支点（Pro 特性 / API 配额 / 嵌入版）才能闭环。
 
 **openfate 赢在「把工具当服务卖」**——50+ 评语 + 22,842+ 数据带 + ★4.8 + dashboard + pricing + MCP —— 即使单位换算天然边界低，也要至少把这套「AI 时代分发样板」的 6 个 surface（social/data/★/pricing/dashboard/MCP）补齐，才有机会从「工具站」升级为「分发样板」。
+
+---
+
+# 附录 · vs time.now（v0.1 初始架构 ref）对比
+
+**time.now 是 unit-now 立项初期的克隆对象**——杨总 7/29 完整复刻过（441 页 Astro SSG，BunnyCDN 反爬所以用微信文章当 source-of-truth）。现对比 unitbox 演进路径。
+
+## 体量 / 规模
+
+| 指标 | time.now 复刻 (7/29) | unitbox (7/31) | 倍数 |
+|---|---|---|---|
+| HTML 页数 | 441 | **3420** | 7.7x |
+| dist 大小 | 10 MB | 133 MB | 13x |
+| build 耗时 | 733 ms | 3.01 s | 4x（可接受） |
+| 单页 HTML 体积 | n/a | 54 KB | n/a |
+| locale 数 | 1 (en) | 3 (en/zh-hant/zh-hans) | 3x |
+
+## 内容结构
+
+| 维度 | time.now | unitbox |
+|---|---|---|
+| 主入口 | 6 层首页（live clock + 城市/国家/时区目录 + 工具集 + high-stickiness + long-tail topics + 文章/buyers guides） | 5 段首页（hero + 信任带 + 3-step + 12 category 矩阵 + API section） |
+| 一级缓存站 | 城市页 284 + 国家页 59 = **343 个地理实体页** | category × 13 = **13 个分类页** |
+| 工具子页 | tool/[tool].astro × 15（time-zone / clock / calculator / 等） | pair 页 × 1135 = **1135 个换算对** |
+| 学习页 | learn/[topic].astro × 20 | learn/[topic].astro × ~20（部分保留） |
+| 文章页 | articles/[...slug].astro × 20 | articles/[...slug].astro × 4 |
+| compare 页 | compare/[...slug].astro × 15 | compare/[...slug].astro × N |
+| 特殊页 | /premium（付费 funnel 占位）+ /widget（嵌入版）+ /api（开发者 hooks） | /llms + /openapi.json + /privacy + /terms + /methodology（信任面） |
+| 单页组件 | LiveClock + SunMoonBlock + RelatedQuestions + FAQ | ConverterWidget + FaqBlock + RelatedQuestions + RecommendedList |
+| 数据驱动 | cities.json (284) + countries.json (59) + articles.ts (20) | units.ts 内置 + categories 内置（无外部 JSON） |
+| 缓存逻辑核心 | 时区换算（核心） + 太阳月计算 + 时差 | 单位换算（核心）+ 方向感知（affine/reciprocal） |
+
+## SEO / AI 基建
+
+| 维度 | time.now | unitbox | 备注 |
+|---|---|---|---|
+| sitemap | 脚本桩位（空函数，未跑） | sitemap-index.xml + sitemap-0.xml (3420 URLs) | ✅ unitbox 跑通 |
+| robots.txt | 无 | ✅ 12 AI bot 白名单 | ✅ unitbox 唯一 |
+| llms.txt | 无 | ✅ 5.7K (openfate 模式) | ✅ unitbox 唯一 |
+| OpenAPI spec | 无 | ✅ /openapi.json | ✅ unitbox 唯一 |
+| JSON-LD 全栈 | 无 | ✅ WebSite + Organization + BreadcrumbList + **FAQPage × 8** + **HowTo × 1135** | ✅ unitbox 唯一 |
+| hreflang | 无 | ✅ locale-prefix 三语 | ✅ unitbox 唯一 |
+| Google Search Console | 未提交 | ✅ sitemap-index 已提交 | ✅ unitbox 唯一 |
+| AI bot 答案收录 | n/a | 0/15 baseline（7/31） | 待 30 天再测 |
+| Webfont 子集化 | 无（Inter bunny.net 全字重） | 无（同样 Inter bunny.net） | ⚠️ 共同缺陷 |
+
+## 工程化
+
+| 维度 | time.now | unitbox | 备注 |
+|---|---|---|---|
+| 框架 | Astro 4 SSG | Astro 4.16.19 SSG | 同 |
+| JS framework | 无（vanilla JS islands） | 无（vanilla JS） | 同 |
+| BDD 覆盖 | 100%（200/200 status） | 85 → 137 BDD tests pass | ✅ unitbox 有 vitest 测试套 |
+| sitemap 集成 | @astrojs/sitemap 撞 [...slug].astro，禁用 | post-build scripts/build-sitemap.mjs | ✅ unitbox 退路 |
+| 货币转换 / 时区 | luxon + tz data | 无（不相关） | 各自赛道 |
+| Bug 修复轨迹 | Stopwatch DOM 推断死 / FaqBlock import 漏 | ConverterWidget fuel-economy 客户端 JS / RecommendedList href="#" / sitemap 双斜杠 | 各有 3 个 bug |
+
+## 演进路径判断
+
+**time.now 复刻是「架构 demo」**：证明 Astro SSG + 数据驱动 + 多语言可以撑起一个独立的小站，但 v0.1 没有 seo / ai / schema / llms / trust 任何一层基建。
+
+**unitbox 是「AI 时代分发样板」**：v0.2 直接补 seo + i18n，v0.3 加 openfate 模式（llms.txt + openapi + schema 全栈 + AI bot 白名单），v0.4 加 locale-prefix + PNG compressor，v0.4.1 加 mobile + privacy/terms/methodology 信任面。
+
+**unitbox 相比 time.now 的本质升级**：
+- 从「单语单工具」→「三语 1135 个 pair 工具集」
+- 从「无 SEO」→「schema 全栈 + AI bot 白名单」
+- 从「手写 sitemap 桩位」→「3420 URLs 自动化」
+- 从「裸站」→「6 个 trust surface 全齐（privacy/terms/methodology/about/llms/openapi）」
+
+**time.now 模式的可复用价值**：
+- `cities.json + countries.json` 数据驱动 → unitbox 的 `units.ts` 已内置，比 JSON 更类型安全
+- `LiveClock` widget 范式 → unitbox 的 `ConverterWidget` 复用同款「单组件 + 静态数据 + 客户端计算」模式
+- 「One topic, every angle」架构 → unitbox 已完全套用（unit conversion 是 topic，1135 个 pair 是 every angle）
+- **BunnyCDN 反爬 + AI bot 白名单启示** — time.now 用 BunnyCDN 都被反爬，unitbox 用 CF Pages 必须主动白名单 AI bot 才有可能被引用
+
+## v0.1 → v0.4.1 的 9 个 lesson（沉淀进 topic-astro-sites）
+
+1. **Astro 4 + @astrojs/sitemap 撞 [...slug] 路由** → 退路 post-build script（unitbox 已沉淀）
+2. **scoped CSS 不穿透 slot** → utility 必须挂 global.css（unitbox 的 grid/card/btn 已挂）
+3. **Webfont 子集化** → 共同未做（Lighthouse 失分项）
+4. **JSX/TS DOM 推断** → 函数参数标 any 是最快的避坑
+5. **手写 sitemap 比 integration 更稳** → 已成 unitbox 默认模式
+6. **数据驱动 getStaticPaths 是 1135 pair 的可行性前提** → unitbox 已用
+7. **locale-prefix + middleware redirect 比 client-side i18n toggle 更 SEO 友好** → unitbox v0.4 已改
+8. **Cloudflare Pages _redirects 兼容 Netlify** → unitbox 已有等价机制
+9. **AI bot 白名单 + llms.txt 是新 SEO 基建** → unitbox 已全套（time.now 缺）
