@@ -12,7 +12,7 @@ import {
   convert,
 } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -84,7 +84,7 @@ const toFromHeader = t('unit.to-from', locale);
 const forwardHeader = tFmt('unit.forward-h', locale, { symbol: unit.symbol });
 const reverseHeader = tFmt('unit.reverse-h', locale, { symbol: unit.symbol });
 
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 ---
 <Base title={title} description={subtitle} locale={locale}>
   <Fragment slot="head">

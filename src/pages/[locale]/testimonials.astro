@@ -3,7 +3,7 @@ import Base from '~/layouts/Base.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -22,7 +22,7 @@ const faq = [
   { q: 'Will you edit my quote?', a: 'Only for length (trim) and never for meaning. We will not change your words.' },
 ];
 
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 const title = t('testimonial.title', locale);
 const homeLabel = t('pair.breadcrumb-home', locale);
 const navAbout = t('nav.about', locale);

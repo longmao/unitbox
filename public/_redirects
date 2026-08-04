@@ -19,6 +19,5 @@
 /zh-cn  /zh-hans/  301
 /zh-CN  /zh-hans/  301
 
-# Unprefixed static assets → EN locale variants (we ship one per locale)
-/llms.txt  /en/llms.txt  301
-/openapi.json  /en/openapi.json  301
+# Unprefixed static assets (/llms.txt, /openapi.json) are served directly
+# from public/llms.txt and public/openapi.json — no redirect needed.

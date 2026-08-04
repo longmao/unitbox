@@ -59,6 +59,9 @@ export function globalGraph(opts?: { description?: string; inLanguage?: string |
       sameAs: [
         `https://twitter.com/${SITE.twitterHandle.replace('@', '')}`,
         `https://github.com/longmao/unitbox`,
+        `https://www.linkedin.com/company/unitbox`,
+        `https://en.wikipedia.org/wiki/Conversion_of_units`,
+        `https://www.wikidata.org/wiki/Q1269852`,
       ],
     },
   } as unknown as SchemaBase;
@@ -105,6 +108,45 @@ export function buildFaqPage(items: FaqItem[], opts?: { inLanguage?: string }): 
       acceptedAnswer: { '@type': 'Answer', text: it.a },
     })),
   };
+}
+
+/** Build an Article schema (BlogPosting) for /articles/[slug] pages. */
+export function buildArticle(opts: {
+  headline: string;
+  description: string;
+  url: string;
+  inLanguage: string;
+  datePublished: string;
+  dateModified: string;
+  authorName: string;
+  authorUrl: string;
+  category?: string;
+}): SchemaBase {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': `${opts.url}#article`,
+    headline: opts.headline,
+    description: opts.description,
+    url: opts.url,
+    inLanguage: opts.inLanguage,
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified,
+    author: {
+      '@type': 'Organization',
+      name: opts.authorName,
+      url: opts.authorUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${SITE.url}#organization`,
+      name: SITE.legalName,
+      url: SITE.url,
+      logo: `${SITE.url}/logo-outline.svg`,
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
+    ...(opts.category ? { articleSection: opts.category } : {}),
+  } as unknown as SchemaBase;
 }
 
 /** Build a HowTo schema for a converter page. */

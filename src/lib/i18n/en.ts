@@ -231,4 +231,11 @@ export const EN: Record<string, string> = {
   'testimonial.title': 'What people are saying',
   'testimonial.cta': 'Share your experience',
   'nav.testimonials': 'Testimonials',
+
+  // ── Apple Dev recipes (CHE-UNITBOX-APPLE-DEV-001) ──
+  'nav.apple-dev': 'Apple Dev',
+  'apple-dev.h1': 'Apple Dev Recipes',
+  'apple-dev.subtitle': 'Field notes on Apple toolchains — Xcode Cloud, code signing, on-device testing. Written from real shipping pain, not docs paraphrasing.',
+  'apple-dev.all': 'All recipes',
+  'apple-dev.related': 'Related recipes',
 };

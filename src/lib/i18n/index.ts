@@ -1,7 +1,7 @@
-// i18n API for unitbox. Three locale dictionaries (en/zh-hant/zh-hans) wired
+// i18n API for unitbox. Four locale dictionaries (en/zh-hant/zh-hans/ja) wired
 // up via a single `t(key, locale)` lookup. Number formatting is Intl-aware.
 //
-// Build-time invariant: every key from EN must exist in ZH_HANT and ZH_HANS.
+// Build-time invariant: every key from EN must exist in ZH_HANT, ZH_HANS, JA.
 // The assertion below runs at module init and throws if the key sets drift.
 
 import {
@@ -11,16 +11,20 @@ import {
 import { EN } from './en';
 import { ZH_HANT } from './zh-hant';
 import { ZH_HANS } from './zh-hans';
+import { JA } from './ja';
+import { KO } from './ko';
 
 const DICTS: Record<Locale, Record<string, string>> = {
   'en': EN,
   'zh-hant': ZH_HANT,
   'zh-hans': ZH_HANS,
+  'ja': JA,
+  'ko': KO,
 };
 
 // ── Build-time assertions (run once at module init) ──────────────────────────
 const enKeys = Object.keys(EN).sort();
-for (const [name, dict] of [['zh-hant', ZH_HANT], ['zh-hans', ZH_HANS]] as Array<[string, Record<string, string>]>) {
+for (const [name, dict] of [['zh-hant', ZH_HANT], ['zh-hans', ZH_HANS], ['ja', JA], ['ko', KO]] as Array<[string, Record<string, string>]>) {
   const keys = Object.keys(dict).sort();
   if (keys.length !== enKeys.length) {
     throw new Error(`i18n drift: ${name} has ${keys.length} keys, EN has ${enKeys.length}`);

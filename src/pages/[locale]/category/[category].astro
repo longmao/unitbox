@@ -5,7 +5,7 @@ import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { getAllCategories, getCategory, getUnitsByCategory } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, tFmt, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -49,7 +49,7 @@ const popularTitle = tFmt('cat.popular', locale, { cat: cat.name });
 const otherTitle = t('cat.other', locale);
 const homeLabel = t('pair.breadcrumb-home', locale);
 
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 ---
 <Base title={title} description={subtitle} locale={locale}>
   <Fragment slot="head">

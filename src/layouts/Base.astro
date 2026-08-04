@@ -115,6 +115,9 @@ const switcher = LOCALES.map(l => ({
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" />
   <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />
   {baseSchemas.map((s) => <JsonLd data={s} />)}
+  <!-- Cloudflare Web Analytics -->
+  <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1cdedf9d39714153a56034868c969169"}'></script>
+  <!-- End Cloudflare Web Analytics -->
   <slot name="head" />
 </head>
 <body class={pageClass}>
@@ -141,6 +144,7 @@ const switcher = LOCALES.map(l => ({
         <a href={route(locale, '/category/data')}>{t('nav.data', locale)}</a>
         <a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a>
         <a href={route(locale, '/articles')}>{t('nav.articles', locale)}</a>
+        <a href={route(locale, '/apple-dev')}>{t('nav.apple-dev', locale)}</a>
       </nav>
       <div class="lang-toggle" role="group" aria-label="language">
         {switcher.map(s => (

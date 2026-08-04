@@ -12,3 +12,8 @@ dist/
 # env
 .env
 .env.local
+
+# growth-ops runtime: SA creds + daily snapshots
+.gsc/
+.cf/
+.observe/

@@ -6,7 +6,7 @@ import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, getCategory } from '~/lib/units';
 import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
-import { LOCALES, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -75,7 +75,7 @@ const recommended = [
 ];
 
 const canonical = canonicalUrl(Astro.url.pathname);
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 const howtoLd = buildHowTo({
   name: `How to convert ${from.name} to ${to.name}`,
   description: subtitle,

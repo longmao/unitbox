@@ -1,5 +1,5 @@
 // BDD for the PNG compressor page. Verifies:
-// 1. The page renders at all 3 locale URLs
+// 1. The page renders at all locale URLs
 // 2. Required JSON-LD (SoftwareApplication, FAQPage, HowTo) is present
 // 3. The i18n JSON embedded in the page produces correct UI strings
 
@@ -10,7 +10,7 @@ import path from 'path';
 const DIST = path.join(process.cwd(), 'dist');
 
 describe('PNG compressor page', () => {
-  const locales = ['en', 'zh-hant', 'zh-hans'] as const;
+  const locales = ['en', 'zh-hant', 'zh-hans', 'ja', 'ko'] as const;
 
   for (const locale of locales) {
     it(`renders at /${locale}/tools/png-compressor/`, () => {
@@ -21,7 +21,7 @@ describe('PNG compressor page', () => {
     it(`/${locale}/ has correct <html lang>`, () => {
       const file = path.join(DIST, locale, 'tools', 'png-compressor', 'index.html');
       const html = fs.readFileSync(file, 'utf8');
-      const expectedLang = locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans';
+      const expectedLang = ({ en: 'en', 'zh-hant': 'zh-Hant', 'zh-hans': 'zh-Hans', ja: 'ja', ko: 'ko' } as const)[locale];
       expect(html).toMatch(new RegExp(`<html lang="${expectedLang}"`));
     });
 
@@ -57,11 +57,11 @@ describe('PNG compressor page', () => {
       expect(html).toContain('id="png-input"');
     });
 
-    it(`/${locale}/ has 4 hreflang alternate tags`, () => {
+    it(`/${locale}/ has 6 hreflang alternate tags (5 locales + x-default)`, () => {
       const file = path.join(DIST, locale, 'tools', 'png-compressor', 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       const hreflangCount = (html.match(/rel="alternate" hreflang="/g) ?? []).length;
-      expect(hreflangCount).toBe(4);
+      expect(hreflangCount).toBe(6);
     });
 
     it(`/${locale}/ has the i18n JSON for the client component`, () => {
@@ -89,15 +89,17 @@ describe('PNG compressor page', () => {
     });
   }
 
-  it('sitemap includes all 3 PNG compressor URLs', () => {
+  it('sitemap includes all 5 PNG compressor URLs', () => {
     const sitemap = fs.readFileSync(path.join(DIST, 'sitemap-0.xml'), 'utf8');
     expect(sitemap).toContain('https://unitbox.online/en/tools/png-compressor/');
     expect(sitemap).toContain('https://unitbox.online/zh-hant/tools/png-compressor/');
     expect(sitemap).toContain('https://unitbox.online/zh-hans/tools/png-compressor/');
+    expect(sitemap).toContain('https://unitbox.online/ja/tools/png-compressor/');
+    expect(sitemap).toContain('https://unitbox.online/ko/tools/png-compressor/');
   });
 
   it('PNG compressor link is in the footer Products list of all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans']) {
+    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
       const file = path.join(DIST, locale, 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       expect(html, `${locale} home should link to PNG compressor`).toContain(`/${locale}/tools/png-compressor`);
@@ -105,7 +107,7 @@ describe('PNG compressor page', () => {
   });
 
   it('home page has 4 hero chips (3 categories + 1 tool) in all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans']) {
+    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
       const file = path.join(DIST, locale, 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       const chips = (html.match(/<a [^>]*class="hero-chip/g) ?? []).length;
@@ -115,7 +117,7 @@ describe('PNG compressor page', () => {
   });
 
   it('home page has Tools section in all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans']) {
+    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
       const file = path.join(DIST, locale, 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       expect(html).toContain('tools-section');

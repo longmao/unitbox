@@ -3,7 +3,7 @@ import Base from '~/layouts/Base.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -31,7 +31,7 @@ const faqs = [
   { q: 'Why is my unit not listed?', a: 'We add units based on search volume. If yours is missing and you would use it, open an issue on GitHub or use the contact form.' },
 ];
 
-const faqLd = buildFaqPage(faqs, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faqs, { inLanguage: IN_LANGUAGE[locale] });
 
 const title = t('faq.h1', locale);
 const description = t('faq.subtitle', locale);

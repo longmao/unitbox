@@ -1,0 +1,57 @@
+---
+import Base from '~/layouts/Base.astro';
+import { appleDevArticles } from '~/data/apple-dev';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const items = appleDevArticles.map(a => ({
+  slug: a.slug,
+  title: a.title[locale],
+  description: a.description[locale],
+  category: a.category,
+  readTime: a.readTime,
+}));
+
+const h1 = t('apple-dev.h1', locale);
+const subtitle = t('apple-dev.subtitle', locale);
+const homeLabel = t('nav.home', locale);
+const sectionLabel = t('nav.apple-dev', locale);
+---
+<Base title={`${h1} — unitbox`} description={subtitle} locale={locale}>
+
+<div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>{sectionLabel}</span></div>
+<h1>{h1}</h1>
+<p class="muted">{subtitle}</p>
+
+<ul class="recipe-list">
+  {items.map(a => (
+    <li>
+      <a href={route(locale, `/apple-dev/${a.slug}/`)} class="card">
+        <span class="cat">{a.category}</span>
+        <span class="title">{a.title}</span>
+        <span class="desc">{a.description}</span>
+        <span class="rt">{a.readTime} read</span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+</Base>
+
+<style>
+  h1 { font-size: 32px; }
+  .muted { color: var(--fg-soft); font-size: 16px; }
+  .recipe-list { list-style: none; padding: 0; margin: 24px 0; display: grid; gap: 16px; }
+  .recipe-list .card { display: block; padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); text-decoration: none; }
+  .recipe-list .card:hover { border-color: var(--brand); }
+  .recipe-list .cat { display: inline-block; background: var(--brand); color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .recipe-list .title { display: block; font-size: 18px; font-weight: 700; color: var(--fg); margin: 10px 0 6px; }
+  .recipe-list .desc { display: block; font-size: 14px; color: var(--fg-soft); line-height: 1.5; }
+  .recipe-list .rt { display: block; font-size: 12px; color: var(--fg-muted); margin-top: 8px; }
+</style>

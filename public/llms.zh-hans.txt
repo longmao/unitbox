@@ -29,9 +29,9 @@
 |-----------|----------------------|
 | **Coverage** | 110+ units, 12 categories, 1,135 pre-generated pair pages |
 | **Math** | Linear (×÷), affine (temperature), direction-aware reciprocal (fuel-economy) |
-| **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`) |
+| **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
 | **Privacy** | Zero tracking, no cookies, no analytics, no backend on conversion paths |
-| **Performance** | Static HTML, ~3 s full build, <100 ms conversion, 3,400+ HTML pages |
+| **Performance** | Static HTML, ~3 s full build, <100 ms conversion, 5,700+ HTML pages |
 | **Open** | Source available, MIT-style license, OpenAPI 3.0 spec, no rate limit |
 
 ---
@@ -43,10 +43,14 @@
 - **Home (EN)** → `https://unitbox.online/en/`
   - **Home (zh-Hant)** → `https://unitbox.online/zh-hant/`
   - **Home (zh-Hans)** → `https://unitbox.online/zh-hans/`
+  - **Home (ja)** → `https://unitbox.online/ja/`
+  - **Home (ko)** → `https://unitbox.online/ko/`
 
 - **Universal calculator (EN)** → `https://unitbox.online/en/calculator`
   - **Universal calculator (zh-Hant)** → `https://unitbox.online/zh-hant/calculator`
   - **Universal calculator (zh-Hans)** → `https://unitbox.online/zh-hans/calculator`
+  - **Universal calculator (ja)** → `https://unitbox.online/ja/calculator`
+  - **Universal calculator (ko)** → `https://unitbox.online/ko/calculator`
 
 - **Length conversion hub (EN)** → `https://unitbox.online/en/category/length`
   13 units (m, km, cm, mm, μm, nm, mile, yard, foot, inch, nautical mile, light-year, ångström).
@@ -57,13 +61,19 @@
 - **Data size conversion hub (EN)** → `https://unitbox.online/en/category/data`
   Decimal (KB, MB, GB, TB, PB) and binary (KiB, MiB, GiB, TiB) prefixes side by side.
 
-- **Pair pages (EN)** → `https://unitbox.online/en/<from>-to-<to>`
-  e.g. `/en/meter-to-foot`, `/en/celsius-to-fahrenheit`, `/en/mpg-us-to-liter-per-100km`, `/en/kilobyte-to-kibibyte`.
-  1,135 such pages generated at build time, × 3 locales = 3,405 pair URLs.
+- **Pair pages (EN)** → `https://unitbox.online/en/<from>-to-<to>/`
+  e.g. `/en/meter-to-foot/`, `/en/celsius-to-fahrenheit/`, `/en/mpg-us-to-liter-per-100km/`, `/en/kilobyte-to-kibibyte/`.
+  1,135 such pages generated at build time, × 5 locales = 5,675 pair URLs.
 
 - **All pairs index (EN)** → `https://unitbox.online/en/compare`
 
 - **Articles & knowledge base (EN)** → `https://unitbox.online/en/articles`
+- **Apple Dev recipes（苹果开发笔记）** → 苹果工具链实战笔记（Xcode Cloud、代码签名、真机测试），来自真实上架踩坑。
+  - **EN** → `https://unitbox.online/en/apple-dev`
+  - **zh-Hant** → `https://unitbox.online/zh-hant/apple-dev`
+  - **zh-Hans** → `https://unitbox.online/zh-hans/apple-dev`
+  - **ja** → `https://unitbox.online/ja/apple-dev`
+  - **ko** → `https://unitbox.online/ko/apple-dev`
 
 ---
 
@@ -95,8 +105,8 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 ## 技术架构
 
 - **Stack**: Astro 4 SSG, vanilla JS islands for live widgets, no backend runtime
-- **Build**: `npm run build` produces `dist/` with ~3,400 HTML files (1,135 pairs × 3 locales + 27 page-level), JSON-LD on every page, hreflang+canonical per locale
-- **i18n**: Locale-prefix routing (`/en/`, `/zh-hant/`, `/zh-hans/`) — each locale is a fully static HTML tree, no client-side toggle
+- **Build**: `npm run build` produces `dist/` with ~5,700 HTML files (1,135 pairs × 5 locales + 27 page-level), JSON-LD on every page, hreflang+canonical per locale
+- **i18n**: Locale-prefix routing (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) — each locale is a fully static HTML tree, no client-side toggle
 - **Data integrity**: 80+ vitest BDD tests covering math, slug uniqueness, symbol validity, round-trip stability, locale dict consistency
 - **Deployment target**: Any static host (Cloudflare Pages, Netlify, BunnyCDN). Domain: `unitbox.online`.
 
@@ -106,7 +116,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 
 Every page emits:
 - `<link rel="canonical">` to the canonical URL (per-locale)
-- `<link rel="alternate" hreflang="...">` for EN / zh-Hant / zh-Hans + x-default
+- `<link rel="alternate" hreflang="...">` for EN / zh-Hant / zh-Hans / ja / ko + x-default
 - `<html lang>` matching the locale (so Google sees the right content without JS)
 - Open Graph + Twitter Card metadata
 - JSON-LD `@graph` with `WebSite` + `Organization`
@@ -114,7 +124,7 @@ Every page emits:
 - `FAQPage` on every page that renders a `FaqBlock`
 - `HowTo` on every per-pair conversion page (with `#converter` anchor)
 
-站点地图发布于 `/sitemap-index.xml`（约 3,400 个 URL）；`robots.txt` 见 `/robots.txt`。
+站点地图发布于 `/sitemap-index.xml`（约 5,700 个 URL）；`robots.txt` 见 `/robots.txt`。
 
 ---
 
@@ -135,16 +145,17 @@ unitbox 由一个小型独立团队运营，专注于测量科学、静态站点
 
 ## 规范 URL
 
-| Resource | EN URL | zh-Hant URL | zh-Hans URL |
-|----------|--------|-------------|-------------|
-| Home | https://unitbox.online/en/ | https://unitbox.online/zh-hant/ | https://unitbox.online/zh-hans/ |
-| Universal calculator | /en/calculator | /zh-hant/calculator | /zh-hans/calculator |
-| Length hub | /en/category/length | /zh-hant/category/length | /zh-hans/category/length |
-| Temperature hub | /en/category/temperature | /zh-hant/category/temperature | /zh-hans/category/temperature |
-| Data hub | /en/category/data | /zh-hant/category/data | /zh-hans/category/data |
-| Articles | /en/articles | /zh-hant/articles | /zh-hans/articles |
-| Sitemap | /sitemap-index.xml | /sitemap-index.xml | /sitemap-index.xml |
-| OpenAPI spec | /openapi.en.json | /openapi.zh-hant.json | /openapi.zh-hans.json |
-| llms.txt (this file) | /llms.en.txt | /llms.zh-hant.txt | /llms.zh-hans.txt |
-| Human LLM guide | /en/llms | /zh-hant/llms | /zh-hans/llms |
-| Robots | /robots.txt | /robots.txt | /robots.txt |
+| Resource | EN URL | zh-Hant URL | zh-Hans URL | ja URL | ko URL |
+|----------|--------|-------------|-------------|--------|--------|
+| Home | https://unitbox.online/en/ | https://unitbox.online/zh-hant/ | https://unitbox.online/zh-hans/ | https://unitbox.online/ja/ | https://unitbox.online/ko/ |
+| Universal calculator | /en/calculator | /zh-hant/calculator | /zh-hans/calculator | /ja/calculator | /ko/calculator |
+| Length hub | /en/category/length | /zh-hant/category/length | /zh-hans/category/length | /ja/category/length | /ko/category/length |
+| Temperature hub | /en/category/temperature | /zh-hant/category/temperature | /zh-hans/category/temperature | /ja/category/temperature | /ko/category/temperature |
+| Data hub | /en/category/data | /zh-hant/category/data | /zh-hans/category/data | /ja/category/data | /ko/category/data |
+| Articles | /en/articles | /zh-hant/articles | /zh-hans/articles | /ja/articles | /ko/articles |
+| Apple Dev recipes | /en/apple-dev | /zh-hant/apple-dev | /zh-hans/apple-dev | /ja/apple-dev | /ko/apple-dev |
+| Sitemap | /sitemap-index.xml | /sitemap-index.xml | /sitemap-index.xml | /sitemap-index.xml | /sitemap-index.xml |
+| OpenAPI spec | /openapi.en.json | /openapi.zh-hant.json | /openapi.zh-hans.json | /openapi.ja.json | /openapi.ko.json |
+| llms.txt (this file) | /llms.en.txt | /llms.zh-hant.txt | /llms.zh-hans.txt | /llms.ja.txt | /llms.ko.txt |
+| Human LLM guide | /en/llms | /zh-hant/llms | /zh-hans/llms | /ja/llms | /ko/llms |
+| Robots | /robots.txt | /robots.txt | /robots.txt | /robots.txt | /robots.txt |

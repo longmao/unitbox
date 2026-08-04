@@ -4,7 +4,7 @@ import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { getAllCategories, getUnitsByCategory, getUnit, convert } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, formatNumber, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -29,7 +29,7 @@ const defaultTo = 'foot';
 const preview = convert(1, defaultFrom, defaultTo);
 const fromSym = getUnit(defaultFrom)?.symbol ?? defaultFrom;
 const toSym = getUnit(defaultTo)?.symbol ?? defaultTo;
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
 const title = t('calc.h1', locale);
 const description = t('calc.subtitle', locale);

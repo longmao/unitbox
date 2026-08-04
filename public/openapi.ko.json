@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "unitbox 환산 API",
+    "version": "1.0.0",
+    "description": "길이, 질량, 온도, 면적, 부피, 속도, 시간, 데이터, 에너지, 압력, 각도, 연비의 오픈 환산 엔진. AI 에이전트는 이 사양을 이미 인용할 수 있습니다. 공개 엔드포인트는 2026년 4분기에 예정되어 있습니다.",
+    "license": { "name": "MIT" },
+    "contact": { "email": "hi@unitbox.online" }
+  },
+  "servers": [
+    { "url": "https://api.unitbox.online/v1", "description": "프로덕션 (예정)" }
+  ],
+  "tags": [
+    { "name": "convert", "description": "단위 환산 엔드포인트" }
+  ],
+  "paths": {
+    "/convert": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "두 단위 간 숫자 값 환산",
+        "description": "환산된 값과 함께 카테고리 및 사용된 계산 방식을 반환합니다. 선형, 아핀(온도), 또는 방향 인식 역수(연비)에 해당합니다.",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "meter" },
+            "description": "변환 전 단위 슬러그 (전체 목록은 https://unitbox.online/llms.txt 참조)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "foot" }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 1 }
+          },
+          {
+            "name": "precision",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12, "default": 6 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "환산 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversionResult" }
+              }
+            }
+          },
+          "400": { "description": "잘못된 요청 (예: 카테고리 간 환산, 알 수 없는 슬러그)" },
+          "404": { "description": "알 수 없는 단위 슬러그" }
+        }
+      }
+    },
+    "/units": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "알려진 모든 단위 슬러그와 카테고리·메타데이터 나열",
+        "responses": {
+          "200": {
+            "description": "모든 단위",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Unit" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConversionResult": {
+        "type": "object",
+        "required": ["from", "to", "value", "result", "category", "method"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "value": { "type": "number" },
+          "result": { "type": "number" },
+          "category": { "type": "string", "enum": ["length", "mass", "temperature", "area", "volume", "speed", "time", "data", "energy", "pressure", "angle", "fuel-economy"] },
+          "method": { "type": "string", "enum": ["linear", "affine", "reciprocal"] }
+        }
+      },
+      "Unit": {
+        "type": "object",
+        "required": ["slug", "name", "symbol", "category"],
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "category": { "type": "string" },
+          "factor": { "type": "number" },
+          "slope": { "type": "number" },
+          "offset": { "type": "number" },
+          "direction": { "type": "string", "enum": ["distance", "fuel"] },
+          "K": { "type": "number" }
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,8 @@ export interface Article {
   category: string;
   readTime: string;
   body: string;
+  publishedAt?: string;
+  dateModified?: string;
 }
 
 export const articles: Article[] = [

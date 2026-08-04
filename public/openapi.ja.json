@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "unitbox 換算 API",
+    "version": "1.0.0",
+    "description": "長さ、質量、温度、面積、体積、速度、時間、データ、エネルギー、圧力、角度、燃費のオープン換算エンジン。AI エージェントはこの仕様を既に引用可能です。公開エンドポイントは 2026 年第 4 四半期に予定されています。",
+    "license": { "name": "MIT" },
+    "contact": { "email": "hi@unitbox.online" }
+  },
+  "servers": [
+    { "url": "https://api.unitbox.online/v1", "description": "本番環境（予定）" }
+  ],
+  "tags": [
+    { "name": "convert", "description": "単位換算エンドポイント" }
+  ],
+  "paths": {
+    "/convert": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "2 つの単位間で数値を換算",
+        "description": "換算後の値に加え、カテゴリと使用された計算方法を返します。線形、アフィン（温度）、方向依存の逆数（燃費）に対応します。",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "meter" },
+            "description": "変換元の単位スラッグ（完全なリストは https://unitbox.online/llms.txt を参照）"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "foot" }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 1 }
+          },
+          {
+            "name": "precision",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12, "default": 6 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "換算成功",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversionResult" }
+              }
+            }
+          },
+          "400": { "description": "不正なリクエスト（例：カテゴリ間の換算、不明なスラッグ）" },
+          "404": { "description": "不明な単位スラッグ" }
+        }
+      }
+    },
+    "/units": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "既知のすべての単位スラッグとカテゴリ・メタデータを一覧表示",
+        "responses": {
+          "200": {
+            "description": "すべての単位",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Unit" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConversionResult": {
+        "type": "object",
+        "required": ["from", "to", "value", "result", "category", "method"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "value": { "type": "number" },
+          "result": { "type": "number" },
+          "category": { "type": "string", "enum": ["length", "mass", "temperature", "area", "volume", "speed", "time", "data", "energy", "pressure", "angle", "fuel-economy"] },
+          "method": { "type": "string", "enum": ["linear", "affine", "reciprocal"] }
+        }
+      },
+      "Unit": {
+        "type": "object",
+        "required": ["slug", "name", "symbol", "category"],
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "category": { "type": "string" },
+          "factor": { "type": "number" },
+          "slope": { "type": "number" },
+          "offset": { "type": "number" },
+          "direction": { "type": "string", "enum": ["distance", "fuel"] },
+          "K": { "type": "number" }
+        }
+      }
+    }
+  }
+}

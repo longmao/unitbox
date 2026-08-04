@@ -217,4 +217,11 @@ export const ZH_HANS: Record<string, string> = {
   'testimonial.title': '使用者怎么说',
   'testimonial.cta': '分享你的体验',
   'nav.testimonials': '用户评价',
+
+  // ── 苹果开发笔记 (CHE-UNITBOX-APPLE-DEV-001) ──
+  'nav.apple-dev': '苹果开发',
+  'apple-dev.h1': '苹果开发笔记',
+  'apple-dev.subtitle': '苹果工具链实战笔记——Xcode Cloud、代码签名、真机测试。来自真实的上架踩坑，不是文档搬运。',
+  'apple-dev.all': '全部笔记',
+  'apple-dev.related': '相关笔记',
 };

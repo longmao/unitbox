@@ -1,4 +1,4 @@
-// BDD for src/lib/i18n. Verifies the three locale dicts stay aligned and the
+// BDD for src/lib/i18n. Verifies the locale dicts stay aligned and the
 // helpers (t / tFmt / formatNumber / formatDate) behave correctly.
 
 import { describe, it, expect } from 'vitest';
@@ -6,10 +6,12 @@ import { LOCALES, DEFAULT_LOCALE, t, tFmt, formatNumber, formatDate, isLocale, O
 import { EN } from './en';
 import { ZH_HANT } from './zh-hant';
 import { ZH_HANS } from './zh-hans';
+import { JA } from './ja';
+import { KO } from './ko';
 
 describe('i18n locale registry', () => {
-  it('declares exactly three locales', () => {
-    expect(LOCALES).toEqual(['en', 'zh-hant', 'zh-hans']);
+  it('declares exactly five locales', () => {
+    expect(LOCALES).toEqual(['en', 'zh-hant', 'zh-hans', 'ja', 'ko']);
   });
 
   it('defaults to English', () => {
@@ -32,6 +34,8 @@ describe('i18n locale registry', () => {
     expect(isLocale('en')).toBe(true);
     expect(isLocale('zh-hant')).toBe(true);
     expect(isLocale('zh-hans')).toBe(true);
+    expect(isLocale('ja')).toBe(true);
+    expect(isLocale('ko')).toBe(true);
     expect(isLocale('zh')).toBe(false); // legacy alias no longer valid
     expect(isLocale('fr')).toBe(false);
     expect(isLocale(null)).toBe(false);
@@ -40,17 +44,21 @@ describe('i18n locale registry', () => {
 });
 
 describe('i18n dict consistency', () => {
-  it('en, zh-hant, zh-hans have identical key sets', () => {
+  it('en, zh-hant, zh-hans, ja, ko have identical key sets', () => {
     const enKeys = Object.keys(EN).sort();
     const hantKeys = Object.keys(ZH_HANT).sort();
     const hansKeys = Object.keys(ZH_HANS).sort();
+    const jaKeys = Object.keys(JA).sort();
+    const koKeys = Object.keys(KO).sort();
     expect(hantKeys).toEqual(enKeys);
     expect(hansKeys).toEqual(enKeys);
+    expect(jaKeys).toEqual(enKeys);
+    expect(koKeys).toEqual(enKeys);
   });
 
   it('no key has an empty value in any locale', () => {
     for (const l of LOCALES) {
-      const dict = l === 'en' ? EN : l === 'zh-hant' ? ZH_HANT : ZH_HANS;
+      const dict = l === 'en' ? EN : l === 'zh-hant' ? ZH_HANT : l === 'zh-hans' ? ZH_HANS : l === 'ja' ? JA : KO;
       for (const [k, v] of Object.entries(dict)) {
         expect(v, `${l}.${k} must be non-empty`).toBeTruthy();
       }

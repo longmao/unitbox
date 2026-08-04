@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "unitbox Conversion API",
+    "version": "1.0.0",
+    "description": "Open conversion engine for length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy. AI agents can already cite this spec; the public endpoint is planned for Q4 2026.",
+    "license": { "name": "MIT" },
+    "contact": { "email": "hi@unitbox.online" }
+  },
+  "servers": [
+    { "url": "https://api.unitbox.online/v1", "description": "Production (planned)" }
+  ],
+  "tags": [
+    { "name": "convert", "description": "Unit conversion endpoints" }
+  ],
+  "paths": {
+    "/convert": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "Convert a numeric value between two units",
+        "description": "Returns the converted value plus the category and the math method used. Linear, affine (temperature), or direction-aware reciprocal (fuel-economy).",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "meter" },
+            "description": "Source unit slug (see https://unitbox.online/llms.txt for full list)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "foot" }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 1 }
+          },
+          {
+            "name": "precision",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12, "default": 6 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful conversion",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversionResult" }
+              }
+            }
+          },
+          "400": { "description": "Bad request (e.g. cross-category, unknown slug)" },
+          "404": { "description": "Unknown unit slug" }
+        }
+      }
+    },
+    "/units": {
+      "get": {
+        "tags": ["convert"],
+        "summary": "List all known unit slugs with their category and metadata",
+        "responses": {
+          "200": {
+            "description": "All units",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Unit" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConversionResult": {
+        "type": "object",
+        "required": ["from", "to", "value", "result", "category", "method"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "value": { "type": "number" },
+          "result": { "type": "number" },
+          "category": { "type": "string", "enum": ["length", "mass", "temperature", "area", "volume", "speed", "time", "data", "energy", "pressure", "angle", "fuel-economy"] },
+          "method": { "type": "string", "enum": ["linear", "affine", "reciprocal"] }
+        }
+      },
+      "Unit": {
+        "type": "object",
+        "required": ["slug", "name", "symbol", "category"],
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "category": { "type": "string" },
+          "factor": { "type": "number" },
+          "slope": { "type": "number" },
+          "offset": { "type": "number" },
+          "direction": { "type": "string", "enum": ["distance", "fuel"] },
+          "K": { "type": "number" }
+        }
+      }
+    }
+  }
+}

@@ -217,4 +217,11 @@ export const ZH_HANT: Record<string, string> = {
   'testimonial.title': '使用者怎麼說',
   'testimonial.cta': '分享你的體驗',
   'nav.testimonials': '使用者評語',
+
+  // ── 蘋果開發筆記 (CHE-UNITBOX-APPLE-DEV-001) ──
+  'nav.apple-dev': '蘋果開發',
+  'apple-dev.h1': '蘋果開發筆記',
+  'apple-dev.subtitle': '蘋果工具鏈實戰筆記——Xcode Cloud、程式碼簽署、真機測試。來自真實的上架踩坑，不是文件搬運。',
+  'apple-dev.all': '全部筆記',
+  'apple-dev.related': '相關筆記',
 };

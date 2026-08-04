@@ -7,7 +7,7 @@ import JsonLd from '~/components/JsonLd.astro';
 import { getAllCategories, getUnitsByCategory } from '~/lib/units';
 import { articles } from '~/data/articles';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -61,7 +61,7 @@ const faq = [
 ];
 
 const featuredArticles = articles.slice(0, 4);
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
 const title = 'Convert Any Unit — Length, Mass, Temperature, and More';
 const description = `${categories.length} categories · 110+ units · 1,135 conversion pairs. Pick a popular conversion below or use the live calculator.`;

@@ -1,10 +1,12 @@
 ---
 import Base from '~/layouts/Base.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
 import { articles } from '~/data/articles';
 import { formatInline } from '~/lib/format';
 import { LOCALES, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import { buildArticle, canonicalUrl } from '~/lib/seo';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string; slug: string }; props: { locale: Locale; slug: string } }> = [];
@@ -31,8 +33,26 @@ const related = articles
 
 const homeLabel = t('nav.home', locale);
 const articlesLabel = t('nav.articles', locale);
+const canonical = canonicalUrl(Astro.url.pathname);
+// Use article.updatedAt / publishedAt if present; otherwise default to build time.
+const publishedAt = article.publishedAt ?? '2026-08-01';
+const dateModified = article.dateModified ?? '2026-08-01';
+const articleSchema = buildArticle({
+  headline: article.title,
+  description: article.description,
+  url: canonical,
+  inLanguage: locale,
+  datePublished: publishedAt,
+  dateModified,
+  authorName: 'unitbox Editorial Team',
+  authorUrl: 'https://unitbox.online/about/',
+  category: article.category,
+});
 ---
-<Base title={article.title} description={article.description} locale={locale}>
+<Base title={article.title} description={article.description} locale={locale} ogType="article">
+
+<JsonLd data={articleSchema} />
+
 
 <div class="breadcrumbs">
   <a href={route(locale, '/')}>{homeLabel}</a> ›

@@ -1,8 +1,7 @@
 // Route helpers for locale-prefixed URLs. Every in-app navigation link should
 // pass through these so the path is always consistent with the current locale.
 
-import type { Locale } from './locales';
-import { DEFAULT_LOCALE } from './locales';
+import { LOCALES, DEFAULT_LOCALE, IN_LANGUAGE, type Locale } from './locales';
 
 /** Build a locale-prefixed URL path. Pass an unprefixed path like '/meter-to-foot'. */
 export function route(locale: Locale, path: string): string {
@@ -22,8 +21,8 @@ export function hreflangUrl(locale: Locale, path: string): string {
 export function stripLocale(pathname: string): string {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length === 0) return '/';
-  // If first segment is a locale, drop it
-  if (segments.length >= 1 && (segments[0] === 'en' || segments[0] === 'zh-hant' || segments[0] === 'zh-hans')) {
+  // If first segment is a known locale, drop it
+  if (segments.length >= 1 && (LOCALES as readonly string[]).includes(segments[0])) {
     return '/' + segments.slice(1).join('/');
   }
   return pathname;
@@ -39,14 +38,14 @@ export const ROOT_PATHS = {
   favicon: '/favicon.svg',
 } as const;
 
-/** Build a hreflang alternate block — emit one <link> per locale + x-default. */
+/** Build a hreflang alternate block — emit one <link> per locale + x-default.
+ *  Iterates LOCALES so new locales are picked up automatically. */
 export function hreflangTags(currentPath: string, baseUrl = 'https://unitbox.online') {
   const suffix = stripLocale(currentPath);
-  const tags: Array<{ hreflang: string; href: string }> = [
-    { hreflang: 'en', href: `${baseUrl}${route('en', suffix)}` },
-    { hreflang: 'zh-Hant', href: `${baseUrl}${route('zh-hant', suffix)}` },
-    { hreflang: 'zh-Hans', href: `${baseUrl}${route('zh-hans', suffix)}` },
-    { hreflang: 'x-default', href: `${baseUrl}${route(DEFAULT_LOCALE, suffix)}` },
-  ];
+  const tags: Array<{ hreflang: string; href: string }> = LOCALES.map((loc) => ({
+    hreflang: IN_LANGUAGE[loc],
+    href: `${baseUrl}${route(loc, suffix)}`,
+  }));
+  tags.push({ hreflang: 'x-default', href: `${baseUrl}${route(DEFAULT_LOCALE, suffix)}` });
   return tags;
 }

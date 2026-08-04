@@ -5,7 +5,7 @@ import RelatedQuestions from '~/components/RelatedQuestions.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { getAllCategories } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -25,7 +25,7 @@ const faq = [
 ];
 
 const cats = getAllCategories();
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
 const title = t('about.h1', locale);
 const description = t('about.subtitle', locale);

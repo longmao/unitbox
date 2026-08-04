@@ -1,0 +1,135 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import { appleDevArticles } from '~/data/apple-dev';
+import { parseRecipe } from '~/lib/recipe';
+import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { buildArticle, buildFaqPage, canonicalUrl, type FaqItem } from '~/lib/seo';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string; slug: string }; props: { locale: Locale; slug: string } }> = [];
+  for (const locale of LOCALES) {
+    for (const article of appleDevArticles) {
+      out.push({
+        params: { locale, slug: article.slug },
+        props: { locale, slug: article.slug },
+      });
+    }
+  }
+  return out;
+}
+
+const { locale, slug } = Astro.props as { locale: Locale; slug: string };
+const article = appleDevArticles.find(a => a.slug === slug);
+if (!article) throw new Error(`Apple-dev recipe not found: ${slug}`);
+
+const blocks = parseRecipe(article.body[locale]);
+const faqItems: FaqItem[] = article.faq.map(f => ({ q: f.q[locale], a: f.a[locale] }));
+
+const canonical = canonicalUrl(Astro.url.pathname);
+const publishedAt = article.publishedAt ?? '2026-08-04';
+const dateModified = article.dateModified ?? '2026-08-04';
+
+const articleSchema = buildArticle({
+  headline: article.title[locale],
+  description: article.description[locale],
+  url: canonical,
+  inLanguage: locale,
+  datePublished: publishedAt,
+  dateModified,
+  authorName: 'unitbox Editorial Team',
+  authorUrl: 'https://unitbox.online/about/',
+  category: article.category,
+});
+
+const howtoSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: article.title[locale],
+  description: article.description[locale],
+  inLanguage: locale,
+  totalTime: 'PT30M',
+  tool: [{ '@type': 'HowToTool', name: article.howto.tool[locale] }],
+  step: article.howto.steps.map((s, i) => ({
+    '@type': 'HowToStep',
+    position: i + 1,
+    name: s.name[locale],
+    text: s.text[locale],
+  })),
+};
+
+const faqSchema = faqItems.length > 0 ? buildFaqPage(faqItems, { inLanguage: locale }) : null;
+
+const homeLabel = t('nav.home', locale);
+const sectionLabel = t('apple-dev.h1', locale);
+const relatedLabel = t('apple-dev.related', locale);
+const related = appleDevArticles
+  .filter(a => a.slug !== slug)
+  .slice(0, 4)
+  .map(a => ({ name: a.title[locale], description: a.description[locale], href: route(locale, `/apple-dev/${a.slug}/`) }));
+---
+<Base title={article.title[locale]} description={article.description[locale]} locale={locale} ogType="article">
+
+<JsonLd data={articleSchema} />
+<JsonLd data={howtoSchema} />
+{faqSchema && <JsonLd data={faqSchema} />}
+
+<div class="breadcrumbs">
+  <a href={route(locale, '/')}>{homeLabel}</a> ›
+  <a href={route(locale, '/apple-dev/')}>{sectionLabel}</a> ›
+  <span>{article.title[locale]}</span>
+</div>
+
+<article class="recipe">
+  <header>
+    <h1>{article.title[locale]}</h1>
+    <div class="meta">
+      <span class="cat">{article.category}</span>
+      <span class="rt">{article.readTime} read</span>
+    </div>
+    <p class="lead">{article.description[locale]}</p>
+  </header>
+
+  <div class="body">
+    {blocks.map(b => {
+      if (b.type === 'code') {
+        return <pre class="code-block"><code>{b.code}</code></pre>;
+      }
+      if (b.type === 'h2') {
+        return <h2>{b.segments.map(seg => typeof seg === 'string' ? <span set:html={seg} /> : <span class="math" set:html={seg.html} />)}</h2>;
+      }
+      if (b.type === 'ul') {
+        return <ul>{b.items.map(segs => <li>{segs.map(seg => typeof seg === 'string' ? <span set:html={seg} /> : <span class="math" set:html={seg.html} />)}</li>)}</ul>;
+      }
+      return <p>{b.segments.map(seg => typeof seg === 'string' ? <span set:html={seg} /> : <span class="math" set:html={seg.html} />)}</p>;
+    })}
+  </div>
+
+  {related.length > 0 && (
+    <aside class="related-section">
+      <RecommendedList title={relatedLabel} items={related} />
+    </aside>
+  )}
+</article>
+
+</Base>
+
+<style>
+  .recipe { max-width: 760px; margin: 0 auto; }
+  .recipe header { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 12px; }
+  .recipe h1 { font-size: 32px; line-height: 1.2; margin-bottom: 12px; }
+  .lead { color: var(--fg-soft); font-size: 18px; line-height: 1.55; margin: 12px 0 0; }
+  .meta { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
+  .meta .cat { background: var(--brand); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .meta .rt { font-size: 13px; color: var(--fg-muted); }
+  .body p { font-size: 16px; line-height: 1.7; color: var(--fg); margin: 14px 0; }
+  .body h2 { font-size: 22px; margin-top: 26px; }
+  .body ul { font-size: 16px; line-height: 1.7; color: var(--fg); margin: 14px 0; padding-left: 24px; }
+  .body ul li { margin: 6px 0; }
+  .body :global(code) { font-family: ui-monospace, monospace; background: #eef2fb; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: #1e3a8a; }
+  .code-block { background: #f6f8fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 18px 0; }
+  .code-block code { font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.7; color: #1f2937; white-space: pre; }
+  .math { font-family: ui-monospace, monospace; background: var(--bg-soft); color: #fff; padding: 14px 18px; border-radius: 8px; }
+</style>

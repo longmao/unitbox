@@ -3,7 +3,7 @@ import Base from '~/layouts/Base.astro';
 import PngCompressor from '~/components/PngCompressor.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { LOCALES, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
 
@@ -30,7 +30,7 @@ const faq = [
   { q: t('png.faq-6.q', locale), a: t('png.faq-6.a', locale) },
 ];
 
-const faqLd = buildFaqPage(faq, { inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans' });
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 const howtoLd = buildHowTo({
   name: t('png.howto.title', locale),
   description: subtitle,
@@ -52,7 +52,7 @@ const softwareApp = {
   operatingSystem: 'Any (browser-based)',
   description: subtitle,
   url: canonical,
-  inLanguage: locale === 'en' ? 'en' : locale === 'zh-hant' ? 'zh-Hant' : 'zh-Hans',
+  inLanguage: IN_LANGUAGE[locale],
   offers: {
     '@type': 'Offer',
     price: '0',
