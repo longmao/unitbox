@@ -1,0 +1,206 @@
+---
+// JWT decoder island. Pure client-side: textarea + paste → decode via
+// ~/lib/jwt.ts (import triggers Vite hoisting into /_astro/hoisted.*.js).
+// i18n strings are resolved server-side and injected as a JSON blob on the
+// root <section>, then read back by the hoisted script (same pattern as
+// PngCompressor.astro).
+
+interface Props {
+  i18n: Record<string, string>;
+}
+const { i18n } = Astro.props as Props;
+const i18nJson = JSON.stringify(i18n);
+
+// A sample JWT (HS256) with a 2018 exp so the security scanner demonstrates
+// the "expired" warning. base64url segments, dot-joined.
+const SAMPLE =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+  'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyNDI2MjIsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSIsImF1ZCI6Im15LWNsaWVudC1pZCIsInNjb3BlIjoicmVhZDpwcm9maWxlIHdyaXRlOmRhdGEifQ.' +
+  'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+---
+
+<section class="jwt-decoder" data-i18n={i18nJson} data-sample={SAMPLE}>
+  <div class="pills">
+    <span class="pill">🔒 {i18n.privacy1 ?? ''}</span>
+    <span class="pill">🚫 {i18n.privacy2 ?? ''}</span>
+    <span class="pill">👁️ {i18n.privacy3 ?? ''}</span>
+  </div>
+
+  <label class="input-label" for="jwt-input">{i18n['input-label'] ?? ''}</label>
+  <textarea id="jwt-input" rows="4" spellcheck="false" autocomplete="off"
+    placeholder={i18n['input-ph'] ?? ''}></textarea>
+
+  <div class="actions-top">
+    <button type="button" id="jwt-decode-btn" class="btn btn-primary">{i18n.decode ?? ''}</button>
+    <button type="button" id="jwt-sample-btn" class="btn">{i18n.sample ?? ''}</button>
+    <button type="button" id="jwt-clear-btn" class="btn btn-ghost">{i18n.clear ?? ''}</button>
+  </div>
+
+  <div id="jwt-error" class="error" hidden></div>
+
+  <div id="jwt-results" class="results" aria-live="polite">
+    <p class="empty-state">{i18n['empty-state'] ?? ''}</p>
+  </div>
+</section>
+
+<style>
+  .jwt-decoder { display: flex; flex-direction: column; gap: 14px; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { background: var(--bg-soft, #eef2fb); color: var(--fg-soft, #1e3a8a); font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+  .input-label { font-size: 13px; font-weight: 600; color: var(--fg-soft); }
+  textarea { width: 100%; font-family: ui-monospace, monospace; font-size: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; background: #f6f8fa; color: #1f2937; box-sizing: border-box; }
+  textarea:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+  .actions-top { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { font-size: 13px; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border); background: #fff; color: var(--fg); cursor: pointer; font-weight: 600; }
+  .btn:hover { background: #f6f8fa; }
+  .btn-primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-ghost { background: transparent; }
+  .error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+  .results { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; }
+  .empty-state { color: var(--fg-muted); font-size: 14px; }
+  .card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card-head { background: #f6f8fa; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-soft); display: flex; justify-content: space-between; align-items: center; }
+  .card-body { padding: 12px 14px; }
+  pre.json { margin: 0; font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; word-break: break-all; }
+  .claim-row { display: grid; grid-template-columns: 130px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .claim-row:last-child { border-bottom: 0; }
+  .claim-key { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; color: #1e3a8a; }
+  .claim-val { font-family: ui-monospace, monospace; font-size: 12px; color: #1f2937; word-break: break-all; }
+  .claim-expl { grid-column: 2; font-family: inherit; font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+  .claim-time { grid-column: 2; font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+  .claim-time .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-weight: 700; margin-left: 4px; }
+  .badge-valid { background: #dcfce7; color: #166534; }
+  .badge-expired { background: #fee2e2; color: #991b1b; }
+  .badge-notyet { background: #fef9c3; color: #854d0e; }
+  .type-label { font-size: 15px; font-weight: 700; color: var(--brand); }
+  .type-reason { font-size: 12px; color: var(--fg-muted); margin-top: 3px; }
+  .finding { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .finding:last-child { border-bottom: 0; }
+  .finding-icon { flex-shrink: 0; }
+  .finding.danger .finding-icon { color: #dc2626; }
+  .finding.warn .finding-icon { color: #d97706; }
+  .finding.info .finding-icon { color: #2563eb; }
+  .sig { font-family: ui-monospace, monospace; font-size: 11px; color: var(--fg-muted); word-break: break-all; }
+  .sig-meta { font-size: 11px; color: var(--fg-muted); margin-top: 6px; }
+  .copy-btn { font-size: 11px; padding: 2px 8px; border-radius: 5px; border: 1px solid var(--border); background: #fff; cursor: pointer; color: var(--fg-soft); }
+  .copy-btn:hover { background: #f6f8fa; }
+</style>
+
+<script>
+  import { decodeJwt, inferTokenType, securityScan, describeTime, explainClaim } from '../lib/jwt';
+
+  const root = document.querySelector('.jwt-decoder') as HTMLElement | null;
+  if (root) {
+    const i18n = JSON.parse(root.dataset.i18n ?? '{}');
+    const SAMPLE = root.dataset.sample ?? '';
+    const input = root.querySelector('#jwt-input') as HTMLTextAreaElement;
+    const errorBox = root.querySelector('#jwt-error') as HTMLElement;
+    const results = root.querySelector('#jwt-results') as HTMLElement;
+
+    const esc = (s: unknown) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+
+    function timeBadge(claim: unknown) {
+      const t = describeTime(claim);
+      if (!t) return '';
+      return `<div class="claim-time">${t.iso} · ${t.relative}</div>`;
+    }
+
+    function renderClaims(obj: Record<string, unknown>): string {
+      const TIME_CLAIMS = ['exp', 'nbf', 'iat', 'auth_time'];
+      return Object.entries(obj).map(([k, v]) => {
+        const expl = explainClaim(k);
+        const isTime = TIME_CLAIMS.includes(k.toLowerCase()) && typeof v === 'number';
+        const now = Math.floor(Date.now() / 1000);
+        let badge = '';
+        if (isTime) {
+          if (k.toLowerCase() === 'exp') badge = v < now ? `<span class="badge badge-expired">${i18n['result.expired'] ?? 'expired'}</span>` : `<span class="badge badge-valid">${i18n['result.valid'] ?? 'valid'}</span>`;
+          if (k.toLowerCase() === 'nbf' && v > now) badge = `<span class="badge badge-notyet">${i18n['result.notyet'] ?? 'not yet valid'}</span>`;
+        }
+        return `<div class="claim-row">
+          <div class="claim-key">${esc(k)}</div>
+          <div class="claim-val">${esc(JSON.stringify(v))}${badge}</div>
+          ${expl ? `<div class="claim-expl">${esc(expl)}</div>` : ''}
+          ${isTime ? timeBadge(v) : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function render(token: string) {
+      errorBox.hidden = true;
+      const trimmed = token.trim();
+      if (!trimmed) {
+        results.innerHTML = `<p class="empty-state">${esc(i18n['empty-state'] ?? '')}</p>`;
+        return;
+      }
+      let d;
+      try {
+        d = decodeJwt(trimmed);
+      } catch (e) {
+        const msg = (e as Error).message;
+        errorBox.textContent = i18n[`error.${msg === 'invalid-json' ? 'invalid-json' : 'malformed'}`] ?? i18n['error.malformed'];
+        errorBox.hidden = false;
+        results.innerHTML = '';
+        return;
+      }
+      const type = inferTokenType(d.header, d.payload);
+      const findings = securityScan(d.header, d.payload);
+      const alg = String((d.header as Record<string, unknown>).alg ?? '—');
+
+      const headerJson = JSON.stringify(d.header, null, 2);
+      const sigLen = d.signature.length;
+
+      const findingsHtml = findings.map((f) => {
+        const icon = f.level === 'danger' ? '⛔' : f.level === 'warn' ? '⚠️' : 'ℹ️';
+        return `<div class="finding ${f.level}"><span class="finding-icon">${icon}</span><span>${esc(f.message)}</span></div>`;
+      }).join('');
+
+      results.innerHTML = `
+        <div class="card">
+          <div class="card-head"><span>${esc(i18n['result.type'] ?? 'Inferred token type')}</span></div>
+          <div class="card-body">
+            <div class="type-label">${esc(type.label)}</div>
+            <div class="type-reason">${esc(type.reason)}</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span>${esc(i18n['result.security'] ?? 'Security check')} · ${alg}</span></div>
+          <div class="card-body">${findingsHtml || '<div class="finding info"><span class="finding-icon">✅</span><span>No issues detected.</span></div>'}</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span>${esc(i18n['result.header'] ?? 'Header')}</span><button class="copy-btn" data-copy="${esc(headerJson)}">${esc(i18n.copy ?? 'Copy')}</button></div>
+          <div class="card-body"><pre class="json">${esc(headerJson)}</pre></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span>${esc(i18n['result.payload'] ?? 'Payload')} · ${esc(i18n['result.claims'] ?? 'Claims')}</span></div>
+          <div class="card-body">${renderClaims(d.payload)}</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span>${esc(i18n['result.signature'] ?? 'Signature')}</span></div>
+          <div class="card-body">
+            <div class="sig">${esc(d.signature || '(empty — alg:none)')}</div>
+            <div class="sig-meta">${sigLen} chars · base64url · ${sigLen === 0 ? 'unsigned' : 'opaque without the signing key'}</div>
+          </div>
+        </div>`;
+    }
+
+    let timer: number | undefined;
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => render(input.value), 250);
+    });
+    root.querySelector('#jwt-decode-btn')?.addEventListener('click', () => render(input.value));
+    root.querySelector('#jwt-sample-btn')?.addEventListener('click', () => { input.value = SAMPLE; render(SAMPLE); });
+    root.querySelector('#jwt-clear-btn')?.addEventListener('click', () => { input.value = ''; render(''); input.focus(); });
+    input.addEventListener('paste', () => window.setTimeout(() => render(input.value), 0));
+    // delegated copy
+    results.addEventListener('click', (ev) => {
+      const btn = (ev.target as HTMLElement).closest('.copy-btn') as HTMLElement | null;
+      if (!btn) return;
+      const text = btn.dataset.copy ?? '';
+      navigator.clipboard?.writeText(text).then(() => { btn.textContent = i18n.copied ?? 'Copied'; window.setTimeout(() => { btn.textContent = i18n.copy ?? 'Copy'; }, 1200); });
+    });
+
+    (window as unknown as Record<string, unknown>).__JWT_DECODER_READY__ = true;
+  }
+</script>

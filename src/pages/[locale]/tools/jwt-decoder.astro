@@ -1,0 +1,143 @@
+---
+import Base from '~/layouts/Base.astro';
+import JwtDecoder from '~/components/JwtDecoder.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const title = `${t('jwt.h1', locale)} — unitbox`;
+const subtitle = t('jwt.subtitle', locale);
+const canonical = canonicalUrl(Astro.url.pathname);
+
+const faq = [
+  { q: t('jwt.faq-1.q', locale), a: t('jwt.faq-1.a', locale) },
+  { q: t('jwt.faq-2.q', locale), a: t('jwt.faq-2.a', locale) },
+  { q: t('jwt.faq-3.q', locale), a: t('jwt.faq-3.a', locale) },
+  { q: t('jwt.faq-4.q', locale), a: t('jwt.faq-4.a', locale) },
+  { q: t('jwt.faq-5.q', locale), a: t('jwt.faq-5.a', locale) },
+  { q: t('jwt.faq-6.q', locale), a: t('jwt.faq-6.a', locale) },
+];
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+
+const howtoLd = buildHowTo({
+  name: t('jwt.howto.title', locale),
+  description: subtitle,
+  step1Name: t('jwt.howto.s1.title', locale),
+  step1Text: t('jwt.howto.s1.body', locale),
+  step2Name: t('jwt.howto.s2.title', locale),
+  step2Text: t('jwt.howto.s2.body', locale),
+  toolName: 'JWT Decoder',
+  canonicalUrl: canonical,
+});
+
+const softwareApp = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'unitbox JWT Decoder',
+  applicationCategory: 'DeveloperApplication',
+  applicationSubCategory: 'Token Decoder',
+  operatingSystem: 'Any (browser-based)',
+  description: subtitle,
+  url: canonical,
+  inLanguage: IN_LANGUAGE[locale],
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  isAccessibleForFree: true,
+};
+
+// Client-side i18n strings (resolved per-locale, injected as JSON blob).
+const jwtI18n = {
+  privacy1: t('jwt.privacy.line1', locale),
+  privacy2: t('jwt.privacy.line2', locale),
+  privacy3: t('jwt.privacy.line3', locale),
+  'input-label': t('jwt.input-label', locale),
+  'input-ph': t('jwt.input-ph', locale),
+  decode: t('jwt.decode', locale),
+  clear: t('jwt.clear', locale),
+  sample: t('jwt.sample', locale),
+  'empty-state': t('jwt.empty-state', locale),
+  copy: t('jwt.copy', locale),
+  copied: t('jwt.copied', locale),
+  'error.malformed': t('jwt.error.malformed', locale),
+  'error.invalid-json': t('jwt.error.invalid-json', locale),
+  'result.header': t('jwt.result.header', locale),
+  'result.payload': t('jwt.result.payload', locale),
+  'result.signature': t('jwt.result.signature', locale),
+  'result.type': t('jwt.result.type', locale),
+  'result.security': t('jwt.result.security', locale),
+  'result.claims': t('jwt.result.claims', locale),
+  'result.valid': t('jwt.result.valid', locale),
+  'result.expired': t('jwt.result.expired', locale),
+  'result.notyet': t('jwt.result.notyet', locale),
+};
+---
+
+<Base title={title} description={subtitle} ogType="website" locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={softwareApp} />
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+  <div class="breadcrumbs">
+    <a href={route(locale, '/')}>{t('nav.home', locale)}</a> ›
+    <span>{t('jwt.h1', locale)}</span>
+  </div>
+
+  <h1>{t('jwt.h1', locale)}</h1>
+  <p class="lede">{subtitle}</p>
+
+  <JwtDecoder i18n={jwtI18n} />
+
+  <section class="section">
+    <h2>{t('jwt.howto.title', locale)}</h2>
+    <ol class="howto">
+      <li><strong>{t('jwt.howto.s1.title', locale)}</strong> — <span>{t('jwt.howto.s1.body', locale)}</span></li>
+      <li><strong>{t('jwt.howto.s2.title', locale)}</strong> — <span>{t('jwt.howto.s2.body', locale)}</span></li>
+      <li><strong>{t('jwt.howto.s3.title', locale)}</strong> — <span>{t('jwt.howto.s3.body', locale)}</span></li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2>{t('jwt.faq-title', locale)}</h2>
+    <FaqBlock items={faq} />
+  </section>
+
+  <section class="section">
+    <h2>{t('jwt.cta.related', locale)}</h2>
+    <ul class="related-list">
+      <li>🖼️ <a href={route(locale, '/tools/png-compressor')}>{t('png.h1', locale)}</a></li>
+      <li>🧮 <a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a></li>
+      <li>🔒 <span>{t('jwt.cta.related.coming', locale)}</span></li>
+    </ul>
+  </section>
+
+  <p class="back-link"><a href={route(locale, '/')}>{t('jwt.cta.back', locale)}</a></p>
+</Base>
+
+<style>
+  .breadcrumbs { font-size: 13px; color: var(--fg-muted); margin-bottom: 14px; }
+  .breadcrumbs a { color: var(--brand); }
+  h1 { font-size: 32px; line-height: 1.2; margin-bottom: 10px; }
+  .lede { color: var(--fg-soft); font-size: 17px; line-height: 1.55; margin: 0 0 24px; max-width: 680px; }
+  .section { margin-top: 36px; }
+  .section h2 { font-size: 22px; margin-bottom: 12px; }
+  .howto { padding-left: 22px; line-height: 1.7; color: var(--fg); }
+  .howto li { margin: 8px 0; }
+  .howto strong { color: var(--fg); }
+  .related-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .related-list a { color: var(--brand); }
+  .back-link { margin-top: 32px; }
+  .back-link a { color: var(--brand); font-weight: 600; }
+</style>

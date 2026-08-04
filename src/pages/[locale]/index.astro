@@ -139,6 +139,15 @@ const description = `${categories.length} categories · 110+ units · 1,135 conv
         <p class="tool-body">{t('home.tools-section.tool-png.body', locale)}</p>
         <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
       </a>
+      <a class="card tool-card tool-card-jwt" href={route(locale, '/tools/jwt-decoder')}>
+        <div class="tool-card-head">
+          <span class="tool-emoji" aria-hidden="true">🔓</span>
+          <span class="tool-badge">new</span>
+        </div>
+        <h3 class="tool-title">{t('home.tools-section.tool-jwt.title', locale)}</h3>
+        <p class="tool-body">{t('home.tools-section.tool-jwt.body', locale)}</p>
+        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
+      </a>
       <a class="card tool-card" href={route(locale, '/calculator')}>
         <div class="tool-card-head">
           <span class="tool-emoji" aria-hidden="true">🧮</span>
