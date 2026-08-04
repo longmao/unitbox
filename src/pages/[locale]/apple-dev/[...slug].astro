@@ -115,6 +115,14 @@ const related = appleDevArticles
       if (b.type === 'ul') {
         return <ul>{b.items.map(segs => <li>{segs.map(seg => typeof seg === 'string' ? <span set:html={seg} /> : <span class="math" set:html={seg.html} />)}</li>)}</ul>;
       }
+      if (b.type === 'image') {
+        return (
+          <figure class="recipe-img">
+            <img src={b.src} alt={b.alt} loading="lazy" decoding="async" />
+            {b.caption && <figcaption>{b.caption}</figcaption>}
+          </figure>
+        );
+      }
       return <p>{b.segments.map(seg => typeof seg === 'string' ? <span set:html={seg} /> : <span class="math" set:html={seg.html} />)}</p>;
     })}
   </div>
@@ -144,4 +152,7 @@ const related = appleDevArticles
   .code-block { background: #f6f8fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 18px 0; }
   .code-block code { font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.7; color: #1f2937; white-space: pre; }
   .math { font-family: ui-monospace, monospace; background: var(--bg-soft); color: #fff; padding: 14px 18px; border-radius: 8px; }
+  .recipe-img { margin: 22px 0; }
+  .recipe-img img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  .recipe-img figcaption { font-size: 13px; color: var(--fg-muted); margin-top: 8px; line-height: 1.5; }
 </style>

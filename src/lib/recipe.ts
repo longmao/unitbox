@@ -16,7 +16,8 @@ export type Block =
   | { type: 'p'; segments: InlineRenderable[] }
   | { type: 'h2'; segments: InlineRenderable[] }
   | { type: 'code'; lang?: string; code: string }
-  | { type: 'ul'; items: InlineRenderable[][] };
+  | { type: 'ul'; items: InlineRenderable[][] }
+  | { type: 'image'; alt: string; src: string; caption?: string };
 
 // ASCII sentinel that can never appear in a real recipe body. Survives trim().
 const CODE_MARK = '@@CB@@';
@@ -53,6 +54,15 @@ export function parseRecipe(body: string): Block[] {
     // heading
     if (/^##\s+/.test(trimmed)) {
       blocks.push({ type: 'h2', segments: formatInline(trimmed.replace(/^##\s+/, '').replace(/\n/g, ' ')) });
+      continue;
+    }
+
+    // image — 整段是一张 markdown image，可选紧跟一行斜体 caption
+    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)\)(?:\s*\n+\*([^*]+)\*)?\s*$/);
+    if (imgMatch) {
+      const blk: Block = { type: 'image', alt: imgMatch[1].trim(), src: imgMatch[2].trim() };
+      if (imgMatch[3]) blk.caption = imgMatch[3].trim();
+      blocks.push(blk);
       continue;
     }
 

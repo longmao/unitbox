@@ -168,6 +168,19 @@ xcodebuild test \
 
 首次带 Test action 的云端 build：`TEST SUCCEEDED`，连同 Archive 总耗时约 7 分钟。Xcode Cloud 的 Test action 只跑 XCTest / XCUITest（原生层），不跑 jest——RN 的 JS 单测要另配（比如用 GitLab CI 的 jest job 并行跑）。
 
+## 实测：4 个模拟器并行，smoke 全绿
+
+把这条链路在一个真实 RN 项目上跑通：UITest scheme 的 TestAction 配 Release configuration，smoke 用例 `testAppLaunches` 只验 app 起得来不崩。push 后 Xcode Cloud 自动触发，Test action 在 4 个 destination（iPhone SE / 16 / 16 Pro / 16 Pro Max）并行跑，全绿。
+
+![Xcode Cloud 测试报告 Gallery 视图](/apple-dev/xcode-cloud-testing-gallery.png)
+*testAppLaunches 4 passed runs，按 destination 分组，每组带一张 app 启动屏——这正是 XCTAttachment 用 keepAlways 摊进 .xcresult 的截图证据。*
+
+三个实测踩到的非显然点：
+
+- **Release configuration 在 Cloud 上能跑 UITest**。本地真机用 Release 会撞 `test bundles not available in Release configuration`，但 Xcode Cloud 的 build-for-testing / test-without-building 分离模式没事，TestAction 直接配 Release 即可。
+- **截图默认不留，得显式保活**。XCTest 的 attachment 默认 `.deleteOnSuccess`——测试一过就清，出现"过了但无图"。改成 `.keepAlways` 才会进 .xcresult，Gallery 标签和 Xcode Organizer 才看得到。
+- **截图不在 Artifacts 标签**。Artifacts 只列打包产物（Logs / Test Products / .xcresult.zip），attachment 是 .xcresult 包内资源。看它要去 Tests → Gallery，或下载 .xcresult 用 `xcrun xcresulttool export attachments` 导出。
+
 ## 进阶：用环境变量门控 BDD
 
 smoke 是基线，每次都跑。但真机 BDD（UI 交互、业务流程）耗时长、占配额，不该每次 build 都跑。约定用环境变量门控：
