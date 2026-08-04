@@ -57,20 +57,40 @@ async function getMetadata(t, url) {
   return r.json().catch(() => ({}));
 }
 
-function extractUrlsFromSitemap(xml, limit) {
+function extractUrlsFromSitemap(xml) {
   const urls = [];
   const re = /<loc>([^<]+)<\/loc>/g;
   let m;
-  while ((m = re.exec(xml)) !== null) {
-    urls.push(m[1]);
-    if (urls.length >= limit) break;
-  }
+  while ((m = re.exec(xml)) !== null) urls.push(m[1]);
   return urls;
+}
+
+// High-intent head terms (mirrors prioritize-indexing.mjs).
+const HEAD = [
+  'celsius-to-fahrenheit','fahrenheit-to-celsius','km-to-mile','mile-to-km',
+  'kg-to-pound','pound-to-kg','cm-to-inch','inch-to-cm','mb-to-mb',
+  'gb-to-mb','mb-to-gb','gb-to-tb','liter-to-gallon','gallon-to-liter',
+  'meter-to-feet','feet-to-meter','inch-to-mm','mm-to-inch','byte-to-mb',
+  'cup-to-ml','ml-to-cup','ounce-to-gram','gram-to-ounce','fahrenheit-to-kelvin',
+];
+
+// Rank so the cron's 100/day quota hits cross-locale high-value pages
+// (homes → articles → apple-dev → head → rest) instead of the first 100 en URLs
+// in raw sitemap order (which left every non-en locale uncrawlable via cron).
+function rankUrls(all, limit) {
+  const homes = [`${SITE}/`, `${SITE}/en/`, `${SITE}/zh-hans/`, `${SITE}/zh-hant/`].filter(u => all.includes(u));
+  const articles = all.filter(u => /\/articles\//.test(u));
+  const appleDev = all.filter(u => /\/apple-dev\//.test(u));
+  const headUrls = [];
+  for (const term of HEAD) for (const loc of ['/en/', '/zh-hans/', '/zh-hant/']) { const u = `${SITE}${loc}${term}/`; if (all.includes(u)) headUrls.push(u); }
+  const rest = all.filter(u => !homes.includes(u) && !articles.includes(u) && !appleDev.includes(u) && !headUrls.includes(u));
+  return [...new Set([...homes, ...articles, ...appleDev, ...headUrls, ...rest])].slice(0, limit);
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const verify = args.includes('--verify');
+  const dryRun = args.includes('--dry-run');
   const limitArg = args.find(a => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.slice(8), 10) : 100;
   const sitemapArg = args.find(a => a.startsWith('--sitemap='));
@@ -94,7 +114,16 @@ async function main() {
       console.error('[idx] sitemap not found:', sitemapPath);
       process.exit(1);
     }
-    urls = extractUrlsFromSitemap(fs.readFileSync(sitemapPath, 'utf8'), limit);
+    urls = rankUrls(extractUrlsFromSitemap(fs.readFileSync(sitemapPath, 'utf8')), limit);
+  }
+
+  if (dryRun) {
+    const bucket = u => /\/apple-dev\//.test(u) ? 'apple-dev' : /\/articles\//.test(u) ? 'articles' : /\/(en|zh-hans|zh-hant)\/?$/.test(u.replace(SITE, '')) ? 'homes/head' : 'rest';
+    const dist = {};
+    for (const u of urls) dist[bucket(u)] = (dist[bucket(u)] || 0) + 1;
+    console.log(`[idx] dry-run · top ${urls.length} bucket:`, JSON.stringify(dist));
+    urls.slice(0, 10).forEach((u, i) => console.log(`  ${(i + 1).toString().padStart(3)}  ${u.replace(SITE, '')}`));
+    return;
   }
 
   console.log(`[idx] publishing ${urls.length} URLs (quota: 200/day) ...`);

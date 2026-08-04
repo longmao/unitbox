@@ -75,14 +75,15 @@ const all = extractUrls(fs.readFileSync(SITEMAP, 'utf8'));
 const tier1 = all.filter(u => /^(https:\/\/unitbox\.online\/|\/en\/|\/zh-hans\/|\/zh-hant\/|\/zh-hans|\/zh-hant)$/.test(u.replace(SITE, '')) || u === `${SITE}/`);
 const homes = [`${SITE}/`, `${SITE}/en/`, `${SITE}/zh-hans/`, `${SITE}/zh-hant/`].filter(u => all.includes(u));
 const articles = all.filter(u => /\/articles\//.test(u));
+const appleDev = all.filter(u => /\/apple-dev\//.test(u));
 const headUrls = [];
 for (const term of HEAD) for (const loc of ['/en/', '/zh-hans/', '/zh-hant/']) { const u = `${SITE}${loc}${term}/`; if (all.includes(u)) headUrls.push(u); }
-const rest = all.filter(u => !homes.includes(u) && !articles.includes(u) && !headUrls.includes(u));
+const rest = all.filter(u => !homes.includes(u) && !articles.includes(u) && !appleDev.includes(u) && !headUrls.includes(u));
 
-// dedupe + ordered
-const ranked = [...new Set([...homes, ...articles, ...headUrls, ...rest])].slice(0, limit);
+// dedupe + ordered: homes → articles → apple-dev (hand-written verticals) → head conversions → rest
+const ranked = [...new Set([...homes, ...articles, ...appleDev, ...headUrls, ...rest])].slice(0, limit);
 
-console.error(`[prio-idx] sitemap=${all.length} homes=${homes.length} articles=${articles.length} head=${headUrls.length} → submitting top ${ranked.length}`);
+console.error(`[prio-idx] sitemap=${all.length} homes=${homes.length} articles=${articles.length} apple-dev=${appleDev.length} head=${headUrls.length} → submitting top ${ranked.length}`);
 
 if (dryRun) {
   ranked.forEach((u, i) => console.log(`${(i + 1).toString().padStart(3)}  ${u.replace(SITE, '')}`));
@@ -99,7 +100,7 @@ for (let i = 0; i < ranked.length; i++) {
   await sleep(350); // Google Indexing API 429s above ~4/sec; 350ms ≈ 2.8/sec, ~110/min safe
 }
 
-const out = { date: new Date().toISOString(), submitted: ranked.length, ok, fail, tier_counts: { homes: homes.length, articles: articles.length, head: headUrls.length, rest: ranked.length - homes.length - articles.length - headUrls.length }, failures: failLog.slice(0, 10) };
+const out = { date: new Date().toISOString(), submitted: ranked.length, ok, fail, tier_counts: { homes: homes.length, articles: articles.length, appleDev: appleDev.length, head: headUrls.length, rest: ranked.length - homes.length - articles.length - appleDev.length - headUrls.length }, failures: failLog.slice(0, 10) };
 fs.mkdirSync(OUT_DIR, { recursive: true });
 const dateStr = new Date().toISOString().slice(0, 10);
 fs.writeFileSync(path.join(OUT_DIR, dateStr, 'prioritized-indexing.json'), JSON.stringify(out, null, 2));
