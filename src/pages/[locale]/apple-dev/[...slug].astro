@@ -42,6 +42,7 @@ const articleSchema = buildArticle({
   authorName: 'unitbox Editorial Team',
   authorUrl: 'https://unitbox.online/about/',
   category: article.category,
+  keywords: article.keywords[locale],
 });
 
 const howtoSchema = {
@@ -70,7 +71,18 @@ const related = appleDevArticles
   .slice(0, 4)
   .map(a => ({ name: a.title[locale], description: a.description[locale], href: route(locale, `/apple-dev/${a.slug}/`) }));
 ---
-<Base title={article.title[locale]} description={article.description[locale]} locale={locale} ogType="article">
+<Base
+  title={article.title[locale]}
+  description={article.description[locale]}
+  locale={locale}
+  ogType="article"
+  publishedTime={publishedAt}
+  modifiedTime={dateModified}
+  authorName="unitbox Editorial Team"
+  articleSection={article.category}
+  ogImageAlt={article.title[locale]}
+  keywords={article.keywords[locale]}
+>
 
 <JsonLd data={articleSchema} />
 <JsonLd data={howtoSchema} />

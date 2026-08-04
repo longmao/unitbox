@@ -121,6 +121,8 @@ export function buildArticle(opts: {
   authorName: string;
   authorUrl: string;
   category?: string;
+  keywords?: string;
+  image?: string;
 }): SchemaBase {
   return {
     '@context': 'https://schema.org',
@@ -129,6 +131,7 @@ export function buildArticle(opts: {
     headline: opts.headline,
     description: opts.description,
     url: opts.url,
+    image: opts.image ?? `${SITE.url}${SITE.ogImage}`,
     inLanguage: opts.inLanguage,
     datePublished: opts.datePublished,
     dateModified: opts.dateModified,
@@ -146,6 +149,7 @@ export function buildArticle(opts: {
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
     ...(opts.category ? { articleSection: opts.category } : {}),
+    ...(opts.keywords ? { keywords: opts.keywords } : {}),
   } as unknown as SchemaBase;
 }
 

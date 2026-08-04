@@ -31,6 +31,7 @@ export interface AppleDevArticle {
   category: string;
   readTime: string;
   body: Localized;
+  keywords: Localized;
   howto: { tool: Localized; steps: RecipeStep[] };
   faq: RecipeFaq[];
   publishedAt?: string;
@@ -57,6 +58,13 @@ function bodyFor(slug: string, locale: string): string {
 export const appleDevArticles: AppleDevArticle[] = [
   {
     slug: 'xcode-cloud-rn-ipa-firebase',
+    keywords: {
+      en: 'React Native, Xcode Cloud, iOS IPA export, Firebase App Distribution, CI/CD, iOS build automation, Xcode Cloud free tier, over-the-air install',
+      'zh-hans': 'React Native, Xcode Cloud, iOS 打包, IPA 导出, Firebase App Distribution, CI/CD, 免费出包, 自动化构建, OTA 安装',
+      'zh-hant': 'React Native, Xcode Cloud, iOS 封裝, IPA 匯出, Firebase App Distribution, CI/CD, 免費出包, 自動化建置, OTA 安裝',
+      ja: 'React Native, Xcode Cloud, iOS ビルド, IPA エクスポート, Firebase App Distribution, CI/CD, 無料ビルド, 自動化, OTA 配布',
+      ko: 'React Native, Xcode Cloud, iOS 빌드, IPA 내보내기, Firebase App Distribution, CI/CD, 무료 빌드, 자동화, OTA 배포',
+    },
     category: 'Xcode Cloud',
     readTime: '9 min',
     publishedAt: '2026-08-04',
@@ -226,6 +234,13 @@ export const appleDevArticles: AppleDevArticle[] = [
   },
   {
     slug: 'xcode-cloud-testing',
+    keywords: {
+      en: 'Xcode Cloud, React Native testing, UITest, XCUITest, iOS test target, automated UI testing, xcodeproj gem, continuous testing',
+      'zh-hans': 'Xcode Cloud, React Native 测试, UITest, XCUITest, 测试 target, UI 自动化测试, xcodeproj, 持续测试',
+      'zh-hant': 'Xcode Cloud, React Native 測試, UITest, XCUITest, 測試 target, UI 自動化測試, xcodeproj, 持續測試',
+      ja: 'Xcode Cloud, React Native テスト, UITest, XCUITest, テスト target, UI 自動テスト, xcodeproj, 継続テスト',
+      ko: 'Xcode Cloud, React Native 테스트, UITest, XCUITest, 테스트 target, UI 자동화 테스트, xcodeproj, 지속 테스트',
+    },
     category: 'Xcode Cloud',
     readTime: '8 min',
     publishedAt: '2026-08-04',
@@ -395,6 +410,13 @@ export const appleDevArticles: AppleDevArticle[] = [
   },
   {
     slug: 'gitlab-ci-rn-ios-pipeline',
+    keywords: {
+      en: 'GitLab CI, React Native iOS, iOS pipeline, fastlane, code signing, CI/CD, iOS build automation, self-hosted runner',
+      'zh-hans': 'GitLab CI, React Native iOS, iOS 流水线, fastlane, 代码签名, CI/CD, 自动化构建, 自托管 runner',
+      'zh-hant': 'GitLab CI, React Native iOS, iOS 管線, fastlane, 程式碼簽章, CI/CD, 自動化建置, 自托管 runner',
+      ja: 'GitLab CI, React Native iOS, iOS パイプライン, fastlane, コード署名, CI/CD, 自動化, セルフホステッド runner',
+      ko: 'GitLab CI, React Native iOS, iOS 파이프라인, fastlane, 코드 서명, CI/CD, 자동화 빌드, 셀프호스티드 runner',
+    },
     category: 'GitLab CI',
     readTime: '10 min',
     publishedAt: '2026-08-04',
@@ -564,6 +586,13 @@ export const appleDevArticles: AppleDevArticle[] = [
   },
   {
     slug: 'rn-ios-dual-ci-architecture',
+    keywords: {
+      en: 'Xcode Cloud, GitLab CI, dual CI, React Native iOS, CI/CD architecture, Firebase App Distribution, branch strategy, iOS release pipeline',
+      'zh-hans': 'Xcode Cloud, GitLab CI, 双 CI, React Native iOS, CI/CD 架构, Firebase App Distribution, 分支策略, iOS 发版流水线',
+      'zh-hant': 'Xcode Cloud, GitLab CI, 雙 CI, React Native iOS, CI/CD 架構, Firebase App Distribution, 分支策略, iOS 發版管線',
+      ja: 'Xcode Cloud, GitLab CI, デュアル CI, React Native iOS, CI/CD アーキテクチャ, Firebase App Distribution, ブランチ戦略, iOS リリースパイプライン',
+      ko: 'Xcode Cloud, GitLab CI, 듀얼 CI, React Native iOS, CI/CD 아키텍처, Firebase App Distribution, 브랜치 전략, iOS 릴리스 파이프라인',
+    },
     category: 'Architecture',
     readTime: '6 min',
     publishedAt: '2026-08-04',
