@@ -63,8 +63,11 @@ const faq = [
 const featuredArticles = articles.slice(0, 4);
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
-const title = 'Convert Any Unit — Length, Mass, Temperature, and More';
-const description = `${categories.length} categories · 110+ units · 1,135 conversion pairs. Pick a popular conversion below or use the live calculator.`;
+// 8/5 loop: 补导航式 query 关键词（unit converter / free / online / tool），
+// 对齐 AI 可见度战场（7-31 baseline）。H1 不动（"any unit, instantly" 保品牌调性）；
+// title/desc 是 SEO 元数据，用户和 AI 搜索时看。
+const title = 'Convert Any Unit — Free Online Unit Converter';
+const description = `12 categories · 110+ units · 1,135 conversion pairs. Free online unit converter tool — convert length, mass, temperature & more, instantly. No signup, no tracking.`;
 ---
 <Base title={title} description={description} locale={locale} noBreadcrumb>
 

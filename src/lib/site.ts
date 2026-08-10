@@ -4,7 +4,7 @@ export const SITE = {
   legalName: 'unitbox',
   tagline: 'Convert any unit — and everything related to it',
   description:
-    'Conversion tables and live calculators for length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy. Plus a knowledge base on units, history, and standards.',
+    'Free online unit converter tool. 12 categories · 110+ units · 1,135 conversion pairs. Convert length, mass, temperature, area, volume, speed & more — instantly, no signup, no tracking.',
   url: 'https://unitbox.online',
   ogImage: '/og-default.png',
   locale: 'en_US',

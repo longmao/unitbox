@@ -13,12 +13,15 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
+// Query 战场（per 7-31 baseline llm-coverage-check）:
+// unitbox 的 AI 可见度主战场 = 导航式 query（best/free/tool 类，AI 会列工具网站），
+// 不是 transactional（convert X to Y，AI 直接给公式不列工具）。重导航式 + 1 对照。
 const QUERIES = [
-  'convert 100 celsius to fahrenheit',
-  'how many feet in a meter',
-  'convert 1 mile to kilometers',
-  '30 mpg to liters per 100km',
-  'how many bytes in a gigabyte',
+  'best unit converter online',
+  'free online unit converter tool',
+  'convert units tool',
+  'celsius to fahrenheit converter',
+  'convert 100 celsius to fahrenheit', // transactional 对照（AI 多半给公式）
 ];
 
 const ENGINES = {
@@ -56,9 +59,17 @@ async function call(name, q) {
   const e = ENGINES[name];
   const k = e.key();
   if (!k) throw new Error(`${name}: API key missing in env (${name.toUpperCase()}_API_KEY)`);
-  const r = await fetch(e.endpoint, { method: 'POST', headers: e.headers(k), body: JSON.stringify(e.buildBody(q)) });
-  if (!r.ok) throw new Error(`${name} HTTP ${r.status}: ${await r.text()}`);
-  return r.json();
+  // retry once on transient fetch fail (network/限流), 2s backoff — Perplexity 偶发 fetch failed
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const r = await fetch(e.endpoint, { method: 'POST', headers: e.headers(k), body: JSON.stringify(e.buildBody(q)) });
+      if (!r.ok) throw new Error(`${name} HTTP ${r.status}: ${await r.text()}`);
+      return r.json();
+    } catch (err) {
+      if (attempt === 2) throw err;
+      await new Promise(res => setTimeout(res, 2000));
+    }
+  }
 }
 
 async function main() {
@@ -67,9 +78,10 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10);
   const date = (args.find(a => a.startsWith('--date=')) || `--date=${today}`).slice(7);
 
-  const dayIdx = new Date(date + 'T00:00:00Z').getUTCDay() % 3;
   const names = ['perplexity', 'openai', 'anthropic'];
-  const name = names[dayIdx];
+  const engineArg = args.find(a => a.startsWith('--engine='));
+  // --engine=X overrides the 3-day rotation (used by 8/12 checkpoint deep-check)
+  const name = engineArg ? engineArg.slice(9) : names[new Date(date + 'T00:00:00Z').getUTCDay() % 3];
   const eng = ENGINES[name];
   const hasKey = !!eng.key();
 

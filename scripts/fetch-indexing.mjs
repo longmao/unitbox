@@ -78,11 +78,12 @@ const HEAD = [
 // (homes → articles → apple-dev → head → rest) instead of the first 100 en URLs
 // in raw sitemap order (which left every non-en locale uncrawlable via cron).
 function rankUrls(all, limit) {
-  const homes = [`${SITE}/`, `${SITE}/en/`, `${SITE}/zh-hans/`, `${SITE}/zh-hant/`].filter(u => all.includes(u));
+  const LOCALES = ['/en/', '/zh-hans/', '/zh-hant/', '/ja/', '/ko/'];
+  const homes = [`${SITE}/`, ...LOCALES.map(l => `${SITE}${l}`)].filter(u => all.includes(u));
   const articles = all.filter(u => /\/articles\//.test(u));
   const appleDev = all.filter(u => /\/apple-dev\//.test(u));
   const headUrls = [];
-  for (const term of HEAD) for (const loc of ['/en/', '/zh-hans/', '/zh-hant/']) { const u = `${SITE}${loc}${term}/`; if (all.includes(u)) headUrls.push(u); }
+  for (const term of HEAD) for (const loc of LOCALES) { const u = `${SITE}${loc}${term}/`; if (all.includes(u)) headUrls.push(u); }
   const rest = all.filter(u => !homes.includes(u) && !articles.includes(u) && !appleDev.includes(u) && !headUrls.includes(u));
   return [...new Set([...homes, ...articles, ...appleDev, ...headUrls, ...rest])].slice(0, limit);
 }

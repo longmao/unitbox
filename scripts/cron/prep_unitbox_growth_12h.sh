@@ -52,10 +52,13 @@ urls = re.findall(r'<loc>([^<]+)</loc>', xml)
 print('\n'.join(urls[:100]))
 ")
 URL_LIST_JSON=$(echo "$URLS" | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")
-KEY="7C26F6F4-B87D-41D5-AC42-A7C48995714F"
+KEY="7C26F6F4B87D41D5AC42A7C48995714F"
+# FIX 2026-08-05: KEY was UUID-with-hyphens (7C26F6F4-B87D-...) but keyLocation file was
+# no-hyphens → Bing IndexNow strict-checks {key} == filename at keyLocation → 422.
+# Rule: use $KEY for BOTH the key field and the keyLocation filename (root /$KEY.txt).
 curl -sw "\nHTTP: %{http_code}\n" -X POST "https://api.indexnow.org/indexnow" \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d "{\"host\":\"unitbox.online\",\"key\":\"$KEY\",\"keyLocation\":\"https://unitbox.online/.well-known/indexnow-7C26F6F4B87D41D5AC42A7C48995714F.txt\",\"urlList\":$URL_LIST_JSON}" >> "$LOG" 2>&1
+  -d "{\"host\":\"unitbox.online\",\"key\":\"$KEY\",\"keyLocation\":\"https://unitbox.online/$KEY.txt\",\"urlList\":$URL_LIST_JSON}" >> "$LOG" 2>&1
 
 # 6. fetch-bing.mjs (Bing WMT URL Submission API · 10000/month quota)
 #    Skipped silently if .cf/bing-wmt-key missing (B12-2 pending)
@@ -97,4 +100,32 @@ if command -v openclaw >/dev/null 2>&1; then
   openclaw message send --channel feishu --account default --target user:ou_c4bad3acc6a4a315e59a712757f88b59 --message "$MSG" 2>&1 | head -2
 else
   echo "  feishu skip: openclaw not in PATH (launchd env) · log=$LOG"
+fi
+
+# 10. Checkpoint deep-checks (2026-08-05 loop · specific-date, runs only in the 12:00 slot)
+#     Pure launchd + feishu — does NOT depend on a Claude session being open.
+TODAY_MD=$(date +%m-%d)
+HOUR_NOW=$(date +%H)
+if [ "$TODAY_MD" = "08-12" ] && [ "$HOUR_NOW" -ge 12 ] && [ "$HOUR_NOW" -lt 14 ]; then
+  echo "[$(date +%H:%M:%S)] CHECKPOINT 8/12: AI visibility (Perplexity 5q)" >> "$LOG"
+  export PERPLEXITY_API_KEY=$(grep -E '^export PERPLEXITY_API_KEY=' "$HOME/.zshrc" 2>/dev/null | sed -E 's/.*="([^"]*)".*/\1/')
+  if [ -n "$PERPLEXITY_API_KEY" ]; then
+    node scripts/ai-vis.mjs --date="$DATE" --engine=perplexity >> "$LOG" 2>&1 || echo "[ai-vis checkpoint] failed" >> "$LOG"
+    HITS=$(node -e "const d=require('./.observe/${DATE}/ai-vis.json');console.log(Array.isArray(d)?d.filter(r=>r.cited).length:'?')" 2>/dev/null)
+    if command -v openclaw >/dev/null 2>&1; then
+      openclaw message send --channel feishu --account default --target user:ou_c4bad3acc6a4a315e59a712757f88b59 --message "🎯 unitbox 8/12 AI 可见度(Perplexity 5q): cited=${HITS}/5 · 基准 7/31=0/15 · ChatGPT/Gemini 需你手动 web 测(硬约束:代理/stall)" 2>&1 | head -2
+    fi
+  else
+    echo "[checkpoint] PERPLEXITY_API_KEY not found in ~/.zshrc" >> "$LOG"
+  fi
+fi
+if [ "$TODAY_MD" = "08-19" ] && [ "$HOUR_NOW" -ge 12 ] && [ "$HOUR_NOW" -lt 14 ]; then
+  echo "[$(date +%H:%M:%S)] CHECKPOINT 8/19: Bing 收录" >> "$LOG"
+  LATEST_BS=$(ls -1t .observe/2026-08-*/bing-stats.json 2>/dev/null | head -1)
+  if [ -n "$LATEST_BS" ]; then
+    BING=$(node -e "const d=require('./${LATEST_BS}');const s=d.summary;console.log('with_content='+s.with_content+' crawled='+s.crawled+' discovered='+s.discovered)" 2>/dev/null)
+    if command -v openclaw >/dev/null 2>&1; then
+      openclaw message send --channel feishu --account default --target user:ou_c4bad3acc6a4a315e59a712757f88b59 --message "🎯 unitbox 8/19 Bing 收录检查: ${BING} · 基准 8/5=0 · 详见 ${LATEST_BS}" 2>&1 | head -2
+    fi
+  fi
 fi

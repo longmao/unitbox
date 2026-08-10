@@ -14,6 +14,10 @@
 # Bare root → default locale landing
 /  /en/  301
 
+# Convention path /sitemap.xml → real sitemap index
+# (otherwise 404.astro returns SPA HTML; crawlers expecting /sitemap.xml get nothing parseable)
+/sitemap.xml  /sitemap-index.xml  302
+
 # Legacy locale shortcuts → modern names
 /zh  /zh-hant/  301
 /zh-cn  /zh-hans/  301

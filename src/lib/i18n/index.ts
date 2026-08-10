@@ -46,11 +46,12 @@ export function t(key: string, locale: Locale = DEFAULT_LOCALE): string {
   return fallback ?? key;
 }
 
-/** Interpolate {placeholders} in a translated string. */
+/** Interpolate {placeholders} in a translated string. Uses replaceAll so duplicate placeholders
+ *  (e.g. {cat} appearing twice in cat.page-title) all render instead of only the first. */
 export function tFmt(key: string, locale: Locale, vars: Record<string, string | number>): string {
   let s = t(key, locale);
   for (const [k, v] of Object.entries(vars)) {
-    s = s.replace(`{${k}}`, String(v));
+    s = s.replaceAll(`{${k}}`, String(v));
   }
   return s;
 }

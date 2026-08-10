@@ -1,0 +1,170 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllCategories, getAllUnits, getAllPairs } from '~/lib/units';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { SITE } from '~/lib/site';
+
+export async function getStaticPaths() {
+  const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const cats = getAllCategories();
+const units = getAllUnits();
+const pairs = getAllPairs();
+
+// Launch date is 2026-07-29 (unit-now v0.1 first public release, per the
+// time.now clone in unit-now/sources/handoff). Days live is computed at build
+// time so the number is always fresh on every deploy.
+const LAUNCH_ISO = '2026-07-29';
+const launchDate = new Date(LAUNCH_ISO + 'T00:00:00Z');
+const today = new Date();
+const daysLive = Math.max(
+  1,
+  Math.floor((today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24))
+);
+
+const buildStamp = today.toISOString().slice(0, 10);
+
+const stats = [
+  {
+    label: 'conversion pairs',
+    value: pairs.length.toLocaleString('en-US'),
+    sub: 'e.g. meter→foot, °C→°F, kg→lb',
+    source: 'src/data/units.json × categories',
+  },
+  {
+    label: 'units',
+    value: units.length.toLocaleString('en-US'),
+    sub: 'across 12 categories',
+    source: 'src/data/units.json',
+  },
+  {
+    label: 'categories',
+    value: cats.length.toLocaleString('en-US'),
+    sub: 'length · mass · temperature · area · volume · speed · time · data · energy · pressure · angle · fuel economy',
+    source: 'src/data/categories.json',
+  },
+  {
+    label: 'days live',
+    value: daysLive.toLocaleString('en-US'),
+    sub: `since ${LAUNCH_ISO}`,
+    source: 'build-time, ISO 8601',
+  },
+];
+
+const title = `Public stats — ${SITE.name}`;
+const description = `Open stats for ${SITE.name}: ${pairs.length} pairs, ${units.length} units, ${cats.length} categories. Static snapshot, build ${buildStamp}.`;
+const homeLabel = t('pair.breadcrumb-home', locale);
+
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'DataCatalog',
+  name: `${SITE.name} public stats`,
+  url: `https://unitbox.online/${locale}/stats`,
+  dateModified: buildStamp,
+  description,
+  keywords: ['unit conversion', 'pairs', 'units', 'static snapshot', 'AI-friendly'],
+  inLanguage: IN_LANGUAGE[locale],
+};
+---
+
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={ld} />
+  </Fragment>
+
+  <div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>Stats</span></div>
+
+  <header class="stats-hero">
+    <h1>Public stats</h1>
+    <p class="stats-lede">
+      The shape of unitbox, in numbers. Statically generated at every build —
+      no beacons, no tracking, no client-side scripts. Build <code>{buildStamp}</code>.
+    </p>
+  </header>
+
+  <section class="stats-grid" aria-label="Public statistics">
+    {stats.map(s => (
+      <article class="stat-card">
+        <div class="stat-value">{s.value}</div>
+        <div class="stat-label">{s.label}</div>
+        <div class="stat-sub">{s.sub}</div>
+        <div class="stat-source">source: <code>{s.source}</code></div>
+      </article>
+    ))}
+  </section>
+
+  <section class="stats-meta">
+    <h2>Why these numbers are public</h2>
+    <p>
+      unitbox is built so AI agents, search engines, journalists, and partners can verify what we are
+      without contacting us. Static-snapshot stats are cheaper to trust than real-time counters and
+      impossible to inflate. For the full machine-readable product brief, see
+      <a href="/llms.txt">/llms.txt</a> and <a href="/openapi.json">/openapi.json</a>.
+    </p>
+    <p>
+      This page exists because honest numbers compound. Tools that share their shape get shared in
+      return.
+    </p>
+  </section>
+
+  <section class="stats-method">
+    <h2>Method</h2>
+    <ul>
+      <li><strong>pairs / units / categories</strong> — derived from <code>src/data/units.json</code> and <code>src/data/categories.json</code> at Astro build time. Stable until the next data refresh.</li>
+      <li><strong>days live</strong> — <code>floor((build_date − 2026-07-29) / 1 day)</code>. Always current because it's computed, not stored.</li>
+      <li><strong>build stamp</strong> — UTC ISO date of the most recent <code>astro build</code>. Increments on every deploy.</li>
+    </ul>
+  </section>
+
+  <section class="stats-meta">
+    <h2>What's not here</h2>
+    <p>
+      We don't count requests, page views, or "users" — those numbers would require a beacon and
+      would compromise the offline-first promise. If you want traffic, see
+      <a href="/sitemap-index.xml">sitemap-index.xml</a>. If you want uptime, the site runs on
+      Cloudflare Pages.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .stats-hero { padding: 24px 0 12px; }
+  .stats-hero h1 { font-size: 32px; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .stats-lede { color: var(--fg-soft, #4a5160); max-width: 60ch; line-height: 1.55; }
+  .stats-lede code { background: rgba(29, 78, 216, 0.08); color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: ui-monospace, monospace; font-weight: 500; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 24px 0; }
+  @media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr; } }
+  .stat-card { background: var(--bg-card, #fff); border: 1px solid var(--border, #e7e5e4); border-radius: 14px; padding: 22px 24px; }
+  .stat-value { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; color: var(--brand, #1d4ed8); font-feature-settings: "tnum"; }
+  .stat-label { font-size: 13px; color: var(--fg-muted, #71717a); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; font-weight: 600; }
+  .stat-sub { font-size: 13px; color: var(--fg-soft, #4a5160); margin-top: 8px; line-height: 1.5; }
+  .stat-source { font-size: 11px; color: var(--fg-muted, #a1a1aa); margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-soft, #f0efee); }
+  .stat-source code { font-family: ui-monospace, monospace; font-size: 11px; }
+
+  .stats-meta, .stats-method { margin: 36px 0; max-width: 64ch; }
+  .stats-meta h2, .stats-method h2 { font-size: 18px; margin-bottom: 8px; }
+  .stats-meta p, .stats-method p, .stats-method li { color: var(--fg-soft, #4a5160); line-height: 1.6; font-size: 15px; }
+  .stats-meta p { margin-bottom: 12px; }
+  .stats-method ul { padding-left: 22px; }
+  .stats-method li { margin-bottom: 8px; }
+  .stats-method strong { color: var(--fg, #18181b); }
+  .stats-method code, .stats-meta code {
+    background: rgba(29, 78, 216, 0.08);
+    color: #1d4ed8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.92em;
+    font-weight: 500;
+  }
+</style>
