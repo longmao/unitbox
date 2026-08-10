@@ -31,6 +31,7 @@ const featuredChips: HeroChip[] = [
   { kind: 'category', slug: 'temperature', label: 'Temperature', meta: '5 scales' },
   { kind: 'category', slug: 'data', label: 'Data', meta: '12 prefixes' },
   { kind: 'tool', slug: 'tools/png-compressor', label: 'PNG compressor', meta: 'no upload', emoji: '🖼️' },
+  { kind: 'tool', slug: 'tools/image-color-picker', label: 'Image color picker', meta: 'HEX / RGB / HSL', emoji: '🎨' },
 ];
 
 // Popular 36 pairs to surface — first 3 from each category
@@ -149,6 +150,15 @@ const description = `12 categories · 110+ units · 1,135 conversion pairs. Free
         </div>
         <h3 class="tool-title">{t('home.tools-section.tool-jwt.title', locale)}</h3>
         <p class="tool-body">{t('home.tools-section.tool-jwt.body', locale)}</p>
+        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
+      </a>
+      <a class="card tool-card tool-card-cp" href={route(locale, '/tools/image-color-picker')}>
+        <div class="tool-card-head">
+          <span class="tool-emoji" aria-hidden="true">🎨</span>
+          <span class="tool-badge">new</span>
+        </div>
+        <h3 class="tool-title">{t('home.tools-section.tool-cp.title', locale)}</h3>
+        <p class="tool-body">{t('home.tools-section.tool-cp.body', locale)}</p>
         <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
       </a>
       <a class="card tool-card" href={route(locale, '/calculator')}>

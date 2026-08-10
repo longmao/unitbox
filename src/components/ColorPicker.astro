@@ -1,0 +1,374 @@
+---
+// ColorPicker — client-side image colour picking via canvas.
+// 100% in-browser: the image never leaves the device. No backend, no upload.
+
+export interface Props {
+  /** Pre-resolved i18n strings (computed server-side). */
+  i18n: Record<string, string>;
+  /** Max file size in bytes. */
+  maxBytes?: number;
+  /** How many swatches the auto-palette extracts. */
+  paletteSize?: number;
+}
+
+const { i18n, maxBytes = 25 * 1024 * 1024, paletteSize = 8 } = Astro.props as Props;
+const i18nJson = JSON.stringify(i18n);
+---
+<section class="color-picker" data-max-bytes={maxBytes} data-palette-size={paletteSize} data-i18n={i18nJson}>
+  <div class="privacy-banner">
+    <span class="pill">🔒 {i18n.privacy1 ?? ''}</span>
+    <span class="pill">🚫 {i18n.privacy2 ?? ''}</span>
+    <span class="pill">👁️ {i18n.privacy3 ?? ''}</span>
+  </div>
+
+  <div class="dropzone" id="cp-drop">
+    <input type="file" id="cp-input" accept="image/*" hidden />
+    <div class="dropzone-icon" aria-hidden="true">🎨</div>
+    <p class="dropzone-text">{i18n.dropzone}</p>
+    <p class="dropzone-sub">{i18n.dropzoneSub}</p>
+    <label for="cp-input" class="browse-btn">{i18n.browse}</label>
+  </div>
+
+  <p class="cp-error" id="cp-error" role="alert" hidden></p>
+
+  <div class="cp-stage" id="cp-stage" hidden>
+    <div class="cp-canvas-wrap">
+      <canvas id="cp-canvas" role="img" aria-label={i18n.canvasLabel}></canvas>
+      <div class="cp-loupe" id="cp-loupe" aria-hidden="true"></div>
+    </div>
+
+    <aside class="cp-panel">
+      <div class="cp-swatch-head">
+        <div class="cp-swatch" id="cp-swatch"></div>
+        <div class="cp-swatch-meta">
+          <p class="cp-hint" id="cp-hint">{i18n.hint}</p>
+        </div>
+      </div>
+
+      <dl class="cp-codes" id="cp-codes">
+        <div class="cp-code-row"><dt>HEX</dt><dd><code id="cp-hex">—</code><button type="button" class="copy-btn" data-copy="cp-hex" aria-label="Copy HEX">{i18n.copy}</button></dd></div>
+        <div class="cp-code-row"><dt>RGB</dt><dd><code id="cp-rgb">—</code><button type="button" class="copy-btn" data-copy="cp-rgb" aria-label="Copy RGB">{i18n.copy}</button></dd></div>
+        <div class="cp-code-row"><dt>HSL</dt><dd><code id="cp-hsl">—</code><button type="button" class="copy-btn" data-copy="cp-hsl" aria-label="Copy HSL">{i18n.copy}</button></dd></div>
+        <div class="cp-code-row"><dt>CMYK</dt><dd><code id="cp-cmyk">—</code><button type="button" class="copy-btn" data-copy="cp-cmyk" aria-label="Copy CMYK">{i18n.copy}</button></dd></div>
+      </dl>
+
+      <div class="cp-palette-block">
+        <h3 class="cp-palette-title">{i18n.paletteTitle}</h3>
+        <div class="cp-palette" id="cp-palette"></div>
+      </div>
+
+      <button type="button" id="cp-clear" class="btn-secondary">{i18n.clear}</button>
+    </aside>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector('.color-picker') as HTMLElement | null;
+  if (root) {
+    const i18n = JSON.parse(root.dataset.i18n ?? '{}') as Record<string, string>;
+    const maxBytes = Number(root.dataset.maxBytes ?? 26214400);
+    const paletteSize = Number(root.dataset.paletteSize ?? 8);
+
+    const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    const drop = $<HTMLElement>('cp-drop');
+    const input = $<HTMLInputElement>('cp-input');
+    const stage = $<HTMLElement>('cp-stage');
+    const canvas = $<HTMLCanvasElement>('cp-canvas');
+    const loupe = $<HTMLElement>('cp-loupe');
+    const swatch = $<HTMLElement>('cp-swatch');
+    const hint = $<HTMLElement>('cp-hint');
+    const paletteEl = $<HTMLElement>('cp-palette');
+    const errorEl = $<HTMLElement>('cp-error');
+    const clearBtn = $<HTMLButtonElement>('cp-clear');
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    let pinned = false;
+
+    // ── colour maths ─────────────────────────────────────────────────────────
+    const hex = (r: number, g: number, b: number) =>
+      '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+
+    function toHsl(r: number, g: number, b: number) {
+      const rn = r / 255, gn = g / 255, bn = b / 255;
+      const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+      const l = (max + min) / 2;
+      const d = max - min;
+      if (d === 0) return { h: 0, s: 0, l: Math.round(l * 100) };
+      const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      let h: number;
+      if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0));
+      else if (max === gn) h = (bn - rn) / d + 2;
+      else h = (rn - gn) / d + 4;
+      return { h: Math.round(h * 60), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    function toCmyk(r: number, g: number, b: number) {
+      const rn = r / 255, gn = g / 255, bn = b / 255;
+      const k = 1 - Math.max(rn, gn, bn);
+      if (k === 1) return { c: 0, m: 0, y: 0, k: 100 };
+      return {
+        c: Math.round(((1 - rn - k) / (1 - k)) * 100),
+        m: Math.round(((1 - gn - k) / (1 - k)) * 100),
+        y: Math.round(((1 - bn - k) / (1 - k)) * 100),
+        k: Math.round(k * 100),
+      };
+    }
+
+    function setColor(r: number, g: number, b: number) {
+      const h = toHsl(r, g, b), c = toCmyk(r, g, b);
+      $('cp-hex').textContent = hex(r, g, b);
+      $('cp-rgb').textContent = `rgb(${r}, ${g}, ${b})`;
+      $('cp-hsl').textContent = `hsl(${h.h}, ${h.s}%, ${h.l}%)`;
+      $('cp-cmyk').textContent = `cmyk(${c.c}%, ${c.m}%, ${c.y}%, ${c.k}%)`;
+      swatch.style.background = hex(r, g, b);
+      // Flip the swatch label to whichever of black/white reads on this colour.
+      swatch.style.color = h.l > 55 ? '#111' : '#fff';
+      swatch.textContent = hex(r, g, b);
+    }
+
+    // ── palette extraction ───────────────────────────────────────────────────
+    // Bucket pixels into a coarse 4-bit-per-channel grid, then take the most
+    // populous buckets. Cheap, deterministic, and good enough for a UI palette.
+    function extractPalette(data: Uint8ClampedArray, n: number) {
+      const buckets = new Map<number, { r: number; g: number; b: number; count: number }>();
+      // Sample every 4th pixel — 16x fewer reads, visually identical result.
+      for (let i = 0; i < data.length; i += 16) {
+        const a = data[i + 3];
+        if (a < 128) continue; // skip transparent pixels
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+        const cur = buckets.get(key);
+        if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
+        else buckets.set(key, { r, g, b, count: 1 });
+      }
+      return [...buckets.values()]
+        .sort((x, y) => y.count - x.count)
+        .slice(0, n)
+        .map((s) => ({
+          r: Math.round(s.r / s.count),
+          g: Math.round(s.g / s.count),
+          b: Math.round(s.b / s.count),
+        }));
+    }
+
+    function renderPalette(data: Uint8ClampedArray) {
+      paletteEl.innerHTML = '';
+      for (const c of extractPalette(data, paletteSize)) {
+        const code = hex(c.r, c.g, c.b);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cp-chip';
+        btn.style.background = code;
+        btn.title = code;
+        btn.setAttribute('aria-label', code);
+        btn.addEventListener('click', () => {
+          pinned = true;
+          setColor(c.r, c.g, c.b);
+          hint.textContent = i18n.pinned ?? '';
+        });
+        paletteEl.appendChild(btn);
+      }
+    }
+
+    // ── image loading ────────────────────────────────────────────────────────
+    function fail(msg: string) {
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+
+    function loadImage(src: string, revoke?: string) {
+      const img = new Image();
+      img.onload = () => {
+        // Cap the backing store so huge photos stay responsive; CSS scales it down.
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        if (revoke) URL.revokeObjectURL(revoke);
+        errorEl.hidden = true;
+        drop.hidden = true;
+        stage.hidden = false;
+        pinned = false;
+        hint.textContent = i18n.hint ?? '';
+        renderPalette(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
+      };
+      img.onerror = () => {
+        if (revoke) URL.revokeObjectURL(revoke);
+        fail(i18n.errDecode ?? 'Could not decode that image.');
+      };
+      img.src = src;
+    }
+
+    function handleFile(file: File | null | undefined) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) return fail(i18n.errType ?? 'That is not an image file.');
+      if (file.size > maxBytes) return fail(i18n.errSize ?? 'That image is too large.');
+      const url = URL.createObjectURL(file);
+      loadImage(url, url);
+    }
+
+    input.addEventListener('change', () => handleFile(input.files?.[0]));
+
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drop.classList.remove('is-over');
+      handleFile(e.dataTransfer?.files?.[0]);
+    });
+
+    // Paste an image straight from the clipboard (screenshot → Cmd+V).
+    window.addEventListener('paste', (e: ClipboardEvent) => {
+      const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith('image/'));
+      if (item) handleFile(item.getAsFile());
+    });
+
+    // ── picking ──────────────────────────────────────────────────────────────
+    function pixelAt(e: MouseEvent) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor(((e.clientX - rect.left) / rect.width) * canvas.width);
+      const y = Math.floor(((e.clientY - rect.top) / rect.height) * canvas.height);
+      if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return null;
+      const d = ctx.getImageData(x, y, 1, 1).data;
+      return { r: d[0], g: d[1], b: d[2], x, y };
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      const p = pixelAt(e);
+      if (!p) return;
+      // The loupe is absolutely positioned inside the wrapper, which can be wider
+      // than the (centered) canvas — so offset against the wrapper, not the canvas.
+      // Note: offsetParent is null while the loupe is display:none, so use the DOM parent.
+      const wrapRect = canvas.parentElement!.getBoundingClientRect();
+      loupe.style.left = `${e.clientX - wrapRect.left}px`;
+      loupe.style.top = `${e.clientY - wrapRect.top}px`;
+      loupe.style.background = hex(p.r, p.g, p.b);
+      loupe.style.display = 'block';
+      if (!pinned) setColor(p.r, p.g, p.b);
+    });
+
+    canvas.addEventListener('mouseleave', () => { loupe.style.display = 'none'; });
+
+    canvas.addEventListener('click', (e) => {
+      const p = pixelAt(e);
+      if (!p) return;
+      pinned = true;
+      setColor(p.r, p.g, p.b);
+      hint.textContent = i18n.pinned ?? '';
+    });
+
+    // ── copy ─────────────────────────────────────────────────────────────────
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('.copy-btn')) {
+      btn.addEventListener('click', async () => {
+        const text = document.getElementById(btn.dataset.copy ?? '')?.textContent ?? '';
+        if (!text || text === '—') return;
+        try {
+          await navigator.clipboard.writeText(text);
+          const prev = btn.textContent;
+          btn.textContent = i18n.copied ?? 'Copied';
+          btn.classList.add('is-copied');
+          setTimeout(() => { btn.textContent = prev; btn.classList.remove('is-copied'); }, 1200);
+        } catch {
+          fail(i18n.errCopy ?? 'Clipboard blocked by the browser.');
+        }
+      });
+    }
+
+    clearBtn.addEventListener('click', () => {
+      stage.hidden = true;
+      drop.hidden = false;
+      input.value = '';
+      pinned = false;
+      paletteEl.innerHTML = '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+  }
+</script>
+
+<style>
+  .color-picker { display: grid; gap: 1.25rem; }
+
+  .privacy-banner { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .pill {
+    font-size: 0.8125rem; padding: 0.25rem 0.625rem; border-radius: 999px;
+    background: var(--surface-2, #f3f4f6); color: var(--text-muted, #4b5563);
+    border: 1px solid var(--border, #e5e7eb);
+  }
+
+  .dropzone {
+    border: 2px dashed var(--border, #d1d5db); border-radius: 12px;
+    padding: 2.5rem 1.5rem; text-align: center; transition: border-color 0.15s, background 0.15s;
+  }
+  .dropzone.is-over { border-color: var(--accent, #2563eb); background: var(--surface-2, #f8fafc); }
+  .dropzone-icon { font-size: 2rem; }
+  .dropzone-text { margin: 0.5rem 0 0.25rem; font-weight: 600; }
+  .dropzone-sub { margin: 0 0 1rem; font-size: 0.875rem; color: var(--text-muted, #6b7280); }
+  .browse-btn {
+    display: inline-block; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px;
+    background: var(--accent, #2563eb); color: #fff; font-weight: 600; font-size: 0.9375rem;
+  }
+
+  .cp-error {
+    margin: 0; padding: 0.625rem 0.875rem; border-radius: 8px;
+    background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-size: 0.875rem;
+  }
+
+  .cp-stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+  @media (max-width: 760px) { .cp-stage { grid-template-columns: minmax(0, 1fr); } }
+
+  .cp-canvas-wrap { position: relative; line-height: 0; display: flex; justify-content: center; }
+  #cp-canvas {
+    max-width: 100%; max-height: 70vh; width: auto; height: auto;
+    border-radius: 10px; cursor: crosshair;
+    border: 1px solid var(--border, #e5e7eb);
+    /* Keep pixel art / tiny images crisp rather than smeared when scaled up. */
+    image-rendering: pixelated;
+  }
+  .cp-loupe {
+    display: none; position: absolute; width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%); pointer-events: none;
+  }
+
+  .cp-panel { display: grid; gap: 1rem; }
+  .cp-swatch-head { display: grid; gap: 0.5rem; }
+  .cp-swatch {
+    height: 76px; border-radius: 10px; border: 1px solid var(--border, #e5e7eb);
+    display: grid; place-items: center; font-weight: 700; letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums; background: var(--surface-2, #f3f4f6);
+  }
+  .cp-hint { margin: 0; font-size: 0.8125rem; color: var(--text-muted, #6b7280); }
+
+  .cp-codes { display: grid; gap: 0.375rem; margin: 0; }
+  .cp-code-row { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); align-items: center; gap: 0.5rem; }
+  .cp-code-row dt { font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #6b7280); }
+  .cp-code-row dd { margin: 0; display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+  .cp-code-row code {
+    flex: 1; min-width: 0; overflow-wrap: anywhere;
+    font-size: 0.75rem; line-height: 1.4; padding: 0.3125rem 0.5rem; border-radius: 6px;
+    background: var(--surface-2, #f3f4f6); border: 1px solid var(--border, #e5e7eb);
+  }
+  .copy-btn {
+    cursor: pointer; font-size: 0.75rem; padding: 0.3125rem 0.5rem; border-radius: 6px;
+    border: 1px solid var(--border, #e5e7eb); background: transparent; color: var(--text-muted, #4b5563);
+  }
+  .copy-btn:hover { background: var(--surface-2, #f3f4f6); }
+  .copy-btn.is-copied { color: #047857; border-color: #a7f3d0; background: #ecfdf5; }
+
+  .cp-palette-title { margin: 0 0 0.5rem; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted, #6b7280); }
+  .cp-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.375rem; }
+  /* Swatches are created in JS, so Astro's scoped attribute never lands on them —
+     they must be styled through :global() or they render unstyled. */
+  .cp-palette :global(.cp-chip) {
+    display: block; width: 100%; min-height: 42px; aspect-ratio: 1;
+    border-radius: 8px; border: 1px solid var(--border, #e5e7eb);
+    cursor: pointer; padding: 0;
+  }
+  .cp-palette :global(.cp-chip:hover) { transform: scale(1.06); }
+
+  .btn-secondary {
+    cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem;
+    border: 1px solid var(--border, #e5e7eb); background: transparent; color: var(--text, #111827);
+  }
+  .btn-secondary:hover { background: var(--surface-2, #f3f4f6); }
+</style>

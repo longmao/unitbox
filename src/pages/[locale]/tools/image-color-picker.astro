@@ -1,0 +1,111 @@
+---
+import Base from '~/layouts/Base.astro';
+import ColorPicker from '~/components/ColorPicker.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+
+export async function getStaticPaths() {
+  const out = [];
+  for (const locale of LOCALES) {
+    out.push({ params: { locale }, props: { locale } });
+  }
+  return out;
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const title = `${t('cp.h1', locale)} — unitbox`;
+const subtitle = t('cp.subtitle', locale);
+const canonical = canonicalUrl(Astro.url.pathname);
+
+const faq = [
+  { q: t('cp.faq-1.q', locale), a: t('cp.faq-1.a', locale) },
+  { q: t('cp.faq-2.q', locale), a: t('cp.faq-2.a', locale) },
+  { q: t('cp.faq-3.q', locale), a: t('cp.faq-3.a', locale) },
+  { q: t('cp.faq-4.q', locale), a: t('cp.faq-4.a', locale) },
+  { q: t('cp.faq-5.q', locale), a: t('cp.faq-5.a', locale) },
+  { q: t('cp.faq-6.q', locale), a: t('cp.faq-6.a', locale) },
+];
+
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+const howtoLd = buildHowTo({
+  name: t('cp.howto.title', locale),
+  description: subtitle,
+  step1Name: t('cp.howto.s1.title', locale),
+  step1Text: t('cp.howto.s1.body', locale),
+  step2Name: t('cp.howto.s2.title', locale),
+  step2Text: t('cp.howto.s2.body', locale),
+  toolName: 'Image Color Picker',
+  canonicalUrl: canonical,
+});
+
+const softwareApp = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'unitbox Image Color Picker',
+  applicationCategory: 'DesignApplication',
+  applicationSubCategory: 'Color Picker',
+  operatingSystem: 'Any (browser-based)',
+  description: subtitle,
+  url: canonical,
+  inLanguage: IN_LANGUAGE[locale],
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  isAccessibleForFree: true,
+};
+
+const pickerI18n = {
+  privacy1: t('cp.privacy.line1', locale),
+  privacy2: t('cp.privacy.line2', locale),
+  privacy3: t('cp.privacy.line3', locale),
+  dropzone: t('cp.dropzone', locale),
+  dropzoneSub: t('cp.dropzone-sub', locale),
+  browse: t('cp.browse', locale),
+  canvasLabel: t('cp.canvas-label', locale),
+  hint: t('cp.hint', locale),
+  pinned: t('cp.pinned', locale),
+  copy: t('cp.copy', locale),
+  copied: t('cp.copied', locale),
+  paletteTitle: t('cp.palette-title', locale),
+  clear: t('cp.clear', locale),
+  errType: t('cp.err-type', locale),
+  errSize: t('cp.err-size', locale),
+  errDecode: t('cp.err-decode', locale),
+  errCopy: t('cp.err-copy', locale),
+};
+---
+<Base title={title} description={subtitle} locale={locale}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+    <JsonLd data={softwareApp} />
+  </Fragment>
+
+  <h1>{t('cp.h1', locale)}</h1>
+  <p class="lede">{subtitle}</p>
+
+  <ColorPicker i18n={pickerI18n} />
+
+  <FaqBlock items={faq} />
+
+  <nav class="related">
+    <h2>{t('jwt.cta.related', locale)}</h2>
+    <ul>
+      <li>🖼️ <a href={route(locale, '/tools/png-compressor')}>{t('png.h1', locale)}</a></li>
+      <li>🔓 <a href={route(locale, '/tools/jwt-decoder')}>{t('jwt.h1', locale)}</a></li>
+    </ul>
+  </nav>
+
+  <p class="back"><a href={route(locale, '/')}>{t('jwt.cta.back', locale)}</a></p>
+</Base>
+
+<style>
+  h1 { margin-bottom: 0.35rem; }
+  .lede { margin-top: 0; color: var(--text-muted, #6b7280); max-width: 62ch; }
+  .related { margin-top: 2.5rem; }
+  .related h2 { font-size: 1rem; }
+  .related ul { list-style: none; padding: 0; display: grid; gap: 0.375rem; }
+  .back { margin-top: 2rem; font-size: 0.9375rem; }
+</style>
