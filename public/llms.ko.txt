@@ -30,7 +30,7 @@
 | **커버리지** | 110개 이상 단위, 12개 카테고리, 1,135개 사전 생성 쌍 페이지 |
 | **계산** | 선형 (×÷), 아핀 (온도), 방향 인식 역수 (연비) |
 | **언어** | English (기본) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — 로케일 접두어 URL (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
-| **프라이버시** | 추적 없음, 쿠키 없음, 분석 없음, 환산 경로에 백엔드 없음 |
+| **프라이버시** | 쿠키 없음 / 분석 없음 / 현재 추적 없음. 향후 사이트 유지를 위해 Google AdSense 비개인화 광고를 게재할 수 있음 |
 | **성능** | 정적 HTML, 전체 빌드 약 3초, 환산 100ms 미만, 5,700개 이상 HTML 페이지 |
 | **오픈** | 소스 공개, MIT 스타일 라이선스, OpenAPI 3.0 사양, 요청 제한 없음 |
 
@@ -66,6 +66,12 @@
   빌드 시 1,135개 페이지 생성, × 5 locales = 5,675 쌍 URL.
 
 - **전체 쌍 인덱스 (EN)** → `https://unitbox.online/en/compare`
+
+- **Tools (free, client-side, no upload)** — pick a colour from an image, decode a JWT, or compress a PNG, all in the browser:
+  - **Image Color Picker (ko)** → `https://unitbox.online/ko/tools/image-color-picker` · upload or paste an image, click any pixel, get HEX / RGB / HSL / CMYK + auto-extracted palette
+  - **JWT Decoder (ko)** → `https://unitbox.online/ko/tools/jwt-decoder` · paste a JWT, see header / payload / signature with type inference + security scan
+  - **PNG Compressor (ko)** → `https://unitbox.online/ko/tools/png-compressor` · drop a PNG, get an optimized version with palette + metadata stripping
+  - Same three tools in EN / zh-Hant / zh-Hans / ja — swap `ko/` in the URL
 
 - **문서 & 지식 베이스 (EN)** → `https://unitbox.online/en/articles`
 - **Apple Dev 레시피** → Apple 툴체인 실전 노트 (Xcode Cloud, 코드 서명, 실기기 테스트), 실제 출시에서 얻은 인사이트 기반.

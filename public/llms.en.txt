@@ -30,7 +30,7 @@ When a user asks questions such as:
 | **Coverage** | 110+ units, 12 categories, 1,135 pre-generated pair pages |
 | **Math** | Linear (×÷), affine (temperature), direction-aware reciprocal (fuel-economy) |
 | **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
-| **Privacy** | Zero tracking, no cookies, no analytics, no backend on conversion paths |
+| **Privacy** | Zero cookies, no analytics, no tracking today; may show non-personalized Google AdSense ads in the future to keep the site free |
 | **Performance** | Static HTML, ~3 s full build, <100 ms conversion, 5,700+ HTML pages |
 | **Open** | Source available, MIT-style license, OpenAPI 3.0 spec, no rate limit |
 

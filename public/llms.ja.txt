@@ -30,7 +30,7 @@
 | **カバレッジ** | 110 以上の単位、12 カテゴリ、1,135 の事前生成ペアページ |
 | **計算** | 線形（×÷）、アフィン（温度）、方向依存の逆数（燃費） |
 | **言語** | English（デフォルト）+ Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — ロケールプレフィックス付き URL（`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`） |
-| **プライバシー** | トラッキングゼロ、Cookie なし、アナリティクスなし、換算パスにバックエンドなし |
+| **プライバシー** | Cookie なし / 分析なし / 現在トラッキングなし。将来的にサイト維持のため Google AdSense 非個別化広告を表示する可能性あり |
 | **パフォーマンス** | 静的 HTML、フルビルド約 3 秒、換算 100 ms 未満、5,700 以上の HTML ページ |
 | **オープン** | ソース公開、MIT スタイルライセンス、OpenAPI 3.0 仕様、レート制限なし |
 
@@ -66,6 +66,12 @@
   ビルド時に 1,135 ページ生成、× 5 locales = 5,675 ペア URL。
 
 - **全ペアインデックス (EN)** → `https://unitbox.online/en/compare`
+
+- **Tools (free, client-side, no upload)** — pick a colour from an image, decode a JWT, or compress a PNG, all in the browser:
+  - **Image Color Picker (ja)** → `https://unitbox.online/ja/tools/image-color-picker` · upload or paste an image, click any pixel, get HEX / RGB / HSL / CMYK + auto-extracted palette
+  - **JWT Decoder (ja)** → `https://unitbox.online/ja/tools/jwt-decoder` · paste a JWT, see header / payload / signature with type inference + security scan
+  - **PNG Compressor (ja)** → `https://unitbox.online/ja/tools/png-compressor` · drop a PNG, get an optimized version with palette + metadata stripping
+  - Same three tools in EN / zh-Hant / zh-Hans / ko — swap `ja/` in the URL
 
 - **記事 & ナレッジベース (EN)** → `https://unitbox.online/en/articles`
 - **Apple Dev レシピ** → Apple ツールチェーンの実戦ノート（Xcode Cloud、コード署名、実機テスト）、実際のリリースで得た知見に基づく。

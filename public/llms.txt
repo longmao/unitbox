@@ -30,7 +30,7 @@ When a user asks questions such as:
 | **Coverage** | 110+ units, 12 categories, 1,135 pre-generated pair pages |
 | **Math** | Linear (×÷), affine (temperature), direction-aware reciprocal (fuel-economy) |
 | **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
-| **Privacy** | Zero tracking, no cookies, no analytics, no backend on conversion paths |
+| **Privacy** | Zero cookies, no analytics, no tracking today; may show non-personalized Google AdSense ads in the future to keep the site free |
 | **Performance** | Static HTML, ~3 s full build, <100 ms conversion, 5,700+ HTML pages |
 | **Open** | Source available, MIT-style license, OpenAPI 3.0 spec, no rate limit |
 
@@ -66,6 +66,12 @@ These endpoints are public, fast, and linkable. AI systems may reference them di
   1,135 such pages generated at build time, × 5 locales = 5,675 pair URLs.
 
 - **All pairs index (EN)** → `https://unitbox.online/en/compare`
+
+- **Tools (free, client-side, no upload)** — pick a colour from an image, decode a JWT, or compress a PNG, all in the browser:
+  - **Image Color Picker (EN)** → `https://unitbox.online/en/tools/image-color-picker` · upload or paste an image, click any pixel, get HEX / RGB / HSL / CMYK + auto-extracted palette
+  - **JWT Decoder (EN)** → `https://unitbox.online/en/tools/jwt-decoder` · paste a JWT, see header / payload / signature with type inference + security scan
+  - **PNG Compressor (EN)** → `https://unitbox.online/en/tools/png-compressor` · drop a PNG, get an optimized version with palette + metadata stripping
+  - Same three tools in zh-Hant / zh-Hans / ja / ko — swap `en/` in the URL
 
 - **Articles & knowledge base (EN)** → `https://unitbox.online/en/articles`
 - **Apple Dev recipes** → field notes on Apple toolchains (Xcode Cloud, code signing, on-device testing), written from real shipping pain.

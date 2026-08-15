@@ -81,6 +81,43 @@ export function formatDate(d: Date, locale: Locale = DEFAULT_LOCALE): string {
   });
 }
 
+/**
+ * Minimal markdown→HTML for narrative content on unit detail pages.
+ *
+ * Supports only:
+ *   ## Heading 2      → <h2>Heading 2</h2>
+ *   ### Heading 3     → <h3>Heading 3</h3>
+ *   blank-line break  → </p><p>
+ *   plain text        → escaped & inserted verbatim
+ *
+ * Intentionally tiny — no links, no bold, no lists. Narrative content is
+ * hand-written, low-formatting, and pre-validated, so a heavy markdown parser
+ * would add bundle weight and risk footguns. If we ever need more, swap in
+ * marked or remark.
+ */
+export function narrativeInline(text: string): string {
+  if (!text) return '';
+  const escape = (s: string) =>
+    s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  const blocks = text.split(/\n{2,}/);
+  return blocks
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('### ')) {
+        return `<h3>${escape(trimmed.slice(4))}</h3>`;
+      }
+      if (trimmed.startsWith('## ')) {
+        return `<h2>${escape(trimmed.slice(3))}</h2>`;
+      }
+      return `<p>${escape(trimmed).replace(/\n/g, '<br>')}</p>`;
+    })
+    .join('\n');
+}
+
 // ── Re-exports ───────────────────────────────────────────────────────────────
 export { LOCALES, DEFAULT_LOCALE, LOCALE_LABELS, OG_LOCALE, IN_LANGUAGE, INTL_LOCALE, isLocale };
 export type { Locale };

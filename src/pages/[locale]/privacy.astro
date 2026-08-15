@@ -19,8 +19,8 @@ const { locale } = Astro.props as { locale: Locale };
 const faq = [
   { q: 'Do you set cookies?', a: 'No. unitbox runs zero cookies — no session cookie, no analytics cookie, no preference cookie.' },
   { q: 'Do you log my conversion inputs?', a: 'No. Every conversion happens client-side in your browser. Your inputs never reach a server.' },
-  { q: 'Do you run ads?', a: 'No. No ad networks, no sponsored links, no affiliate redirects.' },
-  { q: 'What about Cloudflare logs?', a: 'Cloudflare (our CDN) keeps edge access logs for 24 hours, then deletes them. These are used for security/abuse detection only.' },
+  { q: 'Do you run ads?', a: 'Today: no ads. unitbox may display non-personalized ads via Google AdSense in the future to keep the site free. When this changes we will announce it on this page and ask for cookie consent where required (GDPR/CCPA).' },
+  { q: 'What about Cloudflare logs and analytics?', a: 'Cloudflare (our CDN) keeps edge access logs for 24 hours, then deletes them — used for security/abuse detection only. We also enable Cloudflare Web Analytics, a cookieless, IP-free, fingerprint-free aggregate counter, to see how popular the site is. It does not track individual visitors.' },
 ];
 
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });

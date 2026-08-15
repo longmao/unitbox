@@ -14,5 +14,6 @@ export {
   tFmt,
   formatNumber,
   formatDate,
+  narrativeInline,
 } from './i18n/index';
 export type { Locale } from './i18n/locales';
