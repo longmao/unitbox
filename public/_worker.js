@@ -5,6 +5,9 @@
 
 const LOCALE_PRIORITY = ['zh-hans', 'zh-hant', 'ja', 'ko', 'en'];
 
+// Locale-prefixed path shape: /en/..., /zh-hans/... — these own all real pages.
+const LOCALE_PREFIX_RE = /^\/(en|zh-hans|zh-hant|ja|ko)(\/|$)/;
+
 /**
  * Parse Accept-Language header → best-matching locale.
  * zh-CN/zh-SG/zh-Hans → zh-hans; zh-TW/zh-HK/zh-Hant → zh-hant.
@@ -42,7 +45,20 @@ export default {
     // Only negotiate the bare root. Everything else → static assets.
     // (trailing-slash variants, /favicon, /llms.txt, /<locale>/... all pass through)
     if (url.pathname !== '/') {
-      return env.ASSETS.fetch(request);
+      const res = await env.ASSETS.fetch(request);
+      // Unprefixed HTML path that no asset answers (e.g. /celsius-to-fahrenheit,
+      // pre-locale-prefix URLs) → 301 to the EN equivalent instead of a 404.
+      // Extension-less guard keeps static assets (/llms.txt, /og-default.png)
+      // on the plain 404 path.
+      if (
+        res.status === 404 &&
+        !LOCALE_PREFIX_RE.test(url.pathname) &&
+        !/\.[a-z0-9]+$/i.test(url.pathname)
+      ) {
+        const slash = url.pathname.endsWith('/') ? '' : '/';
+        return Response.redirect(`${url.origin}/en${url.pathname}${slash}`, 301);
+      }
+      return res;
     }
 
     // Manual override: /?force=zh-hant (no cookie set — stateless, privacy-first)
