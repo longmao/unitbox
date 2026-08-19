@@ -21,7 +21,7 @@ export const ZH_HANT: Record<string, string> = {
   'footer.col.open': '開源與 API',
 
   'home.h1': '任何單位，即時換算',
-  'home.subtitle': '12 個分類 · 100+ 單位 · 1135 個換算對。從下方常用換算中選擇，或使用實時計算器。',
+  'home.subtitle': '12 個分類 · 100+ 單位 · 1019 個換算對。從下方常用換算中選擇，或使用實時計算器。',
   'home.trustBand': '離線優先 · 中英雙語 · 開放換算引擎',
   'home.steps.title': '使用步驟',
   'home.steps.s1.title': '選兩個單位',

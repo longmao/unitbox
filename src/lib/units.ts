@@ -133,7 +133,7 @@ const PAIR_PROMOTION_CAP: Record<string, number> = {
   length: 12,
   mass: 10,
   temperature: 5,   // all 5 — they all pair interestingly
-  area: 9,
+  area: 11,         // 11 area units incl. tsubo/jo — promote all so unit-page links resolve
   volume: 14,
   speed: 6,
   time: 12,
@@ -150,6 +150,15 @@ export interface Pair {
   /** URL slug like "meter-to-feet" */
   url: string;
 }
+
+/**
+ * Pair URLs that are superseded by hand-written, per-locale landing pages
+ * (src/pages/[locale]/<url>.astro). The generic [from]-to-[to] template skips
+ * these (locale, url) combos so two routes never build the same path.
+ */
+export const PAIR_PAGE_OVERRIDES: Record<string, string[]> = {
+  'jo-to-square-meter': ['ja'],
+};
 
 /** Pick a "primary" set of N units for each category. First listed = highest priority. */
 function pickPromoted(catSlug: string): Unit[] {

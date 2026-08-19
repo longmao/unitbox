@@ -47,6 +47,16 @@
   { "slug": "square-mile", "name": "square mile", "symbol": "mi²", "aliases": ["sq mi", "square miles"], "category": "area", "factor": 2589988.110336, "precision": 4, "description": "640 acres. US county/area units." },
   { "slug": "acre", "name": "acre", "symbol": "ac", "aliases": ["acres"], "category": "area", "factor": 4046.8564224, "precision": 4, "description": "4,047 m². US farmland and lot size." },
   { "slug": "square-yard", "name": "square yard", "symbol": "yd²", "aliases": ["sq yd"], "category": "area", "factor": 0.83612736, "precision": 4, "description": "9 ft². Carpet and fabric sales." },
+  { "slug": "tsubo", "name": "tsubo", "symbol": "坪", "aliases": ["heibe", "pyeong", "坪"], "category": "area", "factor": 3.3057851239669421, "precision": 6, "description": "400/121 m² ≈ 3.305785 m². Japanese (and Korean pyeong) land/real-estate area unit.", "note": "1 tsubo = 400/121 m² = 3.305785 m², a 6-shaku × 6-shaku square. Roughly 2 Edo-period tatami mats.",
+    "narrative": {
+      "ja": "## 坪とは\n\n坪（つぼ）は、日本の土地・不動産で慣用的に使われる面積の単位です。1坪は辺が6尺（約1.818m）の正方形の面積、すなわち2,400/729 平方尺に相当し、正確には 400/121 m²＝3.305785 m² です。1966年の計量法改正で取引での使用は原則禁止され、現在の不動産広告では平方メートル表記が義務ですが、「坪」という感覚は今も強く残っており、中古住宅の間取りや駐車場、墓地などの案内では補助単位としてよく併記されます。\n\n## 坪と畳の関係\n\n1坪は「畳2枚分」とよく言われます。これは江戸間（関東間）の畳1枚＝1.6562 m²とすると約2枚（1.996枚）に相当するためです。京間（本間）の畳は1枚あたり1.8181 m²と大きいので、1坪は約1.8枚、中京間（1.7412 m²）では約1.9枚です。畳のサイズは地域で異なるため、「畳2枚分＝1坪」はあくまで江戸間基準の目安です。\n\n## 坪単価の読み方\n\n日本の不動産取引では、公示価格や路線価、中古マンションの相場が「坪単価」で語られることが少なくありません。坪単価を m² 単価に直すには坪単価を 3.305785 で割り、逆に m² 単価を坪単価に直すには 3.305785 を掛けます。例えば坪単価100万円の物件は、1 m² あたり約30.25万円に相当します。\n\n## 朝鮮半島の坪（평）\n\n韓国でも同じ尺貫法由来の「평（ピョン）」が使われていました。韓国では2007年に法律上メートル法への移行が完了しましたが、不動産やインテリアの現場では今も 평 표기が日常的に残っています。1평は日本の1坪と同じ 3.305785 m² です。"
+    }
+  },
+  { "slug": "jo", "name": "tatami mat", "symbol": "畳", "aliases": ["jo", "tatami", "畳"], "category": "area", "factor": 1.6562, "precision": 4, "description": "One tatami mat. Edo-period (江戸間) standard 1.6562 m², used here.", "note": "Tatami size varies by region: 江戸間 1.6562 m², 中京間 1.7412 m², 京間 1.8181 m². This site converts using the 江戸間 standard.",
+    "narrative": {
+      "ja": "## 畳（じょう）とは\n\n畳（じょう）は、日本の住宅の和室で部屋の広さを表す伝統的な単位です。1畳は畳1枚分の面積を表しますが、問題は畳のサイズが地域によって異なる点です。関東で一般的な江戸間（関東間）は1畳＝1.6562 m²、名古屋周辺の中京間は1.7412 m²、京都など関西の京間（本間）は1.8181 m²です。同じ「6畳」でも、江戸間なら約9.94 m²、京間なら約10.91 m²となり、1 m²近く変わります。\n\n## 不動産広告の「1.62 m²」ルール\n\n不動産公正競争規約施行規則では、畳による広告は1畳＝1.62 m² 以上の畳を基準とする旨の表示が必要とされ、実際の広告では「1畳」を概ね1.62 m²として扱うのが通例です。これは江戸間・京間いずれよりも小さい、規制上の下限に近い値です。賃貸物件の間取り図で「専有面積30 m²・6畳」のように面積と畳数が釣り合わないことがあるのは、この基準の違いによるものです。\n\n## 使い分けの目安\n\n日常会話や間取りの感覚では畳、登記・売買・賃貸契約では平方メートル（㎡）が使われます。畳数を m² に換算する際は、まずその畳が江戸間・中京間・京間のどれかを確認することが大切です。地域が分からない場合は、不動産広告の慣行に合わせて1畳＝1.62 m² で概算する方法もあります。"
+    }
+  },
 
   { "slug": "liter", "name": "litre", "symbol": "L", "aliases": ["liter", "liters", "litre", "litres", "l"], "category": "volume", "factor": 1, "precision": 6, "description": "1000 cm³. Cooking, beverages, fuel." },
   { "slug": "milliliter", "name": "millilitre", "symbol": "mL", "aliases": ["milliliter", "ml"], "category": "volume", "factor": 0.001, "precision": 4, "description": "1 cm³. Medicine doses, perfume." },

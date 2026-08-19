@@ -25,7 +25,7 @@ export const EN: Record<string, string> = {
 
   // ── Home ──
   'home.h1': 'Convert any unit, instantly',
-  'home.subtitle': '12 categories · 100+ units · 1,135 conversion pairs. Pick a popular conversion below or use the live calculator.',
+  'home.subtitle': '12 categories · 100+ units · 1,019 conversion pairs. Pick a popular conversion below or use the live calculator.',
   'home.trustBand': 'Offline-first · i18n EN+中文 · Open conversion engine',
   'home.steps.title': 'How it works',
   'home.steps.s1.title': 'Pick two units',

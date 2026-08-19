@@ -1,0 +1,211 @@
+---
+// 手書きローカライズ版の換算ペアページ：畳（じょう）→ 平方メートル（m²）。
+// ja 専用。ja ロケールでは [from]-to-[to].astro の自動生成を PAIR_PAGE_OVERRIDES
+// でスキップさせ、このページが /ja/jo-to-square-meter/ を担当する。
+// 換算器は江戸間基準（1畳 = 1.6562 m²）を使用。
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { convert } from '~/lib/units';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+import { IN_LANGUAGE, formatNumber, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return [
+    { params: { locale: 'ja' }, props: { locale: 'ja' as Locale } },
+  ];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const FROM = 'jo';           // 江戸間基準 1畳 = 1.6562 m²
+const TO = 'square-meter';
+
+// 畳の地域基準（m²）と各基準での代表間取り。
+const JO_STANDARDS = [
+  { name: '江戸間（関東間）', m2: 1.6562, region: '関東・東日本中心' },
+  { name: '中京間', m2: 1.7412, region: '東海地方（名古屋周辺）' },
+  { name: '京間（本間）', m2: 1.8181, region: '関西・京都・西日本' },
+];
+const ROOM_EXAMPLES = [
+  { jo: 4, label: '4畳' },
+  { jo: 6, label: '6畳（標準的な和室）' },
+  { jo: 8, label: '8畳' },
+  { jo: 10, label: '10畳' },
+  { jo: 12, label: '12畳' },
+];
+
+const sampleValues = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30, 50, 100];
+const table = sampleValues.map(v => ({ input: v, output: convert(v, FROM, TO) as number }));
+
+const title = '畳から平方メートル（m²）への変換・換算表｜江戸間・京間・中京間対応';
+const subtitle = '畳（じょう）を平方メートル（m²）に即座に変換。江戸間1.6562 m²・京間1.8181 m²・中京間1.7412 m²の基準違いを整理し、「6畳は何m²？」「1畳は何m²？」にまとめて回答します。';
+
+const faq = [
+  {
+    q: '1畳は何平方メートル？',
+    a: `畳のサイズは地域で異なります。江戸間（関東間）は ${formatNumber(JO_STANDARDS[0].m2, 4, locale)} m²、中京間は ${formatNumber(JO_STANDARDS[1].m2, 4, locale)} m²、京間（本間）は ${formatNumber(JO_STANDARDS[2].m2, 4, locale)} m² です。上の換算器は最も一般的な江戸間基準で計算しています。`,
+  },
+  {
+    q: '6畳は何m²？',
+    a: `江戸間なら 6 × 1.6562 ＝ 約9.94 m²、中京間なら約10.45 m²、京間なら約10.91 m² です。同じ「6畳」でも基準により約1 m² の差が出ます。`,
+  },
+  {
+    q: '江戸間・京間・中京間の違いは？',
+    a: '畳1枚の大きさの違いです。江戸間は5.8尺×3尺（約176cm×88cm）で関東の木造賃貸に多く、京間は6.2尺×3.1尺（約187cm×94cm）で関西の伝統的な家屋に多く、中京間はその中間で東海地方で使われます。間取りの「畳数」はこれら地域基準のいずれかに基づいています。',
+  },
+  {
+    q: '不動産広告の「1畳＝1.62 m²」は何？',
+    a: '不動産公正競争規約の運用では、畳で広告する場合は1畳が1.62 m²以上の実物に基づく旨の表示が求められ、広告では1畳＝1.62 m²で扱うのが通例です。これは江戸間・京間いずれよりも小さい値で、契約書の専有面積（m²）と間取り図の畳数が釣り合わない原因のひとつです。',
+  },
+  {
+    q: '1平方メートルは何畳？',
+    a: `江戸間基準では 1 m² ≒ ${formatNumber(1 / JO_STANDARDS[0].m2, 4, locale)} 畳です。「m² 数 × 0.6038」で江戸間の畳数に、× 0.55で京間の畳数におおよそ換算できます。`,
+  },
+];
+
+const related = [
+  { name: '坪 → 平米（m²）の変換', description: '土地・建物面積の坪を m² に。坪単価の換算方法つき。', href: route(locale, '/tsubo-to-heibe/') },
+  { name: '畳 → 平方メートル（汎用ページ）', description: '英語表記の汎用換算ペア（江戸間基準）。', href: route(locale, '/jo-to-square-foot/') },
+  { name: '平方メートル → 畳（逆方向）', description: 'm² から畳数への逆換算。', href: route(locale, '/square-meter-to-jo/') },
+  { name: '畳（単位ページ）', description: '畳の定義・不動産広告の1.62 m² ルールの解説。', href: route(locale, '/jo/') },
+  { name: '坪（単位ページ）', description: '坪の定義・畳との関係・韓国の평（ピョン）の話。', href: route(locale, '/tsubo/') },
+];
+
+const keepItems = [
+  { name: '平方メートル → 平方フィート', description: '海外の部屋広さ表記との対比に。', href: route(locale, '/square-meter-to-square-foot/') },
+  { name: 'エーカー → 平方メートル', description: '海外土地面積から m² へ。', href: route(locale, '/acre-to-square-meter/') },
+  { name: '汎用単位計算機', description: '面積カテゴリの任意の2単位を自由に換算。', href: route(locale, '/calculator/') },
+];
+
+const canonical = canonicalUrl(Astro.url.pathname);
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+const howtoLd = buildHowTo({
+  name: '畳から平方メートル（m²）へ変換する方法',
+  description: subtitle,
+  step1Name: '畳数を入力する',
+  step1Text: '上の換算器の左側に畳数を入力します（江戸間基準）。',
+  step2Name: '平方メートルの結果を読む',
+  step2Text: '右側に m² の値が即座に表示されます。京間・中京間で見たい場合は換算表の基準表を参照してください。',
+  toolName: '畳・平方メートル換算器',
+  canonicalUrl: canonical,
+});
+---
+
+<Base title={title} description={subtitle} locale={locale} altLocales={[locale]} keywords="畳, じょう, 畳 数, 平方メートル, m², 変換, 6畳, 江戸間, 京間, 中京間">
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+  <div class="breadcrumbs">
+    <a href={route(locale, '/')}>{t('pair.breadcrumb-home', locale)}</a> ›
+    <a href={route(locale, '/category/area/')}>面積</a> ›
+    <span>畳 → m²</span>
+  </div>
+
+  <h1>畳から平方メートル（m²）への変換</h1>
+  <p class="muted">{subtitle}</p>
+
+  <div id="converter">
+    <ConverterWidget fromSlug={FROM} toSlug={TO} mode="full" defaultValue={6} />
+  </div>
+
+  <section class="section">
+    <h2 class="section-title">畳の3つの基準 — 江戸間・中京間・京間</h2>
+    <p class="section-subtitle">畳1枚の大きさは地域で異なります。換算前に「どの基準の畳か」を確認するのが正確さの鍵です。</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>基準</th><th>1畳の面積</th><th>主な地域</th></tr>
+      </thead>
+      <tbody>
+        {JO_STANDARDS.map(s => (
+          <tr class={s.name.startsWith('江戸間') ? 'hl' : ''}>
+            <td><strong>{s.name}</strong></td>
+            <td>{formatNumber(s.m2, 4, locale)} m²</td>
+            <td>{s.region}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="muted small">上の換算器・下の換算表は最も普及している<strong>江戸間（1畳＝1.6562 m²）</strong>を基準にしています。</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">畳 → m² 換算表（江戸間基準）</h2>
+    <p class="section-subtitle">間取りでよく使う畳数の一覧。京間・中京間で見たい場合は各値にそれぞれ1.8181 / 1.7412を掛けてください。</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>畳</th><th>→</th><th>平方メートル（m²）・江戸間</th></tr>
+      </thead>
+      <tbody>
+        {table.map(row => (
+          <tr>
+            <td><strong>{formatNumber(row.input, 4, locale)}</strong> 畳</td>
+            <td class="ar">→</td>
+            <td><strong>{formatNumber(row.output, 4, locale)}</strong> m²</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">よくある間取りの広さ（基準別）</h2>
+    <table class="conv-table">
+      <thead>
+        <tr><th>間取り</th><th>江戸間</th><th>中京間</th><th>京間</th></tr>
+      </thead>
+      <tbody>
+        {ROOM_EXAMPLES.map(r => (
+          <tr>
+            <td><strong>{r.label}</strong></td>
+            <td>{formatNumber(r.jo * 1.6562, 2, locale)} m²</td>
+            <td>{formatNumber(r.jo * 1.7412, 2, locale)} m²</td>
+            <td>{formatNumber(r.jo * 1.8181, 2, locale)} m²</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section two-col">
+    <div>
+      <h3>畳とは</h3>
+      <p>畳（じょう）は和室の床に敷く畳1枚分の面積を表す、日本固有の面積の単位です。尺貫法由来で、柱の芯々の寸法（柱1本分を含む間口）を基にする「京間」と、施工後の内寸を基にする「江戸間」など、歴史的な測り方の違いが地域差として残りました。</p>
+    </div>
+    <div>
+      <h3>平方メートル（m²）とは</h3>
+      <p>平方メートルは面積のSI単位で、辺1 mの正方形の面積。現在の不動産取引・登記ではすべて m² 表記が使われます。畳数はあくまで生活感覚の単位であり、契約上の面積は必ず m² で確認しましょう。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{t('pair.faq-title', locale)}</h2>
+    <FaqBlock items={faq} />
+  </section>
+
+  <RecommendedList title={t('pair.related', locale)} items={related} />
+
+  <section class="section">
+    <h2 class="section-title">{t('pair.keep', locale)}</h2>
+    <RecommendedList title="" items={keepItems} />
+  </section>
+
+</Base>
+
+<style>
+  .conv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .conv-table th { background: var(--bg); color: #fff; padding: 12px 14px; text-align: left; font-size: 13px; }
+  .conv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .conv-table td.ar { color: var(--brand); text-align: center; font-weight: 800; }
+  .conv-table tr.hl td { background: var(--brand-soft, #f4f0ff); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .two-col h3 { font-size: 18px; margin-bottom: 6px; }
+  .two-col p { margin-top: 6px; }
+  .small { font-size: 13px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>

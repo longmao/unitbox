@@ -4,7 +4,7 @@ import ConverterWidget from '~/components/ConverterWidget.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, getCategory } from '~/lib/units';
+import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, getCategory, PAIR_PAGE_OVERRIDES } from '~/lib/units';
 import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
@@ -22,6 +22,8 @@ export async function getStaticPaths() {
   const out: Array<{ params: { locale: string; from: string; to: string }; props: { locale: Locale; from: string; to: string } }> = [];
   for (const locale of LOCALES) {
     for (const p of all) {
+      // Skip pairs that have a dedicated hand-written landing page in this locale.
+      if (PAIR_PAGE_OVERRIDES[p.url]?.includes(locale)) continue;
       out.push({
         params: { locale, from: p.from, to: p.to },
         props: { locale, from: p.from, to: p.to },

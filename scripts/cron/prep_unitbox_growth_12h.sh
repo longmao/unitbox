@@ -39,8 +39,21 @@ node scripts/fetch-cf.mjs --date="$DATE" >> "$LOG" 2>&1 || echo "[fetch-cf.mjs] 
 
 # 4. fetch-indexing.mjs (push 100 URL to GSC Indexing API)
 # Skipped if already pushed in last 12h (quota: 200/day)
+# Retry ×3 on transient network failure（2026-08-19：00:01 网络抖动曾全挂，加重试闭环）
 echo "[$(date +%H:%M:%S)] running fetch-indexing.mjs (push 100 URL)" >> "$LOG"
-node scripts/fetch-indexing.mjs --sitemap dist/sitemap-0.xml --limit 100 >> "$LOG" 2>&1 || echo "[fetch-indexing.mjs] failed" >> "$LOG"
+for attempt in 1 2 3; do
+  if node scripts/fetch-indexing.mjs --sitemap dist/sitemap-0.xml --limit 100 >> "$LOG" 2>&1; then
+    echo "[fetch-indexing.mjs] OK (attempt $attempt)" >> "$LOG"
+    break
+  else
+    echo "[fetch-indexing.mjs] FAIL attempt $attempt" >> "$LOG"
+    if [ "$attempt" = "3" ]; then
+      echo "[fetch-indexing.mjs] failed after 3 attempts" >> "$LOG"
+    else
+      sleep 30
+    fi
+  fi
+done
 
 # 5. POST IndexNow 100 URL
 echo "[$(date +%H:%M:%S)] POST IndexNow 100 URL" >> "$LOG"
@@ -87,19 +100,28 @@ node scripts/diff.mjs >> "$LOG" 2>&1 || echo "[diff.mjs] failed" >> "$LOG"
 echo "[$(date +%H:%M:%S)] 12h loop done" >> "$LOG"
 echo "log: $LOG"
 
-# 9. send feishu 1-line summary (build msg from log tail to avoid hardcoded ✅)
-#    Bypass silently if openclaw missing in PATH (launchd env)
-if command -v openclaw >/dev/null 2>&1; then
-  FAIL_COUNT=$(grep -c "\[failed\]" "$LOG" 2>/dev/null || echo 0)
-  if [ "$FAIL_COUNT" = "0" ]; then
-    MSG="unitbox · ${DATE} 12h loop ✅ observe+gsc+cf+indexing+indexnow+bing+ai-vis+diff done"
-  else
-    MSG="unitbox · ${DATE} 12h loop ⚠️ ${FAIL_COUNT} step(s) failed · log=$LOG"
-  fi
-  echo "  send feishu: $MSG"
-  openclaw message send --channel feishu --account default --target user:ou_c4bad3acc6a4a315e59a712757f88b59 --message "$MSG" 2>&1 | head -2
+# 9. send feishu summary + indexed inflection alert（webhook 直发，不依赖 openclaw 在 launchd PATH）
+FEISHU_HOOK="https://open.feishu.cn/open-apis/bot/v2/hook/b11c3819-4e9e-4765-82f4-e91a81361b9e"
+feishu_send() {
+  local msg="$1"
+  curl -s -X POST "$FEISHU_HOOK" -H "Content-Type: application/json" \
+    -d "{\"msg_type\":\"text\",\"content\":{\"text\":\"$msg\"}}" >/dev/null 2>&1
+  echo "  feishu: $msg"
+}
+
+FAIL_COUNT=$(grep -c "\[failed\]" "$LOG" 2>/dev/null || echo 0)
+
+# 9a. indexed 拐点检测（summary.indexed 0→N = Google 开始索引的信号，强提醒）
+INDEXED=$(node -e "const d=require('$ROOT/.observe/${DATE}/gsc-sitemaps.json');console.log(d.summary?.indexed ?? 0)" 2>/dev/null || echo 0)
+if [ -n "$INDEXED" ] && [ "$INDEXED" -gt 0 ] 2>/dev/null; then
+  feishu_send "🎯 unitbox indexed 拐点：${INDEXED}/5746（Google 开始索引了！checkpoint: ${DATE}）"
+fi
+
+# 9b. 每日摘要（含索引推送结果）
+if [ "$FAIL_COUNT" = "0" ]; then
+  feishu_send "unitbox · ${DATE} 12h loop ✅ · indexed ${INDEXED}/5746 · observe+gsc+cf+indexing+indexnow+bing+ai-vis+diff done"
 else
-  echo "  feishu skip: openclaw not in PATH (launchd env) · log=$LOG"
+  feishu_send "unitbox · ${DATE} 12h loop ⚠️ ${FAIL_COUNT} step(s) failed · indexed ${INDEXED}/5746 · log=$LOG"
 fi
 
 # 10. Checkpoint deep-checks (2026-08-05 loop · specific-date, runs only in the 12:00 slot)

@@ -21,7 +21,7 @@ export const ZH_HANS: Record<string, string> = {
   'footer.col.open': '开源与 API',
 
   'home.h1': '任何单位，即时换算',
-  'home.subtitle': '12 个分类 · 100+ 单位 · 1135 个换算对。从下方常用换算中选择，或使用实时计算器。',
+  'home.subtitle': '12 个分类 · 100+ 单位 · 1019 个换算对。从下方常用换算中选择，或使用实时计算器。',
   'home.trustBand': '离线优先 · 中英双语 · 开放换算引擎',
   'home.steps.title': '使用步骤',
   'home.steps.s1.title': '选两个单位',

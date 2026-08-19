@@ -25,6 +25,10 @@ export interface Props {
   noBreadcrumb?: boolean;
   /** Locale for this page. Required — every page under [locale]/ passes its params.locale. */
   locale?: Locale;
+  /** Locales this page exists in. Set ONLY on hand-written pages that don't build in
+   *  every locale — restricts hreflang alternates + the language switcher so neither
+   *  links to a 404. Omit for normal pages (defaults to all LOCALES). */
+  altLocales?: Locale[];
   /** Comma-separated SEO keywords for <meta name="keywords">. Optional — mainly article pages. */
   keywords?: string;
 }
@@ -38,6 +42,7 @@ const {
   ogImage = SITE.ogImage,
   noBreadcrumb = false,
   locale: localeProp,
+  altLocales,
   keywords,
   publishedTime,
   modifiedTime,
@@ -75,9 +80,20 @@ const unitData = Object.fromEntries(
   ])
 );
 
-// Locale-aware hreflang alternates + canonical
-const hreflangs = hreflangTags(Astro.url.pathname);
+// Locale-aware hreflang alternates + canonical.
+// For single/few-locale landing pages (altLocales), emit alternates only for the
+// locales the page actually builds in — otherwise the tags would point at 404s.
+const pageLocales: readonly Locale[] = altLocales && altLocales.length > 0 ? altLocales : LOCALES;
 const suffixPath = stripLocale(Astro.url.pathname);
+const hreflangs = altLocales
+  ? [
+      ...pageLocales.map((loc) => ({
+        hreflang: IN_LANGUAGE[loc],
+        href: `${SITE.url}${route(loc, suffixPath)}`,
+      })),
+      { hreflang: 'x-default', href: `${SITE.url}${route(pageLocales[0], suffixPath)}` },
+    ]
+  : hreflangTags(Astro.url.pathname);
 
 // Base-level structured data: WebSite + Organization + (BreadcrumbList if not suppressed)
 const baseSchemas: unknown[] = [
@@ -87,8 +103,8 @@ if (!noBreadcrumb) {
   baseSchemas.push(buildBreadcrumb(Astro.url.pathname, { title }));
 }
 
-// The "current path" used to build the language switcher links
-const switcher = LOCALES.map(l => ({
+// The "current path" used to build the language switcher links (scoped to pageLocales)
+const switcher = pageLocales.map(l => ({
   locale: l,
   href: route(l, suffixPath),
   label: LOCALE_LABELS[l],
@@ -132,6 +148,7 @@ const switcher = LOCALES.map(l => ({
   <meta name="theme-color" content="#0b1736" />
   {noindex && <meta name="robots" content="noindex" />}
   <link rel="icon" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" />
   <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />

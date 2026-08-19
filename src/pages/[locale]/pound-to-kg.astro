@@ -1,0 +1,238 @@
+---
+// 手書きローカライズ版の換算ペアページ：ポンド / 파운드 → kg。
+// ja・ko の2ロケール向け。URL は pound-to-kg（検索クエリ形）だが、
+// 換算器は実データの pound / kilogram スラグを使用（1 lb = 0.45359237 kg）。
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { convert } from '~/lib/units';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+import { IN_LANGUAGE, formatNumber, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return [
+    { params: { locale: 'ja' }, props: { locale: 'ja' as Locale } },
+    { params: { locale: 'ko' }, props: { locale: 'ko' as Locale } },
+  ];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const FROM = 'pound';
+const TO = 'kilogram';
+const LB_TO_KG = convert(1, FROM, TO) as number; // 0.45359237
+
+const sampleValues = [1, 2, 3, 5, 8, 10, 15, 20, 25, 30, 40, 45, 50, 60, 80, 100, 120, 150, 200, 250, 300];
+const table = sampleValues.map(v => ({ input: v, output: convert(v, FROM, TO) as number }));
+
+// ── ja ──────────────────────────────────────────────────────────────────────
+const JA = {
+  title: 'ポンドからキログラム（kg）への変換・換算表｜1 lb = 0.45359237 kg',
+  subtitle: 'ポンド（lb）をキログラム（kg）に即座に変換。ジムのバーベル・ダンベル、海外アプリの体重表示など、1〜300 lb の換算表とフィットネスでよく出る数値をまとめています。',
+  h1: 'ポンドからキログラム（kg）への変換',
+  fromAbout: 'ポンド（lb）とは',
+  fromBody: 'ポンドはヤード・ポンド法の質量の単位で、1 lb ＝ 0.45359237 kg（正確値）。アメリカでは体重・食料品・ジムのプレート表示に日常的に使われています。日本のジムでも輸入器材の規格表示（lb 表記のプレートやマシン）でよく見かけます。',
+  toAbout: 'キログラム（kg）とは',
+  toBody: 'キログラムは国際単位系（SI）の質量の基本単位で、日本の体重・トレーニング負荷の標準単位です。ポンド → kg は「lb 数 × 0.45359237」、kg → ポンドは「kg 数 ÷ 0.45359237（≒ × 2.2046）」で換算します。',
+  tableTitle: 'ポンド → kg 換算表（1〜300 lb）',
+  tableSub: 'トレーニング・体重でよく使う値の一覧。任意の値は上の換算器をどうぞ。',
+  sceneTitle: 'フィットネスでよく出るポンド表記',
+  scenes: [
+    { label: 'ベンチプレス 135 lb（最初の関門）', lb: 135, note: '空バー（45 lb）＋45 lb プレート×両端。61.2 kg。米国トレーニング動画の基準値。' },
+    { label: 'バーベルプレート1枚（45 lb）', lb: 45, note: '45 lb ＝ 約20.4 kg。米国式ジムの大プレートの標準。' },
+    { label: 'ダンベル（35 lb）', lb: 35, note: '35 lb ＝ 約15.9 kg。可変ダンベルの中〜上級設定によくある目盛り。' },
+    { label: '体重 150 lb', lb: 150, note: '150 lb ＝ 約68.0 kg。海外のフィットネスアプリの体重表示を kg で読むときの代表値。' },
+  ],
+  faq: [
+    { q: '1ポンドは何kg？', a: `1 lb ＝ ${formatNumber(LB_TO_KG, 8, locale)} kg です（正確値）。「ポンド数 × 0.4536」で十分な精度が出ます。` },
+    { q: '45ポンドは何kg？（バーベルプレート）', a: `45 lb ＝ ${formatNumber(convert(45, FROM, TO), 2, locale)} kg です。米国式ジムの大プレート1枚分で、実質20 kgプレートと同じ扱いです。` },
+    { q: '体重の150ポンド・180ポンドは何kg？', a: `150 lb ＝ 約${formatNumber(convert(150, FROM, TO), 1, locale)} kg、180 lb ＝ 約${formatNumber(convert(180, FROM, TO), 1, locale)} kg です。海外製アプリ・YouTube の体重表記を読み替えるときの目安にしてください。` },
+    { q: '135ポンドと225ポンドは何kg？（ベンチプレス）', a: `135 lb ＝ 約${formatNumber(convert(135, FROM, TO), 1, locale)} kg（45 lb プレート×両端＋バー）、225 lb ＝ 約${formatNumber(convert(225, FROM, TO), 1, locale)} kg（45 lb×2枚×両端＋バー）。米国のトレーニング動画の定番数字です。` },
+    { q: 'kgからポンドに戻すには？', a: 'kg 数に 2.20462 を掛けます（÷ 0.45359237 と同じ）。例：60 kg ≒ 132.3 lb。上の換算器は右側（kg 欄）に入力すれば逆方向もそのまま計算できます。' },
+  ],
+  related: [
+    { name: 'kg → ポンド（逆方向）', description: 'キログラムからポンドへの逆換算ページ。', href: '/kilogram-to-pound/' },
+    { name: 'ポンド → オンス', description: 'lb → oz。食品表示・トレーニング栄養表示に。', href: '/pound-to-ounce/' },
+    { name: 'オンス → グラム', description: 'oz → g。プロテインのスクープ表示などに。', href: '/ounce-to-gram/' },
+    { name: 'ポンド（単位ページ）', description: 'ポンドの定義と由来の解説。', href: '/pound/' },
+    { name: 'キログラム（単位ページ）', description: 'SI 質量の基本単位の解説。', href: '/kilogram/' },
+  ],
+  keep: [
+    { name: 'kg → ポンド（汎用換算器）', description: '双方向の汎用ペアページ。', href: '/kilogram-to-pound/' },
+    { name: '液量オンス → ml（調理）', description: '米国レシピの計量換算。', href: '/fluid-ounce-us-to-milliliter/' },
+    { name: '汎用単位計算機', description: '質量カテゴリの任意の2単位を自由に換算。', href: '/calculator/' },
+  ],
+  howto: {
+    name: 'ポンドからキログラムへ変換する方法',
+    step1Name: 'ポンド数を入力する',
+    step1Text: '上の換算器の左側にポンド（lb）の値を入力します。',
+    step2Name: 'kg の結果を読む',
+    step2Text: '右側にキログラムの値が即座に表示されます。kg 側に入力すれば逆方向（kg → lb）も計算できます。',
+    toolName: 'ポンド・kg換算器',
+  },
+  crumb: 'ポンド → kg',
+};
+
+// ── ko ──────────────────────────────────────────────────────────────────────
+const KO = {
+  title: '파운드에서 킬로그램(kg)으로 변환 · 환산표 | 1 lb = 0.45359237 kg',
+  subtitle: '파운드(lb)를 킬로그램(kg)으로 바로 변환하세요. 헬스장 벤치프레스 무게, 해외 앱의 몸무게 표시 등 피트니스에서 자주 나오는 1~300 lb 값을 환산표로 정리했습니다.',
+  h1: '파운드에서 킬로그램(kg)으로 변환',
+  fromAbout: '파운드(lb)란?',
+  fromBody: '파운드는 야드파운드법의 질량 단위로, 1 lb = 0.45359237 kg(정확값)입니다. 미국에서는 몸무게, 식품 포장, 헬스 기구 표기에 널리 쓰입니다. 수입 덤벨이나 케이블 머신의 저항 표시에서 lb를 자주 볼 수 있습니다.',
+  toAbout: '킬로그램(kg)이란?',
+  toBody: '킬로그램은 국제단위계(SI)의 질량 기본 단위로, 한국에서 몸무게와 운동 무게의 표준입니다. 파운드 → kg는 "lb 값 × 0.45359237", kg → 파운드는 "kg 값 × 2.2046"으로 환산합니다.',
+  tableTitle: '파운드 → kg 환산표 (1~300 lb)',
+  tableSub: '트레이닝과 체중에서 자주 쓰는 값들입니다. 다른 값은 위 변환기를 이용하세요.',
+  sceneTitle: '헬스장에서 자주 보는 파운드 표기',
+  scenes: [
+    { label: '벤치프레스 135 lb (첫 관문)', lb: 135, note: '빈 바(45 lb) + 45 lb 플레이트 양쪽 = 61.2 kg. 미국 트레이닝 영상의 기준값.' },
+    { label: '바벨 플레이트 1장 (45 lb)', lb: 45, note: '45 lb = 약 20.4 kg. 미국식 헬스의 대형 플레이트 표준.' },
+    { label: '덤벨 (35 lb)', lb: 35, note: '35 lb = 약 15.9 kg. 가변 덤벨의 중~상급 단계에 자주 있는 눈금.' },
+    { label: '몸무게 165 lb', lb: 165, note: '165 lb = 약 74.8 kg. 해외 피트니스 앱의 몸무게 표시를 kg로 읽을 때 대표값.' },
+  ],
+  faq: [
+    { q: '1파운드는 몇 kg인가요?', a: `1 lb = ${formatNumber(LB_TO_KG, 8, locale)} kg(정확값)입니다. 실전에서는 "lb 값 × 0.4536"으로 계산해도 충분합니다.` },
+    { q: '벤치프레스 135파운드는 몇 kg?', a: `135 lb = 약 ${formatNumber(convert(135, FROM, TO), 1, locale)} kg입니다. 미국 헬스의 "한 판(45 lb) 양쪽 + 빈 바" 기본 무게로, 해외 트레이닝 영상에서 가장 많이 나오는 숫자입니다.` },
+    { q: '225파운드는 몇 kg?', a: `225 lb = 약 ${formatNumber(convert(225, FROM, TO), 1, locale)} kg입니다. 45 lb 플레이트 2장씩 양쪽 + 바(45 lb) 구성으로, 미국 기준 "1렙 달성"의 상징적인 무게입니다.` },
+    { q: '몸무게 180파운드는 몇 kg?', a: `180 lb = 약 ${formatNumber(convert(180, FROM, TO), 1, locale)} kg입니다. 해외 앱이나 유튜브의 몸무게 표시를 읽을 때 참고하세요.` },
+    { q: 'kg에서 파운드로 다시 바꾸려면?', a: 'kg 값에 2.20462를 곱합니다(÷ 0.45359237과 같음). 예: 70 kg ≒ 154.3 lb. 위 변환기는 오른쪽(kg 칸)에 입력하면 역방향도 바로 계산됩니다.' },
+  ],
+  related: [
+    { name: 'kg → 파운드 (역방향)', description: '킬로그램에서 파운드로 되돌리는 환산 페이지.', href: '/kilogram-to-pound/' },
+    { name: '파운드 → 온스', description: 'lb → oz. 식품 표시와 운동 영양 성분 표기에.', href: '/pound-to-ounce/' },
+    { name: '온스 → 그램', description: 'oz → g. 프로틴 스쿱 표기 등에.', href: '/ounce-to-gram/' },
+    { name: '파운드 (단위 페이지)', description: '파운드의 정의와 유래 해설.', href: '/pound/' },
+    { name: '킬로그램 (단위 페이지)', description: 'SI 질량 기본 단위 해설.', href: '/kilogram/' },
+  ],
+  keep: [
+    { name: 'kg → 파운드 (범용 변환기)', description: '양방향 범용 환산 페이지.', href: '/kilogram-to-pound/' },
+    { name: '갤런 → 리터 변환', description: '미국 갤런과 영국 갤런을 리터로.', href: '/gallon-to-liter/' },
+    { name: '범용 단위 계산기', description: '질량 카테고리의 임의 두 단위를 자유롭게 환산.', href: '/calculator/' },
+  ],
+  howto: {
+    name: '파운드에서 킬로그램으로 변환하는 방법',
+    step1Name: '파운드 값 입력',
+    step1Text: '위 변환기 왼쪽에 파운드(lb) 값을 입력합니다.',
+    step2Name: 'kg 결과 확인',
+    step2Text: '오른쪽에 킬로그램 값이 즉시 표시됩니다. kg 칸에 입력하면 역방향(kg → lb)도 계산됩니다.',
+    toolName: '파운드·kg 변환기',
+  },
+  crumb: '파운드 → kg',
+};
+
+const C = locale === 'ko' ? KO : JA;
+
+const canonical = canonicalUrl(Astro.url.pathname);
+const faqLd = buildFaqPage(C.faq, { inLanguage: IN_LANGUAGE[locale] });
+const howtoLd = buildHowTo({
+  name: C.howto.name,
+  description: C.subtitle,
+  step1Name: C.howto.step1Name,
+  step1Text: C.howto.step1Text,
+  step2Name: C.howto.step2Name,
+  step2Text: C.howto.step2Text,
+  toolName: C.howto.toolName,
+  canonicalUrl: canonical,
+});
+const relatedItems = C.related.map(r => ({ ...r, href: route(locale, r.href) }));
+const keepItems = C.keep.map(r => ({ ...r, href: route(locale, r.href) }));
+---
+
+<Base title={C.title} description={C.subtitle} locale={locale} altLocales={['ja', 'ko']} keywords={locale === 'ko' ? '파운드, kg, 변환, 환산, 벤치프레스, 파운드 kg' : 'ポンド, kg, 変換, 換算, ベンチプレス, 体重'}>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+  <div class="breadcrumbs">
+    <a href={route(locale, '/')}>{locale === 'ko' ? '홈' : 'ホーム'}</a> ›
+    <a href={route(locale, '/category/mass/')}>{locale === 'ko' ? '질량' : '質量'}</a> ›
+    <span>{C.crumb}</span>
+  </div>
+
+  <h1>{C.h1}</h1>
+  <p class="muted">{C.subtitle}</p>
+
+  <div id="converter">
+    <ConverterWidget fromSlug={FROM} toSlug={TO} mode="full" defaultValue={1} />
+  </div>
+
+  <section class="section">
+    <h2 class="section-title">{C.tableTitle}</h2>
+    <p class="section-subtitle">{C.tableSub}</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>lb</th><th>→</th><th>kg</th></tr>
+      </thead>
+      <tbody>
+        {table.map(row => (
+          <tr>
+            <td><strong>{formatNumber(row.input, 4, locale)}</strong> lb</td>
+            <td class="ar">→</td>
+            <td><strong>{formatNumber(row.output, 4, locale)}</strong> kg</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{C.sceneTitle}</h2>
+    <p class="section-subtitle">1 lb = {formatNumber(LB_TO_KG, 8, locale)} kg</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>{locale === 'ko' ? '항목' : '場面'}</th><th>lb</th><th>kg</th><th>{locale === 'ko' ? '메모' : 'メモ'}</th></tr>
+      </thead>
+      <tbody>
+        {C.scenes.map(s => (
+          <tr>
+            <td><strong>{s.label}</strong></td>
+            <td>{s.lb} lb</td>
+            <td><strong>{formatNumber(convert(s.lb, FROM, TO), 1, locale)} kg</strong></td>
+            <td class="muted small">{s.note}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section two-col">
+    <div>
+      <h3>{C.fromAbout}</h3>
+      <p>{C.fromBody}</p>
+    </div>
+    <div>
+      <h3>{C.toAbout}</h3>
+      <p>{C.toBody}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{locale === 'ko' ? '자주 묻는 질문' : 'よくある質問'}</h2>
+    <FaqBlock items={C.faq} />
+  </section>
+
+  <RecommendedList title={locale === 'ko' ? '관련 환산' : '関連する換算'} items={relatedItems} />
+
+  <section class="section">
+    <h2 class="section-title">{locale === 'ko' ? '더 살펴보기' : 'さらに探索'}</h2>
+    <RecommendedList title="" items={keepItems} />
+  </section>
+
+</Base>
+
+<style>
+  .conv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .conv-table th { background: var(--bg); color: #fff; padding: 12px 14px; text-align: left; font-size: 13px; }
+  .conv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .conv-table td.ar { color: var(--brand); text-align: center; font-weight: 800; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .two-col h3 { font-size: 18px; margin-bottom: 6px; }
+  .two-col p { margin-top: 6px; }
+  .small { font-size: 13px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>

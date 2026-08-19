@@ -1,0 +1,189 @@
+---
+// 手書きローカライズ版の換算ペアページ：坪 → 平米（m²）。
+// ja 専用（ja 市場向けランディングページ）。テンプレートは [from]-to-[to].astro と同じ
+// 構成（Base + ConverterWidget + 換算表 + FAQ + 関連リンク）だが、本文・FAQ は日本語で
+// 手書きしている。単位スラグは実データの tsubo / square-meter を使用。
+import Base from '~/layouts/Base.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import RecommendedList from '~/components/RecommendedList.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { convert } from '~/lib/units';
+import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
+import { IN_LANGUAGE, formatNumber, t, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return [
+    { params: { locale: 'ja' }, props: { locale: 'ja' as Locale } },
+  ];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+
+const FROM = 'tsubo';
+const TO = 'square-meter';
+const TSUBO_TO_M2 = convert(1, FROM, TO) as number; // 3.305785…
+
+const title = '坪から平米（m²）への変換・換算表｜1坪 = 3.305785 m²';
+const subtitle = '坪（つぼ）と平米（平方メートル・m²）を双方向で即座に変換。1〜100坪の換算表、坪単価の計算方法、畳（京間・江戸間・中京間）との関係まで、不動産・土地面積の換算に必要な情報をまとめています。';
+
+const sampleValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100];
+const table = sampleValues.map(v => ({ input: v, output: convert(v, FROM, TO) as number }));
+
+const faq = [
+  {
+    q: '1坪は何平方メートル？',
+    a: `1坪 = ${formatNumber(TSUBO_TO_M2, 6, locale)} m² です（正確には 400/121 m²）。計算は「坪数 × 3.305785」で、例えば30坪なら 30 × 3.305785 ≒ 99.17 m² になります。`,
+  },
+  {
+    q: '1平方メートルは何坪？',
+    a: `1 m² ≒ ${formatNumber(1 / TSUBO_TO_M2, 4, locale)} 坪です。「m² 数 ÷ 3.305785」で坪数が出ます。例えば100 m²は約30.25坪です。`,
+  },
+  {
+    q: '坪単価をm²単価に換算するには？',
+    a: '坪単価を 3.305785 で割ると m² 単価になります。例：坪単価150万円 → 1 m²あたり約45.4万円。逆に m² 単価へは3.305785を掛けると坪単価に戻ります。',
+  },
+  {
+    q: '1坪は畳何枚分？',
+    a: '江戸間（関東間）の畳（1枚1.6562 m²）ならほぼ2枚分です。京間（1.8181 m²）では約1.8枚、中京間（1.7412 m²）では約1.9枚で、畳の基準により枚数が変わります。',
+  },
+  {
+    q: '30坪・50坪はそれぞれ何m²？',
+    a: `30坪 ≒ ${formatNumber(convert(30, FROM, TO), 2, locale)} m²（戸建ての標準的な床面積）、50坪 ≒ ${formatNumber(convert(50, FROM, TO), 2, locale)} m² です。上の換算器・換算表で他の値もすぐ確認できます。`,
+  },
+];
+
+const related = [
+  { name: '坪 → 平方メートル（汎用ページ）', description: '英語表記の汎用換算ペア。サンプル値つきの換算表とFAQ。', href: route(locale, '/tsubo-to-square-meter/') },
+  { name: '平方メートル → 坪（逆方向）', description: 'm² から坪への逆換算。坪数を知りたいときに。', href: route(locale, '/square-meter-to-tsubo/') },
+  { name: '畳 → m² の変換', description: '江戸間・京間・中京間の違いつき解説。「6畳は何m²？」に対応。', href: route(locale, '/jo-to-square-meter/') },
+  { name: '坪（単位ページ）', description: '坪の定義・由来・畳との関係の解説。', href: route(locale, '/tsubo/') },
+  { name: '面積の全単位', description: 'm²・ha・坪・畳・ft²・エーカーなど面積カテゴリの全単位一覧。', href: route(locale, '/category/area/') },
+];
+
+const keepItems = [
+  { name: '平方メートル → 平方フィート', description: '海外不動産・fps 表記との対比に。', href: route(locale, '/square-meter-to-square-foot/') },
+  { name: 'ヘクタール → エーカー', description: '農地・海外土地面積の比較に。', href: route(locale, '/hectare-to-acre/') },
+  { name: '汎用単位計算機', description: '同じカテゴリの任意の2単位を自由に換算。', href: route(locale, '/calculator/') },
+];
+
+const canonical = canonicalUrl(Astro.url.pathname);
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+const howtoLd = buildHowTo({
+  name: '坪から平米（m²）へ変換する方法',
+  description: subtitle,
+  step1Name: '坪数を入力する',
+  step1Text: '上の換算器の左側に坪数を入力します。',
+  step2Name: '平米（m²）の結果を読む',
+  step2Text: '右側に平方メートル（m²）の値が即座に表示されます。逆方向（m² → 坪）もそのまま入力できます。',
+  toolName: '坪・平米換算器',
+  canonicalUrl: canonical,
+});
+---
+
+<Base title={title} description={subtitle} locale={locale} altLocales={[locale]} keywords="坪, 平米, 平方メートル, 変換, 換算, 坪単価, 不動産">
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={howtoLd} />
+  </Fragment>
+
+  <div class="breadcrumbs">
+    <a href={route(locale, '/')}>{t('pair.breadcrumb-home', locale)}</a> ›
+    <a href={route(locale, '/category/area/')}>面積</a> ›
+    <span>坪 → 平米（m²）</span>
+  </div>
+
+  <h1>坪から平米（m²）への変換</h1>
+  <p class="muted">{subtitle}</p>
+
+  <div id="converter">
+    <ConverterWidget fromSlug={FROM} toSlug={TO} mode="full" defaultValue={1} />
+  </div>
+
+  <section class="section">
+    <h2 class="section-title">坪・平米の換算表（1〜100坪）</h2>
+    <p class="section-subtitle">不動産・土地でよく使う坪数の一覧。任意の値は上の換算器をどうぞ。</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>坪</th><th>→</th><th>平方メートル（m²）</th></tr>
+      </thead>
+      <tbody>
+        {table.map(row => (
+          <tr>
+            <td><strong>{formatNumber(row.input, 4, locale)}</strong> 坪</td>
+            <td class="ar">→</td>
+            <td><strong>{formatNumber(row.output, 4, locale)}</strong> m²</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section two-col">
+    <div>
+      <h3>坪とは</h3>
+      <p>坪（つぼ）は日本の土地・不動産で慣用的に使われる面積の単位で、1坪＝6尺×6尺の正方形、正確には 400/121 m² ＝ {formatNumber(TSUBO_TO_M2, 6, locale)} m² です。現在の取引では計量法により平方メートル表記が原則ですが、中古住宅の間取り感覚や駐車場・墓地・公示価格などでは今も「坪」が広く使われています。</p>
+    </div>
+    <div>
+      <h3>平米（平方メートル）とは</h3>
+      <p>平米（へいべい）は平方メートル（m²）の日本語での呼び方で、辺1 mの正方形の面積。登記・売買・賃貸契約など公式な場面ではすべて m² が使われます。坪 → 平米は「坪数 × 3.305785」、平米 → 坪は「m² 数 ÷ 3.305785」で換算します。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">坪単価の換算方法</h2>
+    <p class="section-subtitle">不動産の価格相場を坪単価と m² 単価で相互に変換する計算式。</p>
+    <div class="formula-card card">
+      <div class="formula-line">坪単価 → m² 単価：<strong>坪単価 ÷ 3.305785</strong></div>
+      <div class="formula-line">m² 単価 → 坪単価：<strong>m² 単価 × 3.305785</strong></div>
+      <div class="formula-example">例：坪単価150万円の物件 → 1 m²あたり 約45.4万円（150 ÷ 3.305785 ＝ 45.37）</div>
+    </div>
+    <p>公示価格・路線価は m² 単価、中古マンションの相場話は坪単価で語られることが多く、両者を比較するときにこの換算が必要になります。上の双方向換算器は面積だけでなく単価の目安にもそのまま使えます（150と入力すれば45.37と出る）。</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">坪と畳（京間・江戸間・中京間）の関係</h2>
+    <p>「1坪＝畳2枚分」という言い方をよく聞きますが、畳のサイズは地域で異なるため、これは江戸間基準の目安です。</p>
+    <table class="conv-table">
+      <thead>
+        <tr><th>畳の基準</th><th>1畳の面積</th><th>1坪は何枚分</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>江戸間（関東間）</td><td>1.6562 m²</td><td><strong>約2.0枚</strong></td></tr>
+        <tr><td>中京間</td><td>1.7412 m²</td><td>約1.9枚</td></tr>
+        <tr><td>京間（本間）</td><td>1.8181 m²</td><td>約1.8枚</td></tr>
+      </tbody>
+    </table>
+    <p class="muted small">畳 → m² の詳細な換算は「<a href={route(locale, '/jo-to-square-meter/')}>畳から平方メートルへの変換</a>」のページで、3つの基準の違いを含めて解説しています。</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">{t('pair.faq-title', locale)}</h2>
+    <FaqBlock items={faq} />
+  </section>
+
+  <RecommendedList title={t('pair.related', locale)} items={related} />
+
+  <section class="section">
+    <h2 class="section-title">{t('pair.keep', locale)}</h2>
+    <RecommendedList title="" items={keepItems} />
+  </section>
+
+</Base>
+
+<style>
+  .conv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .conv-table th { background: var(--bg); color: #fff; padding: 12px 14px; text-align: left; font-size: 13px; }
+  .conv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .conv-table td.ar { color: var(--brand); text-align: center; font-weight: 800; }
+  .conv-table a { color: var(--brand); font-weight: 600; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .two-col h3 { font-size: 18px; margin-bottom: 6px; }
+  .two-col p { margin-top: 6px; }
+  .small { font-size: 13px; }
+  .formula-card { padding: 20px 24px; display: grid; gap: 10px; }
+  .formula-line { font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .formula-example { font-size: 14px; color: var(--fg-soft); border-top: 1px solid var(--border); padding-top: 10px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>
