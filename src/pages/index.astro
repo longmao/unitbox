@@ -1,0 +1,17 @@
+---
+const target = '/en/';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <meta name="robots" content="noindex,follow" />
+    <link rel="canonical" href={`https://unitbox.online${target}`} />
+    <title>unitbox — redirecting</title>
+  </head>
+  <body>
+    <p>Redirecting to <a href={target}>unitbox</a>…</p>
+    <script is:inline>location.replace('/en/');</script>
+  </body>
+</html>
