@@ -1,15 +1,23 @@
 // Centralized site config + helpers
+import { getSiteStats } from './units';
+
+const stats = getSiteStats();
+const coverage = `${stats.categories} categories · ${stats.units} units · ${stats.pairs.toLocaleString('en-US')} conversion pairs`;
+
 export const SITE = {
   name: 'unitbox',
   legalName: 'unitbox',
   tagline: 'Convert any unit — and everything related to it',
   description:
-    'Free online unit converter tool. 12 categories · 110+ units · 1,135 conversion pairs. Convert length, mass, temperature, area, volume, speed & more — instantly, no signup, no tracking.',
+    `Free online unit converter tool. ${coverage}. Convert length, mass, temperature, area, volume, speed & more — instantly, no signup, no tracking.`,
   url: 'https://unitbox.online',
   ogImage: '/og-default.png',
   locale: 'en_US',
   twitterHandle: '@unitbox',
 };
+
+export const SITE_STATS = stats;
+export const SITE_COVERAGE = coverage;
 
 export const NAV_GROUPS = [
   {

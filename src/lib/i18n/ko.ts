@@ -24,7 +24,7 @@ export const KO: Record<string, string> = {
 
   // ── 홈 ──
   'home.h1': '어떤 단위든 즉시 환산',
-  'home.subtitle': '12개 카테고리 · 100개 이상 단위 · 1,019개 환산 쌍. 아래 인기 환산에서 선택하거나 실시간 계산기를 사용해 보세요.',
+  'home.subtitle': '{categories}개 카테고리 · {units}개 단위 · {pairs}개 환산 쌍. 아래 인기 환산에서 선택하거나 실시간 계산기를 사용해 보세요.',
   'home.trustBand': '오프라인 우선 · 다국어 지원 · 오픈 환산 엔진',
   'home.steps.title': '사용 방법',
   'home.steps.s1.title': '두 단위 선택',

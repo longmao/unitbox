@@ -1,0 +1,33 @@
+---
+import { ADS } from '~/lib/ads';
+
+interface Props {
+  placement: 'after-hero' | 'after-result' | 'before-faq' | 'article-top' | 'article-mid';
+  locale?: string;
+}
+
+const { placement } = Astro.props;
+const slot = import.meta.env[`PUBLIC_ADSENSE_SLOT_${placement.toUpperCase().replaceAll('-', '_')}`] || '';
+---
+
+{ADS.enabled && <>
+  <aside class={`ad-slot ad-slot-${placement}`} aria-label="Advertisement">
+    <span class="ad-label">Advertisement</span>
+    <ins class="adsbygoogle"
+      style="display:block;min-height:90px"
+      data-ad-client={ADS.publisherId}
+      data-ad-slot={slot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
+  </aside>
+  <script is:inline>
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+</>}
+
+<style>
+  .ad-slot { min-height: 118px; margin: 24px 0; padding: 10px 0; text-align: center; overflow: hidden; }
+  .ad-label { display: block; margin-bottom: 5px; color: var(--fg-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  .ad-slot .adsbygoogle { min-height: 90px; }
+  @media (max-width: 600px) { .ad-slot { min-height: 104px; margin: 18px 0; } }
+</style>

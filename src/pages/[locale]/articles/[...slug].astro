@@ -7,6 +7,7 @@ import { formatInline } from '~/lib/format';
 import { LOCALES, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 import { buildArticle, canonicalUrl } from '~/lib/seo';
+import AdSlot from '~/components/AdSlot.astro';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string; slug: string }; props: { locale: Locale; slug: string } }> = [];
@@ -67,8 +68,10 @@ const articleSchema = buildArticle({
       <span class="cat">{article.category}</span>
       <span class="rt">{article.readTime} read</span>
     </div>
-    <p class="lead">{article.description}</p>
+  <p class="lead">{article.description}</p>
   </header>
+
+  <AdSlot placement="article-top" locale={locale} />
 
   <div class="body">
     {paragraphs.map(p => {
@@ -84,6 +87,8 @@ const articleSchema = buildArticle({
       );
     })}
   </div>
+
+  <AdSlot placement="article-mid" locale={locale} />
 
   <aside class="related-section">
     {related.length > 0 && <RecommendedList title="Related articles" items={related} />}

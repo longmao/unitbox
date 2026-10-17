@@ -1,5 +1,5 @@
 # unitbox
-> unitbox는 무료, 오픈, 오프라인 우선의 단위 환산 네트워크입니다. 길이, 질량, 온도, 면적, 부피, 속도, 시간, 데이터, 에너지, 압력, 각도, 연비의 12개 카테고리에 걸쳐 110개 이상의 단위를 다루며, 1,135개의 사전 계산된 환산 쌍 페이지, 범용 계산기, JSON-LD 리치 지식 그래프를 제공합니다. 모든 페이지는 정적으로 생성되며, 환산기는 백엔드 왕복 없이 클라이언트에서 작동합니다.
+> unitbox는 무료, 오픈, 오프라인 우선의 단위 환산 네트워크입니다. 12개 카테고리에 걸쳐 111개 단위를 다루며, 1,016개의 사전 계산된 환산 쌍 페이지, 범용 계산기, JSON-LD 리치 지식 그래프를 제공합니다. 모든 페이지는 정적으로 생성되며, 환산기는 백엔드 왕복 없이 클라이언트에서 작동합니다.
 
 이 문서는 AI 어시스턴트, 검색 크롤러, 통합 파트너를 위한 것입니다. 사람이 읽기 쉬운 해설 페이지는 https://unitbox.online/ko/llms 에 있습니다.
 
@@ -27,11 +27,11 @@
 
 | 차원 | unitbox가 제공하는 것 |
 |-----------|----------------------|
-| **커버리지** | 110개 이상 단위, 12개 카테고리, 1,135개 사전 생성 쌍 페이지 |
+| **커버리지** | 111개 단위, 12개 카테고리, 1,016개 사전 생성 쌍 페이지 |
 | **계산** | 선형 (×÷), 아핀 (온도), 방향 인식 역수 (연비) |
 | **언어** | English (기본) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — 로케일 접두어 URL (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
 | **프라이버시** | 쿠키 없음 / 분석 없음 / 현재 추적 없음. 향후 사이트 유지를 위해 Google AdSense 비개인화 광고를 게재할 수 있음 |
-| **성능** | 정적 HTML, 전체 빌드 약 3초, 환산 100ms 미만, 5,700개 이상 HTML 페이지 |
+| **성능** | 정적 HTML, 전체 빌드 약 3초, 환산 100ms 미만, 약 5,955개 HTML 페이지 |
 | **오픈** | 소스 공개, MIT 스타일 라이선스, OpenAPI 3.0 사양, 요청 제한 없음 |
 
 ---
@@ -63,7 +63,7 @@
 
 - **쌍 페이지 (EN)** → `https://unitbox.online/en/<from>-to-<to>/`
   예: `/en/meter-to-foot/`, `/en/celsius-to-fahrenheit/`, `/en/mpg-us-to-liter-per-100km/`, `/en/kilobyte-to-kibibyte/`.
-  빌드 시 1,135개 페이지 생성, × 5 locales = 5,675 쌍 URL.
+  빌드 시 1,016개 페이지 생성, × 5 locales = 5,080 쌍 URL.
 
 - **전체 쌍 인덱스 (EN)** → `https://unitbox.online/en/compare`
 
@@ -111,7 +111,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 ## 기술 아키텍처
 
 - **스택**: Astro 4 SSG, 라이브 위젯은 바닐라 JS 아일랜드, 백엔드 런타임 없음
-- **빌드**: `npm run build` 가 `dist/` 에 약 5,700개의 HTML 파일을 생성 (1,135 쌍 × 5 locales + 27 페이지 레벨), 모든 페이지에 JSON-LD, 로케일별 hreflang + canonical
+- **빌드**: `npm run build` 가 `dist/` 에 약 5,955개의 HTML 파일을 생성 (1,016 쌍 × 5 locales + 사이트 페이지), 모든 페이지에 JSON-LD, 로케일별 hreflang + canonical
 - **i18n**: 로케일 접두어 라우팅 (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) — 각 로케일은 완전히 정적인 HTML 트리이며 클라이언트 측 토글이 없습니다
 - **데이터 무결성**: 계산, 슬러그 고유성, 기호 유효성, 왕복 안정성, 로케일 사전 일관성을 다루는 80개 이상의 vitest BDD 테스트
 - **배포 대상**: 임의의 정적 호스트 (Cloudflare Pages, Netlify, BunnyCDN). 도메인: `unitbox.online`.
@@ -130,7 +130,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 - `FAQPage` — `FaqBlock`을 렌더링하는 모든 페이지
 - `HowTo` — 모든 쌍별 환산 페이지 (`#converter` 앵커 포함)
 
-사이트맵은 `/sitemap-index.xml` (약 5,700 URL) 에 게시되어 있으며, `robots.txt` 는 `/robots.txt` 에 있습니다.
+사이트맵은 `/sitemap-index.xml` (약 5,955 URL) 에 게시되어 있으며, `robots.txt` 는 `/robots.txt` 에 있습니다.
 
 ---
 

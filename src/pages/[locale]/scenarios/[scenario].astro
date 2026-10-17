@@ -1,0 +1,65 @@
+---
+import Base from '~/layouts/Base.astro';
+import AdSlot from '~/components/AdSlot.astro';
+import FaqBlock from '~/components/FaqBlock.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { scenarios } from '~/data/scenarios';
+import { buildFaqPage } from '~/lib/seo';
+import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return scenarios.map((scenario) => ({
+    params: { locale: 'en', scenario: scenario.slug },
+    props: { locale: 'en' as Locale, scenario },
+  }));
+}
+
+const { locale, scenario } = Astro.props as { locale: Locale; scenario: (typeof scenarios)[number] };
+const faqLd = buildFaqPage(scenario.faqs, { inLanguage: IN_LANGUAGE.en });
+const title = scenario.title;
+const description = scenario.description;
+---
+
+<Base title={title} description={description} locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={faqLd} /></Fragment>
+
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <span>{scenario.title}</span></div>
+  <h1>{scenario.title}</h1>
+  <p class="lead">{scenario.intro}</p>
+
+  <section class="section card scenario-units">
+    <h2 class="section-title">Units covered</h2>
+    <div class="unit-list">{scenario.units.map(unit => <span>{unit.replaceAll('-', ' ')}</span>)}</div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Popular conversions</h2>
+    <div class="grid grid-3">
+      {scenario.pairs.map(([from, to]) => (
+        <a class="card pair-card" href={route(locale, `/${from}-to-${to}/`)}>
+          <span>{from.replaceAll('-', ' ')}</span><b>→</b><span>{to.replaceAll('-', ' ')}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <AdSlot placement="after-result" locale={locale} />
+  <section class="section"><h2 class="section-title">Frequently asked questions</h2><FaqBlock items={scenario.faqs} /></section>
+
+  <section class="section card next-step">
+    <h2>Need another conversion?</h2>
+    <p>Use the universal calculator to choose any two units in the same category.</p>
+    <a class="btn" href={route(locale, '/calculator/')}>Open the unit calculator →</a>
+  </section>
+</Base>
+
+<style>
+  .lead { max-width: 760px; color: var(--fg-soft); font-size: 18px; line-height: 1.65; }
+  .scenario-units { margin-top: 24px; }
+  .unit-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .unit-list span { background: var(--brand-soft); border-radius: 999px; color: var(--brand); padding: 6px 11px; font-size: 13px; font-weight: 600; }
+  .pair-card { display: flex; justify-content: space-between; gap: 10px; color: var(--fg); }
+  .pair-card b { color: var(--brand); }
+  .next-step { text-align: center; }
+</style>

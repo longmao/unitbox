@@ -3,7 +3,7 @@ import Base from '~/layouts/Base.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import RelatedQuestions from '~/components/RelatedQuestions.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllCategories } from '~/lib/units';
+import { SITE_STATS } from '~/lib/site';
 import { buildFaqPage } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
@@ -20,11 +20,10 @@ const { locale } = Astro.props as { locale: Locale };
 
 const faq = [
   { q: 'Who runs this?', a: 'unitbox is operated by a small team obsessed with the architecture of search-first content sites and the math of measurement.' },
-  { q: 'How is this free?', a: 'No ads, no tracking, no monetisation. Just a public-good reference site.' },
+  { q: 'How is this free?', a: 'The site is currently free to use and ads are disabled by default. We may add clearly labelled, non-personalized advertising or sponsorships to cover hosting costs.' },
   { q: 'Where can I report an incorrect conversion?', a: 'Use the in-page feedback link or contact form. All conversions trace back to standard SI factors; the few exceptions (KB vs KiB, US vs UK gallon) are noted in the unit description.' },
 ];
 
-const cats = getAllCategories();
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
 const title = t('about.h1', locale);
@@ -44,8 +43,8 @@ const aboutLabel = t('nav.about', locale);
 
 <h2>What you'll find</h2>
 <ul>
-  <li>Every popular {cats.length} categories × {20}+ units, each on its own page</li>
-  <li>Live converters for 1,135+ common pairs (metres↔feet, kg↔lb, °C↔°F, etc.)</li>
+  <li>{SITE_STATS.categories} categories and {SITE_STATS.units} units, each on its own page</li>
+  <li>Live converters for {SITE_STATS.pairs.toLocaleString('en-US')} common pairs (metres↔feet, kg↔lb, °C↔°F, etc.)</li>
   <li>A universal calculator that handles any pair in any category</li>
   <li>Reference articles explaining the SI, the data-prefix divide, fuel-economy math, and more</li>
   <li>For developers &amp; AI agents: an OpenAPI 3.0 spec at <a href="/openapi.json">/openapi.json</a> and a machine-readable product brief at <a href="/llms.txt">/llms.txt</a></li>

@@ -82,3 +82,7 @@ p { margin: 0 0 14px; }
 .section { margin: 36px 0; }
 .section-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .section-subtitle { color: var(--fg-muted); font-size: 14px; margin-bottom: 18px; }
+
+/* Reserve ad space only when an ad provider is enabled; the component itself is
+   omitted at build time when PUBLIC_ADS_ENABLED is not true. */
+.ad-slot { contain: layout paint; }

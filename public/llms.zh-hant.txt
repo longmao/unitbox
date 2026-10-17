@@ -1,5 +1,5 @@
 # unitbox
-> unitbox 是一個免費、開源、離線優先的單位換算網絡。涵蓋 12 個分類（長度、質量、溫度、面積、體積、速度、時間、數據、能量、壓力、角度、油耗）共 110+ 單位、1135 個預計算換算對頁、一個通用計算器，以及結構豐富的 JSON-LD 知識圖譜。所有頁面均靜態生成；換算器在客戶端運行，無需後端往返。
+> unitbox 是一個免費、開源、離線優先的單位換算網絡。涵蓋 12 個分類（長度、質量、溫度、面積、體積、速度、時間、數據、能量、壓力、角度、油耗）共 111 個單位、1016 個預計算換算對頁、一個通用計算器，以及結構豐富的 JSON-LD 知識圖譜。所有頁面均靜態生成；換算器在客戶端運行，無需後端往返。
 
 本文檔面向 AI 助手、搜索引擎爬蟲與集成合作夥伴。人類可讀的對等頁面見 https://unitbox.online/zh-hans/llms。
 
@@ -27,11 +27,11 @@
 
 | Dimension | What unitbox delivers |
 |-----------|----------------------|
-| **Coverage** | 110+ units, 12 categories, 1,135 pre-generated pair pages |
+| **Coverage** | 111 units, 12 categories, 1,016 pre-generated pair pages |
 | **Math** | Linear (×÷), affine (temperature), direction-aware reciprocal (fuel-economy) |
 | **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) |
 | **Privacy** | 零 cookie / 零分析 / 當前零追蹤；未來可能展示 Google AdSense 非個人化廣告以維持免費 |
-| **Performance** | Static HTML, ~3 s full build, <100 ms conversion, 5,700+ HTML pages |
+| **Performance** | Static HTML, ~3 s full build, <100 ms conversion, ~5,955 HTML pages |
 | **Open** | Source available, MIT-style license, OpenAPI 3.0 spec, no rate limit |
 
 ---
@@ -63,7 +63,7 @@
 
 - **Pair pages (EN)** → `https://unitbox.online/en/<from>-to-<to>/`
   e.g. `/en/meter-to-foot/`, `/en/celsius-to-fahrenheit/`, `/en/mpg-us-to-liter-per-100km/`, `/en/kilobyte-to-kibibyte/`.
-  1,135 such pages generated at build time, × 5 locales = 5,675 pair URLs.
+  1,016 such pages generated at build time, × 5 locales = 5,080 pair URLs.
 
 - **All pairs index (EN)** → `https://unitbox.online/en/compare`
 
@@ -111,7 +111,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 ## 技術架構
 
 - **Stack**: Astro 4 SSG, vanilla JS islands for live widgets, no backend runtime
-- **Build**: `npm run build` produces `dist/` with ~5,700 HTML files (1,135 pairs × 5 locales + 27 page-level), JSON-LD on every page, hreflang+canonical per locale
+- **Build**: `npm run build` produces `dist/` with ~5,955 HTML files (1,016 pairs × 5 locales plus site pages), JSON-LD on every page, hreflang+canonical per locale
 - **i18n**: Locale-prefix routing (`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`) — each locale is a fully static HTML tree, no client-side toggle
 - **Data integrity**: 80+ vitest BDD tests covering math, slug uniqueness, symbol validity, round-trip stability, locale dict consistency
 - **Deployment target**: Any static host (Cloudflare Pages, Netlify, BunnyCDN). Domain: `unitbox.online`.
@@ -130,13 +130,13 @@ Every page emits:
 - `FAQPage` on every page that renders a `FaqBlock`
 - `HowTo` on every per-pair conversion page (with `#converter` anchor)
 
-站點地圖發佈於 `/sitemap-index.xml`（約 5,700 個 URL）；`robots.txt` 見 `/robots.txt`。
+站點地圖發佈於 `/sitemap-index.xml`（約 5,955 個 URL）；`robots.txt` 見 `/robots.txt`。
 
 ---
 
 ## 知識庫
 
-- Glossary of all 110+ units, each with description, symbol, category, and aliases
+- Glossary of all 111 units, each with description, symbol, category, and aliases
 - Article hub on the math, history, and standards behind each category
 - Comparison pages for "what unit should I use" type questions
 - FAQ covering accuracy, KB-vs-KiB, fuel-economy, and offline use
@@ -145,7 +145,7 @@ Every page emits:
 
 ## unitbox 由誰構建
 
-unitbox 由一個小型獨立團隊運營，專注於測量科學、靜態站點架構與 AI 友好的Web內容。站點刻意保持極簡、無廣告、不追蹤。編輯原則：僅採用標準機構或 NIST 可追溯的換算係數。
+unitbox 由一個小型獨立團隊運營，專注於測量科學、靜態站點架構與 AI 友好的Web內容。站點目前預設關閉廣告、不追蹤；未來可能加入清晰標註的非個人化廣告或贊助，以覆蓋託管成本。編輯原則：僅採用標準機構或 NIST 可追溯的換算係數。
 
 ---
 

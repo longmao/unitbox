@@ -6,7 +6,7 @@
 #   2. Legacy locale shortcuts (/zh, /zh-cn) → modern zh-hant / zh-hans
 #   3. Unprefixed static assets (/llms.txt, /openapi.json) → EN locale variants
 #
-# Other path-redirects (e.g. 1135 unit-pair URLs) are NOT enumerated here:
+# Other path-redirects (e.g. 1016 unit-pair URLs) are NOT enumerated here:
 # v0.3 has no SEO traffic, so Google's index is empty. For future-proofing,
 # a 404.astro page at root performs a client-side redirect to the EN
 # equivalent (see src/pages/404.astro).

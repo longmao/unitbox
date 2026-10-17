@@ -7,6 +7,7 @@ import { globalGraph, buildBreadcrumb, canonicalUrl } from '~/lib/seo';
 import { route, hreflangTags, stripLocale } from '~/lib/i18n/routes';
 import JsonLd from '~/components/JsonLd.astro';
 import '~/styles/global.css';
+import { ADS } from '~/lib/ads';
 
 export interface Props {
   title?: string;
@@ -151,6 +152,7 @@ const switcher = pageLocales.map(l => ({
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" />
+  {ADS.enabled && <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS.publisherId}`} crossorigin="anonymous"></script>}
   <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />
   {baseSchemas.map((s) => <JsonLd data={s} />)}
   <!-- Cloudflare Web Analytics -->

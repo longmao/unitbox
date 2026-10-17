@@ -1,5 +1,5 @@
 # unitbox
-> unitbox は、無料・オープン・オフラインファーストの単位換算ネットワークです。長さ・質量・温度・面積・体積・速度・時間・データ・エネルギー・圧力・角度・燃費の 12 カテゴリにわたり 110 以上の単位をカバーし、1,135 の事前計算された換算ペアページ、汎用計算機、JSON-LD リッチなナレッジグラフを提供します。すべてのページは静的生成され、換算器はバックエンドへの往復なしにクライアント側で動作します。
+> unitbox は、無料・オープン・オフラインファーストの単位換算ネットワークです。12カテゴリにわたり111単位をカバーし、1,016の事前計算された換算ペアページ、汎用計算機、JSON-LDリッチなナレッジグラフを提供します。すべてのページは静的生成され、換算器はバックエンドへの往復なしにクライアント側で動作します。
 
 本ドキュメントは AI アシスタント、検索クローラー、統合パートナー向けです。人間向けの解説ページは https://unitbox.online/ja/llms にあります。
 
@@ -27,11 +27,11 @@
 
 | 次元 | unitbox が提供するもの |
 |-----------|----------------------|
-| **カバレッジ** | 110 以上の単位、12 カテゴリ、1,135 の事前生成ペアページ |
+| **カバレッジ** | 111 単位、12 カテゴリ、1,016 の事前生成ペアページ |
 | **計算** | 線形（×÷）、アフィン（温度）、方向依存の逆数（燃費） |
 | **言語** | English（デフォルト）+ Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) + Japanese (ja) + Korean (ko) — ロケールプレフィックス付き URL（`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`） |
 | **プライバシー** | Cookie なし / 分析なし / 現在トラッキングなし。将来的にサイト維持のため Google AdSense 非個別化広告を表示する可能性あり |
-| **パフォーマンス** | 静的 HTML、フルビルド約 3 秒、換算 100 ms 未満、5,700 以上の HTML ページ |
+| **パフォーマンス** | 静的 HTML、フルビルド約 3 秒、換算 100 ms 未満、約 5,955 の HTML ページ |
 | **オープン** | ソース公開、MIT スタイルライセンス、OpenAPI 3.0 仕様、レート制限なし |
 
 ---
@@ -63,7 +63,7 @@
 
 - **ペアページ (EN)** → `https://unitbox.online/en/<from>-to-<to>/`
   例：`/en/meter-to-foot/`, `/en/celsius-to-fahrenheit/`, `/en/mpg-us-to-liter-per-100km/`, `/en/kilobyte-to-kibibyte/`。
-  ビルド時に 1,135 ページ生成、× 5 locales = 5,675 ペア URL。
+  ビルド時に 1,016 ページ生成、× 5 locales = 5,080 ペア URL。
 
 - **全ペアインデックス (EN)** → `https://unitbox.online/en/compare`
 
@@ -111,7 +111,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 ## 技術アーキテクチャ
 
 - **スタック**：Astro 4 SSG、ライブウィジェットはバニラ JS アイランド、バックエンドランタイムなし
-- **ビルド**：`npm run build` が `dist/` に約 5,700 の HTML ファイルを生成（1,135 ペア × 5 locales + 27 ページレベル）、すべてのページに JSON-LD、ロケールごとに hreflang + canonical
+- **ビルド**：`npm run build` が `dist/` に約 5,955 の HTML ファイルを生成（1,016 ペア × 5 locales + サイトページ）、すべてのページに JSON-LD、ロケールごとに hreflang + canonical
 - **i18n**：ロケールプレフィックスルーティング（`/en/`, `/zh-hant/`, `/zh-hans/`, `/ja/`, `/ko/`） — 各ロケールは完全に静的な HTML ツリーで、クライアント側のトグルなし
 - **データ整合性**：計算、スラッグの一意性、記号の妥当性、ラウンドトリップ安定性、ロケール辞書の整合性をカバーする 80 以上の vitest BDD テスト
 - **デプロイ先**：任意の静的ホスト（Cloudflare Pages, Netlify, BunnyCDN）。ドメイン：`unitbox.online`。
@@ -130,7 +130,7 @@ GET https://api.unitbox.online/v1/convert?from={unit_slug}&to={unit_slug}&value=
 - `FAQPage` — `FaqBlock` をレンダリングするすべてのページ
 - `HowTo` — すべてのペア換算ページ（`#converter` アンカー付き）
 
-サイトマップは `/sitemap-index.xml`（約 5,700 URL）で公開、`robots.txt` は `/robots.txt` にあります。
+サイトマップは `/sitemap-index.xml`（約 5,955 URL）で公開、`robots.txt` は `/robots.txt` にあります。
 
 ---
 

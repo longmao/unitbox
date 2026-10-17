@@ -2,6 +2,7 @@
 import Base from '~/layouts/Base.astro';
 import { LOCALES, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import { SITE_STATS } from '~/lib/site';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
@@ -26,7 +27,7 @@ const sections = [
   },
   {
     h: 'For search-engine crawlers',
-    body: `Every page on unitbox emits a complete JSON-LD graph: WebSite + Organization, a path-derived BreadcrumbList, a FAQPage derived from the visible FAQ block, and (for per-pair pages) a HowTo schema with #converter anchor. The full sitemap is at /sitemap-index.xml (1,135 URLs). robots.txt at /robots.txt.`,
+    body: `Every page on unitbox emits a complete JSON-LD graph: WebSite + Organization, a path-derived BreadcrumbList, a FAQPage derived from the visible FAQ block, and (for per-pair pages) a HowTo schema with #converter anchor. The full sitemap is at /sitemap-index.xml (${SITE_STATS.pairs.toLocaleString('en-US')} conversion pairs across all locales, plus site pages). robots.txt at /robots.txt.`,
   },
   {
     h: 'License and attribution',
@@ -61,7 +62,7 @@ const homeLabel = t('pair.breadcrumb-home', locale);
   <ul>
     <li><a href="/llms.txt">/llms.txt</a> — machine-readable product brief</li>
     <li><a href="/openapi.json">/openapi.json</a> — OpenAPI 3.0 spec for the conversion API</li>
-    <li><a href="/sitemap-index.xml">/sitemap-index.xml</a> — full sitemap (1,135 URLs)</li>
+    <li><a href="/sitemap-index.xml">/sitemap-index.xml</a> — full sitemap ({SITE_STATS.pairs.toLocaleString('en-US')} conversion pairs across all locales)</li>
     <li><a href="/robots.txt">/robots.txt</a> — robots policy + sitemap pointer</li>
     <li><a href={route(locale, '/about')}>/about</a> — editorial policy and contact</li>
   </ul>

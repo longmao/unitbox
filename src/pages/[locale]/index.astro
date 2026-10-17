@@ -5,10 +5,13 @@ import FaqBlock from '~/components/FaqBlock.astro';
 import ArticlesBlock from '~/components/ArticlesBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { getAllCategories, getUnitsByCategory } from '~/lib/units';
+import { SITE_COVERAGE, SITE_STATS } from '~/lib/site';
+import AdSlot from '~/components/AdSlot.astro';
 import { articles } from '~/data/articles';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import { scenarios } from '~/data/scenarios';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
@@ -68,7 +71,7 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 // 对齐 AI 可见度战场（7-31 baseline）。H1 不动（"any unit, instantly" 保品牌调性）；
 // title/desc 是 SEO 元数据，用户和 AI 搜索时看。
 const title = 'Convert Any Unit — Free Online Unit Converter';
-const description = `12 categories · 110+ units · 1,135 conversion pairs. Free online unit converter tool — convert length, mass, temperature & more, instantly. No signup, no tracking.`;
+const description = `${SITE_COVERAGE}. Free online unit converter tool — convert length, mass, temperature & more, instantly. No signup, no tracking.`;
 ---
 <Base title={title} description={description} locale={locale} noBreadcrumb>
 
@@ -80,7 +83,7 @@ const description = `12 categories · 110+ units · 1,135 conversion pairs. Free
   <section class="hero">
     <div class="hero-inner card">
       <h1>{t('home.h1', locale)}</h1>
-      <p class="hero-sub">{t('home.subtitle', locale)}</p>
+      <p class="hero-sub">{tFmt('home.subtitle', locale, { categories: SITE_STATS.categories, units: SITE_STATS.units, pairs: SITE_STATS.pairs.toLocaleString('en-US') })}</p>
       <ConverterWidget fromSlug={heroFromSlug} toSlug={heroToSlug} mode="full" defaultValue={1} />
       <div class="hero-eg">
         <span>{t('home.try', locale)}</span>
@@ -106,6 +109,8 @@ const description = `12 categories · 110+ units · 1,135 conversion pairs. Free
       </div>
     </div>
   </section>
+
+  <AdSlot placement="after-hero" locale={locale} />
 
   <!-- LAYER 2: 3-step how-it-works -->
   <section class="section">
@@ -169,6 +174,20 @@ const description = `12 categories · 110+ units · 1,135 conversion pairs. Free
         <p class="tool-body">{t('home.tools-section.tool-calc.body', locale)}</p>
         <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
       </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Unit converters for real-world work</h2>
+    <p class="section-subtitle">Start with a practical measurement guide, then open the exact conversion you need.</p>
+    <div class="grid grid-3">
+      {scenarios.map(s => (
+        <a class="card scenario-card" href={route(locale, `/scenarios/${s.slug}/`)}>
+          <h3>{s.title}</h3>
+          <p>{s.description}</p>
+          <span>Explore guide →</span>
+        </a>
+      ))}
     </div>
   </section>
 
@@ -295,6 +314,9 @@ const description = `12 categories · 110+ units · 1,135 conversion pairs. Free
   .hero-chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #fff; font-weight: 600; }
   .hero-chip:hover { border-color: var(--brand); text-decoration: none; }
   .hero-chip .chip-meta { color: #8a95ad; font-size: 12px; font-weight: 500; }
+  .scenario-card h3 { margin: 0 0 8px; }
+  .scenario-card p { color: var(--fg-soft); font-size: 13px; line-height: 1.5; min-height: 58px; }
+  .scenario-card span { color: var(--brand); font-size: 13px; font-weight: 700; }
 
   /* 3-step */
   .steps { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); padding: 0; list-style: none; margin: 16px 0; }

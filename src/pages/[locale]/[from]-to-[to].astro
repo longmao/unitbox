@@ -8,6 +8,7 @@ import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, get
 import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import AdSlot from '~/components/AdSlot.astro';
 
 export async function getStaticPaths() {
   const popular = getPopularPairs();
@@ -117,6 +118,8 @@ const homeLabel = t('pair.breadcrumb-home', locale);
 <div id="converter">
   <ConverterWidget fromSlug={fromSlug} toSlug={toSlug} mode="full" defaultValue={1} />
 </div>
+
+<AdSlot placement="after-result" locale={locale} />
 
 <section class="section">
   <h2 class="section-title">{tableTitle}</h2>

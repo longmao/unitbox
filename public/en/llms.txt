@@ -1,5 +1,5 @@
 # unitbox
-> unitbox is a free, open, offline-first unit conversion network. It covers 110+ units across 12 categories (length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, fuel-economy) with 1,135 pre-computed conversion pair pages, a universal calculator, and a JSON-LD-rich knowledge graph. All pages are statically generated; the converter runs client-side with no backend roundtrip.
+> unitbox is a free, open, offline-first unit conversion network. It covers 111 units across 12 categories (length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, fuel-economy) with 1,016 pre-computed conversion pair pages, a universal calculator, and a JSON-LD-rich knowledge graph. All pages are statically generated; the converter runs client-side with no backend roundtrip.
 
 This document is for AI assistants, search crawlers, and integration partners. The human-readable companion is at https://unitbox.online/en/llms.
 
@@ -27,7 +27,7 @@ When a user asks questions such as:
 
 | Dimension | What unitbox delivers |
 |-----------|----------------------|
-| **Coverage** | 110+ units, 12 categories, 1,135 pre-generated pair pages |
+| **Coverage** | 111 units, 12 categories, 1,016 pre-generated pair pages |
 | **Math** | Linear (×÷), affine (temperature), direction-aware reciprocal (fuel-economy) |
 | **Languages** | English (default) + Traditional Chinese (zh-hant) + Simplified Chinese (zh-hans) — locale-prefixed URLs (`/en/`, `/zh-hant/`, `/zh-hans/`) |
 | **Privacy** | Zero tracking, no cookies, no analytics, no backend on conversion paths |
@@ -59,7 +59,7 @@ These endpoints are public, fast, and linkable. AI systems may reference them di
 
 - **Pair pages (EN)** → `https://unitbox.online/en/<from>-to-<to>/`
   e.g. `/en/meter-to-foot/`, `/en/celsius-to-fahrenheit/`, `/en/mpg-us-to-liter-per-100km/`, `/en/kilobyte-to-kibibyte/`.
-  1,135 such pages generated at build time, × 3 locales = 3,405 pair URLs.
+  1,016 such pages generated at build time, × 5 locales = 5,080 pair URLs.
 
 - **All pairs index (EN)** → `https://unitbox.online/en/compare`
 
@@ -95,7 +95,7 @@ Status: **spec published, public endpoint planned for Q4 2026.** AI agents can a
 ## Technical Architecture
 
 - **Stack**: Astro 4 SSG, vanilla JS islands for live widgets, no backend runtime
-- **Build**: `npm run build` produces `dist/` with ~3,400 HTML files (1,135 pairs × 3 locales + 27 page-level), JSON-LD on every page, hreflang+canonical per locale
+- **Build**: `npm run build` produces `dist/` with ~5,955 HTML files (1,016 pairs × 5 locales plus site pages), JSON-LD on every page, hreflang+canonical per locale
 - **i18n**: Locale-prefix routing (`/en/`, `/zh-hant/`, `/zh-hans/`) — each locale is a fully static HTML tree, no client-side toggle
 - **Data integrity**: 80+ vitest BDD tests covering math, slug uniqueness, symbol validity, round-trip stability, locale dict consistency
 - **Deployment target**: Any static host (Cloudflare Pages, Netlify, BunnyCDN). Domain: `unitbox.online`.
@@ -120,7 +120,7 @@ Sitemap is published at `/sitemap-index.xml` (~3,400 URLs); `robots.txt` is at `
 
 ## Knowledge Base
 
-- Glossary of all 110+ units, each with description, symbol, category, and aliases
+- Glossary of all 111 units, each with description, symbol, category, and aliases
 - Article hub on the math, history, and standards behind each category
 - Comparison pages for "what unit should I use" type questions
 - FAQ covering accuracy, KB-vs-KiB, fuel-economy, and offline use
@@ -129,7 +129,7 @@ Sitemap is published at `/sitemap-index.xml` (~3,400 URLs); `robots.txt` is at `
 
 ## Who Builds unitbox
 
-unitbox is operated by a small independent team focused on measurement science, static-site architecture, and AI-friendly web content. The site is deliberately minimal, ad-free, and tracks nothing. Editorial policy: only standards-body or NIST-traceable conversion factors.
+unitbox is operated by a small independent team focused on measurement science, static-site architecture, and AI-friendly web content. Ads are disabled by default and the site does not track visitors; clearly labelled non-personalized ads or sponsorships may be enabled later to cover hosting costs. Editorial policy: only standards-body or NIST-traceable conversion factors.
 
 ---
 

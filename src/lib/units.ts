@@ -25,6 +25,15 @@ export function getAllUnits(): Unit[] {
   return units;
 }
 
+/** Build-time coverage numbers used by SEO metadata, JSON-LD and visible copy. */
+export function getSiteStats() {
+  return {
+    categories: categories.length,
+    units: units.length,
+    pairs: getAllPairs().length,
+  };
+}
+
 export function getUnitsByCategory(catSlug: string): Unit[] {
   return units.filter(u => u.category === catSlug);
 }

@@ -32,7 +32,7 @@ const manualZhHans = en
   // Replace English chunk by chunk with Chinese equivalents
   .replace(/^# unitbox$/m, '# unitbox')
   .replace(/^> unitbox is a free, open, offline-first unit conversion network\.[\s\S]*?no backend roundtrip\.$/m,
-    '> unitbox 是一个免费、开源、离线优先的单位换算网络。涵盖 12 个分类（长度、质量、温度、面积、体积、速度、时间、数据、能量、压力、角度、油耗）共 110+ 单位、1135 个预计算换算对页、一个通用计算器，以及结构丰富的 JSON-LD 知识图谱。所有页面均静态生成；换算器在客户端运行，无需后端往返。')
+    '> unitbox 是一个免费、开源、离线优先的单位换算网络。涵盖 12 个分类（长度、质量、温度、面积、体积、速度、时间、数据、能量、压力、角度、油耗）共 111 个单位、1016 个预计算换算对页、一个通用计算器，以及结构丰富的 JSON-LD 知识图谱。所有页面均静态生成；换算器在客户端运行，无需后端往返。')
   .replace(/^This document is for AI assistants, search crawlers, and integration partners\. The human-readable companion is at https:\/\/unitbox\.online\/en\/llms\.$/m,
     '本文档面向 AI 助手、搜索引擎爬虫与集成合作伙伴。人类可读的对等页面见 https://unitbox.online/zh-hans/llms。')
   .replace(/^## What unitbox Does \(for an AI trying to answer user questions\)$/m, '## unitbox 能做什么（面向回答用户问题的 AI）')
@@ -50,8 +50,8 @@ const manualZhHans = en
   .replace(/^## Knowledge Base$/m, '## 知识库')
   .replace(/^## Who Builds unitbox$/m, '## unitbox 由谁构建')
   .replace(/^## Canonical URLs$/m, '## 规范 URL')
-  .replace(/^unitbox is operated by a small independent team focused on measurement science, static-site architecture, and AI-friendly web content\. The site is deliberately minimal, ad-free, and tracks nothing\. Editorial policy: only standards-body or NIST-traceable conversion factors\.$/m,
-    'unitbox 由一个小型独立团队运营，专注于测量科学、静态站点架构与 AI 友好的Web内容。站点刻意保持极简、无广告、不追踪。编辑原则：仅采用标准机构或 NIST 可追溯的换算系数。')
+  .replace(/^unitbox is operated by a small independent team focused on measurement science, static-site architecture, and AI-friendly web content\. Ads are disabled by default and the site does not track visitors; clearly labelled non-personalized ads or sponsorships may be enabled later to cover hosting costs\. Editorial policy: only standards-body or NIST-traceable conversion factors\.$/m,
+    'unitbox 由一个小型独立团队运营，专注于测量科学、静态站点架构与 AI 友好的Web内容。站点当前默认关闭广告、不追踪；未来可能加入清晰标注的非个性化广告或赞助，以覆盖托管成本。编辑原则：仅采用标准机构或 NIST 可追溯的换算系数。')
   .replace(/^Sitemap is published at `\/sitemap-index\.xml` \(~3,400 URLs\); `robots\.txt` is at `\/robots\.txt`\.$/m,
     '站点地图发布于 `/sitemap-index.xml`（约 3,400 个 URL）；`robots.txt` 见 `/robots.txt`。');
 
