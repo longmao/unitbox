@@ -9,6 +9,8 @@ import JsonLd from '~/components/JsonLd.astro';
 import '~/styles/global.css';
 import { ADS } from '~/lib/ads';
 
+const adsensePublisherId = import.meta.env.PUBLIC_ADSENSE_PUBLISHER_ID || 'ca-pub-3192343269250623';
+
 export interface Props {
   title?: string;
   description?: string;
@@ -119,6 +121,7 @@ const switcher = pageLocales.map(l => ({
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
+  <meta name="google-adsense-account" content={adsensePublisherId} />
   {keywords && <meta name="keywords" content={keywords} />}
   <link rel="canonical" href={canonical} />
   {hreflangs.map(h => (

@@ -1,3 +1,1 @@
-# Replace this comment with the exact line supplied by the approved ad provider.
-# Example only — do not publish a placeholder publisher ID:
-# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+google.com, pub-3192343269250623, DIRECT, f08c47fec0942fa0
