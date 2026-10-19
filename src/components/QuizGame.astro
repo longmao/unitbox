@@ -1,0 +1,230 @@
+---
+import type { QuizQuestion } from '~/data/quiz';
+import AdSlot from '~/components/AdSlot.astro';
+
+interface Props {
+  questions: QuizQuestion[];
+}
+
+const { questions } = Astro.props;
+---
+
+<section class="daily-game" data-quiz-game>
+  <div class="game-card">
+    <div class="game-card-top">
+      <span>Unitbox Daily</span>
+      <span data-game-date>Today’s challenge</span>
+    </div>
+
+    <div class="game-progress" aria-live="polite">
+      <span data-game-progress>Question 1 of 5</span>
+      <span><strong data-game-score>0</strong> / 500</span>
+    </div>
+
+    <div class="game-question" data-game-question>
+      <p class="game-category" data-game-category>Everyday scale</p>
+      <h2 data-game-prompt>Loading today’s question…</h2>
+      <p class="game-hint" data-game-hint></p>
+      <form data-game-form>
+        <label for="guess-value">Your best estimate</label>
+        <div class="guess-row">
+          <input id="guess-value" name="guess" type="number" inputmode="decimal" step="any" min="0" required autocomplete="off" />
+          <span class="guess-unit" data-game-unit>unit</span>
+        </div>
+        <button class="game-submit" type="submit">Lock in my guess</button>
+      </form>
+    </div>
+
+    <div class="game-result" data-game-result hidden aria-live="polite">
+      <p class="result-label">The reveal</p>
+      <p class="result-answer"><strong data-game-answer></strong> <span data-game-answer-unit></span></p>
+      <p class="result-score"><span data-game-round-score>0</span> points</p>
+      <p data-game-explanation></p>
+      <p class="result-source">Source: <a data-game-source target="_blank" rel="noopener"></a></p>
+      <button class="game-next" type="button" data-game-next>Next question</button>
+    </div>
+
+    <div class="game-complete" data-game-complete hidden>
+      <p class="result-label">Challenge complete</p>
+      <p class="complete-score"><strong data-game-final-score>0</strong><span>/500</span></p>
+      <p data-game-summary></p>
+      <div class="complete-actions">
+        <button class="game-next" type="button" data-game-share>Copy result</button>
+        <button class="game-secondary" type="button" data-game-restart>Play again</button>
+      </div>
+      <p class="share-status" data-game-share-status aria-live="polite"></p>
+    </div>
+  </div>
+
+  <aside class="game-side">
+    <div class="game-stats-slip">
+      <p class="slip-title">Your record</p>
+      <div><span>Current streak</span><strong data-game-streak>0 days</strong></div>
+      <div><span>Personal best</span><strong data-game-best>—</strong></div>
+      <div><span>Completed</span><strong data-game-played>0 rounds</strong></div>
+    </div>
+    <p class="game-note">Five questions. One daily score. No account needed.</p>
+  </aside>
+</section>
+
+<AdSlot placement="after-result" />
+
+<script define:vars={{ questions }}>
+  const root = document.querySelector('[data-quiz-game]');
+  if (root) {
+    const storageKey = 'unitbox-daily-v1';
+    const dayNumber = Math.floor((Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()) - Date.UTC(2026, 0, 1)) / 86400000);
+    const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const dailyQuestions = Array.from({ length: 5 }, (_, index) => questions[(dayNumber * 5 + index) % questions.length]);
+    let position = 0;
+    let total = 0;
+    let roundScores = [];
+
+    const $ = (selector) => root.querySelector(selector);
+    const prompt = $('[data-game-prompt]');
+    const hint = $('[data-game-hint]');
+    const category = $('[data-game-category]');
+    const unit = $('[data-game-unit]');
+    const form = $('[data-game-form]');
+    const questionPanel = $('[data-game-question]');
+    const resultPanel = $('[data-game-result]');
+    const completePanel = $('[data-game-complete]');
+    const score = $('[data-game-score]');
+    const progress = $('[data-game-progress]');
+    const valueInput = root.querySelector('#guess-value');
+
+    const categoryNames = { everyday: 'Everyday scale', space: 'Big questions', data: 'Digital scale', distance: 'Distance', weight: 'Weight' };
+    const todayKey = new Date().toISOString().slice(0, 10);
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat('en-US', { maximumFractionDigits: value < 10 ? 3 : 0 }).format(value);
+    }
+
+    function renderStats() {
+      const streak = state.streak || 0;
+      $('[data-game-streak]').textContent = `${streak} day${streak === 1 ? '' : 's'}`;
+      $('[data-game-best]').textContent = state.best ? `${state.best}/500` : '—';
+      $('[data-game-played]').textContent = `${state.played || 0} round${state.played === 1 ? '' : 's'}`;
+    }
+
+    function renderQuestion() {
+      const question = dailyQuestions[position];
+      progress.textContent = `Question ${position + 1} of 5`;
+      score.textContent = total;
+      category.textContent = categoryNames[question.category] || 'Real-world scale';
+      prompt.textContent = question.prompt;
+      hint.textContent = question.hint;
+      unit.textContent = question.unit;
+      valueInput.value = '';
+      valueInput.focus({ preventScroll: true });
+    }
+
+    function getScore(guess, answer) {
+      const error = Math.abs(Math.log10(guess / answer));
+      return Math.max(0, Math.round(100 * (1 - error / 0.75)));
+    }
+
+    function finishRound(question, roundScore) {
+      $('[data-game-answer]').textContent = formatNumber(question.answer);
+      $('[data-game-answer-unit]').textContent = question.unit;
+      $('[data-game-round-score]').textContent = roundScore;
+      $('[data-game-explanation]').textContent = question.explanation;
+      const source = $('[data-game-source]');
+      source.textContent = question.sourceName;
+      source.href = question.sourceUrl;
+      questionPanel.hidden = true;
+      resultPanel.hidden = false;
+      total += roundScore;
+      score.textContent = total;
+    }
+
+    function finishGame() {
+      resultPanel.hidden = true;
+      completePanel.hidden = false;
+      $('[data-game-final-score]').textContent = total;
+      $('[data-game-summary]').textContent = `You were closest on ${Math.max(...roundScores)} point${Math.max(...roundScores) === 1 ? '' : 's'} round. Come back tomorrow for five new questions.`;
+      if (state.lastDate !== todayKey) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = yesterday.toISOString().slice(0, 10);
+        state.streak = state.lastDate === yesterdayKey ? (state.streak || 0) + 1 : 1;
+        state.lastDate = todayKey;
+        state.played = (state.played || 0) + 1;
+        state.best = Math.max(state.best || 0, total);
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      }
+      renderStats();
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const guess = Number(valueInput.value);
+      if (!Number.isFinite(guess) || guess <= 0) return;
+      const question = dailyQuestions[position];
+      const roundScore = getScore(guess, question.answer);
+      roundScores.push(roundScore);
+      finishRound(question, roundScore);
+    });
+
+    $('[data-game-next]').addEventListener('click', () => {
+      position += 1;
+      if (position >= dailyQuestions.length) finishGame();
+      else { resultPanel.hidden = true; questionPanel.hidden = false; renderQuestion(); }
+    });
+
+    $('[data-game-restart]').addEventListener('click', () => {
+      position = 0; total = 0; roundScores = [];
+      completePanel.hidden = true; questionPanel.hidden = false;
+      renderQuestion();
+    });
+
+    $('[data-game-share]').addEventListener('click', async () => {
+      const shareText = `Unitbox Daily #${dayNumber}: ${total}/500\\nCan you beat me? ${window.location.href}`;
+      try { await navigator.clipboard.writeText(shareText); }
+      catch { window.prompt('Copy your result', shareText); }
+      $('[data-game-share-status]').textContent = 'Result copied — send it to a friend.';
+    });
+
+    renderStats();
+    renderQuestion();
+  }
+</script>
+
+<style>
+  .daily-game { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, .65fr); gap: 28px; align-items: start; margin: 28px 0 40px; }
+  .game-card { background: #d3cec6; color: #0a0a0a; padding: clamp(24px, 4vw, 48px); min-height: 590px; position: relative; overflow: hidden; }
+  .game-card::after { content: ''; position: absolute; right: -48px; bottom: -62px; width: 180px; height: 180px; background: #256f82; border-radius: 50%; opacity: .12; }
+  .game-card-top, .game-progress { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .game-progress { margin-top: 60px; color: #5c5852; text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .game-question { max-width: 680px; margin: 48px auto 0; }
+  .game-category, .result-label, .slip-title { margin: 0 0 14px; color: #256f82; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .game-question h2 { margin: 0; font-size: clamp(2.3rem, 5vw, 5rem); line-height: .94; letter-spacing: -.045em; max-width: 11ch; }
+  .game-hint { margin: 28px 0 32px; color: #5c5852; font-size: 18px; max-width: 38ch; }
+  .game-card label { display: block; margin-bottom: 8px; font-weight: 700; }
+  .guess-row { display: flex; align-items: center; max-width: 430px; background: #dedad3; }
+  .guess-row input { width: 100%; border: 0; background: transparent; padding: 14px 16px; font: inherit; font-size: 24px; color: #0a0a0a; outline: 0; }
+  .guess-row:focus-within { outline: 3px solid #256f82; outline-offset: 2px; }
+  .guess-unit { padding-right: 16px; color: #5c5852; font-weight: 700; }
+  .game-submit, .game-next { margin-top: 20px; border: 0; background: #256f82; color: #fff; padding: 14px 20px; font: inherit; font-weight: 700; cursor: pointer; }
+  .game-submit:hover, .game-next:hover { background: #0a0a0a; }
+  .game-secondary { margin-top: 20px; border: 0; background: transparent; color: #0a0a0a; padding: 14px 0; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 5px; }
+  .game-result { max-width: 680px; margin: 48px auto 0; }
+  .result-answer { margin: 0 0 8px; font-size: clamp(2.4rem, 5vw, 5rem); line-height: .95; letter-spacing: -.04em; }
+  .result-score { font-size: 24px; font-weight: 700; color: #256f82; }
+  .result-source { color: #5c5852; font-size: 14px; }
+  .result-source a { color: #0a0a0a; text-decoration: underline; text-underline-offset: 3px; }
+  .complete-score { margin: 10px 0 18px; font-size: clamp(5rem, 12vw, 10rem); line-height: .8; letter-spacing: -.07em; }
+  .complete-score span { font-size: 24px; letter-spacing: 0; margin-left: 12px; color: #5c5852; }
+  .complete-actions { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .share-status { min-height: 24px; color: #256f82; font-weight: 700; }
+  .game-side { display: grid; gap: 20px; }
+  .game-stats-slip { background: #0a0a0a; color: #fff; padding: 26px; clip-path: polygon(0 0, 100% 0, 100% 94%, 96% 100%, 90% 95%, 84% 100%, 78% 95%, 72% 100%, 66% 95%, 60% 100%, 54% 95%, 48% 100%, 42% 95%, 36% 100%, 30% 95%, 24% 100%, 18% 95%, 12% 100%, 6% 95%, 0 100%); }
+  .game-stats-slip .slip-title { color: #9ec8d0; }
+  .game-stats-slip div { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; background: transparent; }
+  .game-stats-slip div + div { border-top: 1px dotted #6b6b6b; }
+  .game-stats-slip span { color: #c6c6c6; }
+  .game-stats-slip strong { text-align: right; }
+  .game-note { color: #5c5852; font-size: 16px; max-width: 24ch; }
+  [hidden] { display: none !important; }
+  @media (max-width: 760px) { .daily-game { grid-template-columns: 1fr; gap: 18px; } .game-card { min-height: 0; padding: 22px 18px 34px; } .game-progress { margin-top: 34px; } .game-question, .game-result { margin-top: 36px; } .game-question h2, .result-answer { font-size: clamp(2.3rem, 13vw, 4.4rem); } .game-hint { font-size: 16px; } .game-side { grid-template-columns: 1fr; } }
+</style>

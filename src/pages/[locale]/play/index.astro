@@ -1,0 +1,106 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import QuizGame from '~/components/QuizGame.astro';
+import { quizQuestions } from '~/data/quiz';
+import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+import { buildFaqPage } from '~/lib/seo';
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const faq = [
+  { q: 'What is Unitbox Daily?', a: 'Unitbox Daily is a free daily estimation game about real-world size, weight, distance and data. Make your best guess, reveal the answer and earn up to 500 points.' },
+  { q: 'Do I need an account?', a: 'No. Your streak, personal best and completed rounds are saved in this browser. An account system may be added later for cross-device sync.' },
+  { q: 'How are scores calculated?', a: 'Scores reward estimates that are close to the answer. Large values use a logarithmic error scale so a tenfold miss is treated consistently across different units.' },
+  { q: 'Where do the answers come from?', a: 'Every question includes a source and a short explanation. Estimates use published specifications or a clearly stated real-world range.' },
+  { q: 'Can I play yesterday’s challenge?', a: 'The first version focuses on the daily round. Historical challenges and unlimited practice are planned for the next release.' },
+];
+const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+const title = 'Unitbox Daily — Free Real-World Estimation Game';
+const description = 'Guess the size, weight, distance and data behind everyday things. Play five free estimation questions every day with Unitbox Daily.';
+---
+
+<Base title={title} description={description} locale={locale} noBreadcrumb>
+  <Fragment slot="head">
+    <JsonLd data={faqLd} />
+    <JsonLd data={{
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'Unitbox Daily',
+      applicationCategory: 'GameApplication',
+      operatingSystem: 'Any',
+      isAccessibleForFree: true,
+      url: `https://unitbox.online${route(locale, '/play/')}`,
+      description,
+      inLanguage: IN_LANGUAGE[locale],
+    }} />
+  </Fragment>
+
+  <section class="play-intro">
+    <div>
+      <h1>How good is your sense of scale?</h1>
+      <p>Five questions about the real world. Make a guess, see the reveal, and come back tomorrow to beat your score.</p>
+    </div>
+    <a class="play-back-link" href={route(locale, '/')}>Back to unit converters</a>
+  </section>
+
+  <QuizGame questions={quizQuestions} />
+
+  <section class="play-guide">
+    <div>
+      <h2>Make a guess. Learn the number.</h2>
+      <p>Unitbox Daily turns familiar units into a quick test of intuition. You do not need specialist knowledge; a good estimate and a little reasoning are enough.</p>
+    </div>
+    <ol>
+      <li><strong>Estimate</strong><span>Commit to your best answer.</span></li>
+      <li><strong>Reveal</strong><span>See the published value and range.</span></li>
+      <li><strong>Remember</strong><span>Use the related converter to explore the unit.</span></li>
+    </ol>
+  </section>
+
+  <section class="play-links">
+    <div>
+      <h2>Keep exploring</h2>
+      <p>Turn today’s answer into a useful conversion or read the reasoning behind the number.</p>
+    </div>
+    <div class="play-link-list">
+      <a href={route(locale, '/kilogram-to-pound')}>Kilogram to pound converter <span>→</span></a>
+      <a href={route(locale, '/meter-to-foot')}>Meter to foot converter <span>→</span></a>
+      <a href={route(locale, '/learn')}>Measurement guides <span>→</span></a>
+      <a href={route(locale, '/faq')}>Unitbox FAQ <span>→</span></a>
+    </div>
+  </section>
+
+  <section class="play-faq">
+    <h2>Questions about the game</h2>
+    <div class="faq-reading">
+      {faq.map(item => <p><strong>{item.q}</strong> {item.a}</p>)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .play-intro { display: flex; justify-content: space-between; align-items: end; gap: 32px; padding: 44px 0 20px; }
+  .play-intro h1 { max-width: 10ch; margin: 0 0 16px; font-size: clamp(3rem, 7vw, 6.5rem); line-height: .9; letter-spacing: -.06em; }
+  .play-intro p { max-width: 42ch; color: var(--fg-soft); font-size: 18px; }
+  .play-back-link { color: var(--fg); font-weight: 700; text-decoration: underline; text-underline-offset: 5px; white-space: nowrap; }
+  .play-guide, .play-links { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; padding: 56px 0; border-top: 8px solid var(--fg); }
+  .play-guide h2, .play-links h2, .play-faq h2 { margin: 0 0 14px; font-size: clamp(2rem, 4vw, 4rem); line-height: .95; letter-spacing: -.045em; max-width: 9ch; }
+  .play-guide p, .play-links p { max-width: 34ch; color: var(--fg-soft); font-size: 17px; }
+  .play-guide ol { list-style: none; margin: 0; padding: 0; }
+  .play-guide li { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px dotted var(--fg-soft); font-size: 17px; }
+  .play-guide li strong { color: var(--brand); }
+  .play-links { background: #d3cec6; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+  .play-link-list { display: grid; align-content: center; }
+  .play-link-list a { display: flex; justify-content: space-between; padding: 18px 0; color: var(--fg); font-size: 20px; font-weight: 700; border-bottom: 1px dotted var(--fg-soft); }
+  .play-link-list a span { color: var(--brand); }
+  .play-faq { display: grid; grid-template-columns: .55fr 1.45fr; gap: 48px; padding: 64px 0 20px; }
+  .faq-reading { columns: 2; column-gap: 42px; }
+  .faq-reading p { break-inside: avoid; color: var(--fg-soft); font-size: 16px; }
+  .faq-reading strong { color: var(--fg); }
+  @media (max-width: 700px) { .play-intro, .play-guide, .play-links, .play-faq { display: block; } .play-intro { padding-top: 24px; } .play-intro h1 { font-size: clamp(3.2rem, 15vw, 5rem); } .play-back-link { display: inline-block; margin-top: 10px; } .play-guide, .play-links, .play-faq { padding: 40px 0; } .play-guide ol { margin-top: 28px; } .play-links { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; } .play-faq h2 { margin-bottom: 28px; } .faq-reading { columns: 1; } }
+</style>

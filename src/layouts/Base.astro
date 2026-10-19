@@ -180,6 +180,7 @@ const switcher = pageLocales.map(l => ({
       </label>
       <nav class="primary-nav" aria-label="primary">
         <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
+        <a href={route(locale, '/play/')}>Daily game</a>
         <a href={route(locale, '/category/length')}>{t('nav.length', locale)}</a>
         <a href={route(locale, '/category/mass')}>{t('nav.mass', locale)}</a>
         <a href={route(locale, '/category/temperature')}>{t('nav.temperature', locale)}</a>

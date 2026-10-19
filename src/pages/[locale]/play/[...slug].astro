@@ -1,0 +1,83 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { quizQuestions } from '~/data/quiz';
+import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export function getStaticPaths() {
+  return LOCALES.flatMap((locale) => quizQuestions.map((question) => ({
+    params: { locale, slug: question.slug },
+    props: { locale, question },
+  })));
+}
+
+const { locale, question } = Astro.props as { locale: Locale; question: (typeof quizQuestions)[number] };
+const title = `${question.prompt} — Unitbox Daily`;
+const description = `${question.explanation} Explore the related unit conversions and test your real-world estimation skills with Unitbox Daily.`;
+---
+
+<Base title={title} description={description} locale={locale} ogType="article" noBreadcrumb>
+  <Fragment slot="head">
+    <JsonLd data={{
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: question.prompt,
+      description,
+      author: { '@type': 'Organization', name: 'unitbox' },
+      isPartOf: { '@type': 'WebApplication', name: 'Unitbox Daily' },
+      mainEntityOfPage: `https://unitbox.online${route(locale, `/play/${question.slug}`)}`,
+      inLanguage: IN_LANGUAGE[locale],
+    }} />
+  </Fragment>
+
+  <article class="question-article">
+    <p class="article-kicker">Unitbox Daily · Estimation guide</p>
+    <h1>{question.prompt}</h1>
+    <p class="article-lead">{question.explanation}</p>
+
+    <div class="answer-panel">
+      <span>Best estimate</span>
+      <strong>{question.answer.toLocaleString('en-US', { maximumFractionDigits: question.answer < 10 ? 3 : 0 })} {question.unit}</strong>
+      {question.min && question.max && <small>Typical range: {question.min.toLocaleString('en-US')}–{question.max.toLocaleString('en-US')} {question.unit}</small>}
+    </div>
+
+    <section>
+      <h2>How to think about it</h2>
+      <p>{question.hint} Start with a familiar reference, estimate the order of magnitude, then refine the number using the dimensions or specifications you know.</p>
+      <p>The answer is not meant to reward memorisation. The useful skill is knowing whether your first guess is in the right range and which unit makes the number easiest to reason about.</p>
+    </section>
+
+    <section>
+      <h2>Check the units</h2>
+      <div class="related-links">
+        {question.relatedConversions.map((slug) => <a href={route(locale, `/${slug}`)}>{slug.replaceAll('-', ' ')} <span>→</span></a>)}
+      </div>
+    </section>
+
+    <p class="source-line">Source: <a href={question.sourceUrl} target="_blank" rel="noopener">{question.sourceName}</a></p>
+    <a class="play-again" href={route(locale, '/play/')}>Play today’s Unitbox Daily challenge →</a>
+  </article>
+</Base>
+
+<style>
+  .question-article { max-width: 780px; padding: 56px 0 80px; }
+  .article-kicker { color: var(--brand); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; }
+  .question-article h1 { max-width: 13ch; margin: 16px 0 20px; font-size: clamp(3rem, 7vw, 6rem); line-height: .9; letter-spacing: -.06em; }
+  .article-lead { max-width: 56ch; color: var(--fg-soft); font-size: 21px; }
+  .answer-panel { display: grid; gap: 8px; background: #d3cec6; padding: 28px; margin: 44px 0; }
+  .answer-panel span { color: var(--brand); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: 13px; }
+  .answer-panel strong { font-size: clamp(3rem, 8vw, 6rem); line-height: .9; letter-spacing: -.06em; }
+  .answer-panel small { color: var(--fg-soft); font-size: 15px; }
+  .question-article section { margin-top: 44px; }
+  .question-article h2 { font-size: 30px; margin-bottom: 12px; }
+  .question-article section p { max-width: 62ch; color: var(--fg-soft); font-size: 17px; }
+  .related-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 28px; }
+  .related-links a { display: flex; justify-content: space-between; padding: 15px 0; color: var(--fg); font-weight: 700; border-bottom: 1px dotted var(--fg-soft); text-transform: capitalize; }
+  .related-links span { color: var(--brand); }
+  .source-line { margin-top: 44px; color: var(--fg-soft); font-size: 14px; }
+  .source-line a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+  .play-again { display: inline-block; margin-top: 22px; background: var(--brand); color: #fff; padding: 14px 18px; font-weight: 700; }
+  .play-again:hover { background: var(--fg); text-decoration: none; }
+  @media (max-width: 600px) { .question-article { padding-top: 28px; } .article-lead { font-size: 18px; } .related-links { grid-template-columns: 1fr; } }
+</style>
