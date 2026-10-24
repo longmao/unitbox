@@ -28,13 +28,13 @@ const heroFromSlug = 'meter';
 const heroToSlug = 'foot';
 
 // 4 hero chips: 3 categories + the viral PNG compressor tool (v0.4 launch).
-type HeroChip = { kind: 'category' | 'tool'; slug: string; label: string; meta: string; emoji?: string };
+type HeroChip = { kind: 'category' | 'tool'; slug: string; label: string; meta: string; mark?: string };
 const featuredChips: HeroChip[] = [
   { kind: 'category', slug: 'length', label: 'Length', meta: '13 units' },
   { kind: 'category', slug: 'temperature', label: 'Temperature', meta: '5 scales' },
   { kind: 'category', slug: 'data', label: 'Data', meta: '12 prefixes' },
-  { kind: 'tool', slug: 'tools/png-compressor', label: 'PNG compressor', meta: 'no upload', emoji: '🖼️' },
-  { kind: 'tool', slug: 'tools/image-color-picker', label: 'Image color picker', meta: 'HEX / RGB / HSL', emoji: '🎨' },
+  { kind: 'tool', slug: 'tools/png-compressor', label: 'PNG compressor', meta: 'no upload', mark: 'PNG' },
+  { kind: 'tool', slug: 'tools/image-color-picker', label: 'Image color picker', meta: 'HEX / RGB / HSL', mark: 'RGB' },
 ];
 
 // Popular 36 pairs to surface — first 3 from each category
@@ -82,35 +82,53 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   <!-- LAYER 1: hero with live converter (openfate-aligned) -->
   <section class="hero">
     <div class="hero-inner card">
-      <h1>{t('home.h1', locale)}</h1>
-      <p class="hero-sub">{tFmt('home.subtitle', locale, { categories: SITE_STATS.categories, units: SITE_STATS.units, pairs: SITE_STATS.pairs.toLocaleString('en-US') })}</p>
-      <ConverterWidget fromSlug={heroFromSlug} toSlug={heroToSlug} mode="full" defaultValue={1} />
-      <div class="hero-eg">
-        <span>{t('home.try', locale)}</span>
-        <a href={route(locale, '/kilogram-to-pound')}>1 kg → lb</a> ·
-        <a href={route(locale, '/celsius-to-fahrenheit')}>0 °C → °F</a> ·
-        <a href={route(locale, '/gigabyte-to-megabyte')}>1 GB → MB</a> ·
-        <a href={route(locale, '/mpg-us-to-liter-per-100km')}>30 MPG → L/100km</a>
+      <div class="hero-copy">
+        <p class="hero-note">A measuring desk for the web</p>
+        <h1>{t('home.h1', locale)}</h1>
+        <p class="hero-sub">{tFmt('home.subtitle', locale, { categories: SITE_STATS.categories, units: SITE_STATS.units, pairs: SITE_STATS.pairs.toLocaleString('en-US') })}</p>
       </div>
-      <p class="trust-band">{t('home.trustBand', locale)}</p>
-      <div class="hero-chips">
-        {featuredChips.map(c => {
-          const href = c.kind === 'category'
-            ? route(locale, `/category/${c.slug}`)
-            : route(locale, `/${c.slug}`);
-          return (
-            <a class={`hero-chip ${c.kind === 'tool' ? 'hero-chip-tool' : ''}`} href={href}>
-              {c.emoji && <span class="chip-emoji" aria-hidden="true">{c.emoji}</span>}
-              <span class="chip-label">{c.label}</span>
-              <span class="chip-meta">{c.meta}</span>
-            </a>
-          );
-        })}
+      <div class="hero-converter">
+        <div class="hero-measure" aria-hidden="true"><strong>1</strong><span>meter</span><i>→</i><strong>3.28084</strong><span>feet</span></div>
+        <ConverterWidget fromSlug={heroFromSlug} toSlug={heroToSlug} mode="full" defaultValue={1} />
+        <div class="hero-eg">
+          <span>{t('home.try', locale)}</span>
+          <a href={route(locale, '/kilogram-to-pound')}>1 kg → lb</a>
+          <a href={route(locale, '/celsius-to-fahrenheit')}>0 °C → °F</a>
+          <a href={route(locale, '/gigabyte-to-megabyte')}>1 GB → MB</a>
+          <a href={route(locale, '/mpg-us-to-liter-per-100km')}>30 MPG → L/100km</a>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <p class="trust-band">{t('home.trustBand', locale)}</p>
+        <div class="hero-chips">
+          {featuredChips.slice(0, 4).map(c => {
+            const href = c.kind === 'category'
+              ? route(locale, `/category/${c.slug}`)
+              : route(locale, `/${c.slug}`);
+            return (
+              <a class={`hero-chip ${c.kind === 'tool' ? 'hero-chip-tool' : ''}`} href={href}>
+                {c.mark && <span class="chip-mark" aria-hidden="true">{c.mark}</span>}
+                <span class="chip-label">{c.label}</span>
+                <span class="chip-meta">{c.meta}</span>
+              </a>
+            );
+          })}
+        </div>
       </div>
     </div>
   </section>
 
   <AdSlot placement="after-hero" locale={locale} />
+
+  <section class="daily-callout">
+    <div class="daily-stamp">TODAY</div>
+    <div>
+    <p class="daily-note">Unitbox Daily</p>
+      <h2>How good is your sense of scale?</h2>
+      <p>Five quick questions about real-world size, weight, distance and data. Guess first. Learn the number after.</p>
+    </div>
+    <a class="daily-action" href={route(locale, '/play/')}>Play today <span>↗</span></a>
+  </section>
 
   <!-- LAYER 2: 3-step how-it-works -->
   <section class="section">
@@ -141,7 +159,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     <div class="grid grid-2 tools-grid">
       <a class="card tool-card tool-card-png" href={route(locale, '/tools/png-compressor')}>
         <div class="tool-card-head">
-          <span class="tool-emoji" aria-hidden="true">🖼️</span>
+          <span class="tool-mark" aria-hidden="true">PNG</span>
           <span class="tool-badge">v0.4</span>
         </div>
         <h3 class="tool-title">{t('home.tools-section.tool-png.title', locale)}</h3>
@@ -150,7 +168,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       </a>
       <a class="card tool-card tool-card-jwt" href={route(locale, '/tools/jwt-decoder')}>
         <div class="tool-card-head">
-          <span class="tool-emoji" aria-hidden="true">🔓</span>
+          <span class="tool-mark" aria-hidden="true">JWT</span>
           <span class="tool-badge">new</span>
         </div>
         <h3 class="tool-title">{t('home.tools-section.tool-jwt.title', locale)}</h3>
@@ -159,7 +177,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       </a>
       <a class="card tool-card tool-card-cp" href={route(locale, '/tools/image-color-picker')}>
         <div class="tool-card-head">
-          <span class="tool-emoji" aria-hidden="true">🎨</span>
+          <span class="tool-mark" aria-hidden="true">RGB</span>
           <span class="tool-badge">new</span>
         </div>
         <h3 class="tool-title">{t('home.tools-section.tool-cp.title', locale)}</h3>
@@ -168,7 +186,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       </a>
       <a class="card tool-card" href={route(locale, '/calculator')}>
         <div class="tool-card-head">
-          <span class="tool-emoji" aria-hidden="true">🧮</span>
+          <span class="tool-mark" aria-hidden="true">CALC</span>
         </div>
         <h3 class="tool-title">{t('home.tools-section.tool-calc.title', locale)}</h3>
         <p class="tool-body">{t('home.tools-section.tool-calc.body', locale)}</p>
@@ -303,25 +321,53 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
 </script>
 
 <style>
-  .hero { margin: 8px 0 28px; }
-  .hero-inner { padding: 36px 32px; background: linear-gradient(135deg, #0b1736 0%, #11224a 100%); color: #fff; border: 0; }
-  .hero-inner h1 { color: #fff; font-size: 38px; margin-bottom: 8px; }
-  .hero-sub { color: #c5cee5; font-size: 16px; margin-bottom: 24px; max-width: 720px; }
-  .hero-eg { margin-top: 18px; color: #c5cee5; font-size: 13px; }
-  .hero-eg a { color: #fbbf24; margin: 0 4px; }
-  .trust-band { color: #8a95ad; font-size: 13px; margin-top: 22px; letter-spacing: .03em; }
-  .hero-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-  .hero-chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #fff; font-weight: 600; }
-  .hero-chip:hover { border-color: var(--brand); text-decoration: none; }
-  .hero-chip .chip-meta { color: #8a95ad; font-size: 12px; font-weight: 500; }
+  .hero { margin: 0 -28px; padding: 86px 28px 60px; background: #e6dbc7; overflow: hidden; }
+  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 0; background: transparent; color: var(--fg); border: 0; display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(32px, 7vw, 110px); align-items: center; position: relative; }
+  .hero-inner::before { content: ''; position: absolute; width: min(70vw, 760px); height: min(70vw, 760px); right: -190px; top: -150px; background: var(--brand); clip-path: polygon(14% 0, 100% 0, 100% 86%, 86% 100%, 0 100%, 0 14%); z-index: 0; }
+  .hero-copy, .hero-converter, .hero-meta { position: relative; z-index: 1; }
+  .hero-note, .daily-note { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-soft); }
+  .hero-inner h1 { color: var(--fg); font-size: clamp(3.8rem, 8vw, 8rem); line-height: .88; letter-spacing: -.065em; margin-bottom: 24px; max-width: 7ch; }
+  .hero-sub { color: var(--fg-soft); font-size: 18px; line-height: 1.5; margin-bottom: 24px; max-width: 34ch; }
+  .hero-converter { padding: 26px; background: #efe5d3; border: 1px solid var(--brand); clip-path: polygon(0 0, 96% 0, 100% 8%, 100% 100%, 4% 100%, 0 92%); }
+  .hero-measure { display: flex; align-items: baseline; gap: 10px; color: var(--brand); margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .hero-measure strong { font-size: clamp(2rem, 4vw, 4rem); line-height: .9; letter-spacing: -.06em; }
+  .hero-measure span { font-size: 13px; font-weight: 600; text-transform: uppercase; }
+  .hero-measure i { font-size: 28px; font-style: normal; margin: 0 8px; }
+  .hero-eg { margin-top: 18px; color: var(--fg-soft); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 14px; }
+  .hero-eg a { color: var(--fg); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .trust-band { color: var(--fg-soft); font-size: 13px; margin-top: 30px; letter-spacing: .03em; }
+  .hero-meta { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: end; gap: 24px; border-top: 1px solid rgba(6,43,138,.28); /* taste-skill-ignore: hero metadata boundary */ padding-top: 18px; }
+  .hero-meta .trust-band { margin: 0; }
+  .hero-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .hero-chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 8px 12px; border: 1px solid var(--brand); border-radius: 0; color: var(--fg); font-weight: 600; clip-path: polygon(0 0, 92% 0, 100% 22%, 100% 100%, 8% 100%, 0 78%); }
+  .hero-chip:hover { background: var(--brand); color: #e6dbc7; text-decoration: none; }
+  .hero-chip .chip-meta { color: var(--fg-soft); font-size: 12px; font-weight: 500; }
+  .hero-chip:hover .chip-meta { color: #d7dfec; }
+  .daily-callout { margin: 0 -28px; padding: 42px max(28px, calc((100vw - 1280px) / 2 + 28px)); background: var(--brand); color: #e6dbc7; display: grid; grid-template-columns: 120px 1fr auto; gap: 32px; align-items: center; }
+  .daily-stamp { width: 92px; height: 92px; border: 1px solid #e6dbc7; display: grid; place-items: center; font-weight: 600; font-size: 14px; transform: rotate(-7deg); }
+  .daily-callout h2 { color: #e6dbc7; font-size: clamp(2rem, 4vw, 4rem); line-height: .95; letter-spacing: -.05em; margin: 0 0 10px; max-width: 12ch; }
+  .daily-callout p { color: #d7dfec; max-width: 52ch; }
+  .daily-action { background: #e6dbc7; color: var(--brand); padding: 14px 18px; font-weight: 600; white-space: nowrap; }
+  .daily-action:hover { color: var(--brand); text-decoration: none; transform: translateY(-2px); }
+  .daily-action span { margin-left: 18px; font-size: 20px; }
   .scenario-card h3 { margin: 0 0 8px; }
   .scenario-card p { color: var(--fg-soft); font-size: 13px; line-height: 1.5; min-height: 58px; }
   .scenario-card span { color: var(--brand); font-size: 13px; font-weight: 700; }
+  .tool-card { min-height: 220px; display: flex; flex-direction: column; background: #efe5d3; }
+  .tool-card:hover { transform: translateY(-4px); border-color: var(--brand); text-decoration: none; }
+  .tool-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .tool-mark, .chip-mark { display: inline-grid; place-items: center; background: var(--brand); color: #e6dbc7; font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+  .tool-mark { width: 52px; height: 52px; clip-path: polygon(0 0, 86% 0, 100% 14%, 100% 100%, 14% 100%, 0 86%); }
+  .chip-mark { min-width: 26px; height: 20px; padding: 0 4px; }
+  .tool-badge { color: var(--fg-soft); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .tool-title { margin-top: 0; }
+  .tool-body { color: var(--fg-soft); font-size: 14px; }
+  .tool-cta { margin-top: auto; color: var(--brand); font-size: 13px; font-weight: 700; }
 
   /* 3-step */
   .steps { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); padding: 0; list-style: none; margin: 16px 0; }
-  .step { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px 22px 20px; }
-  .step-num { display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; margin-bottom: 10px; }
+  .step { background: transparent; border-top: 1px solid var(--brand); /* taste-skill-ignore: numbered step boundary */ padding: 22px 0 20px; }
+  .step-num { display: inline-block; color: var(--brand); font-weight: 800; margin-bottom: 10px; }
   .step-title { font-size: 18px; margin-bottom: 6px; }
   .step p { color: var(--fg-soft); font-size: 14px; line-height: 1.5; }
   @media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
@@ -330,7 +376,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .category-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
   .category-card .cat-name { font-weight: 800; font-size: 17px; }
   .category-card .cat-base { font-size: 12px; color: var(--fg-muted); }
-  .category-card .cat-base .code { font-family: ui-monospace, monospace; font-weight: 700; }
+  .category-card .cat-base .code { font-family: ui-monospace, monospace; /* taste-skill-ignore: unit symbols are code-like */ font-weight: 700; }
   .category-card .cat-desc { font-size: 13px; color: var(--fg-soft); }
   .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
   .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
@@ -338,22 +384,31 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .keyword-footprint .pill { font-weight: 600; padding: 8px 14px; font-size: 13px; }
 
   /* API section (openfate-style dark) */
-  .api-section { margin: 60px 0 40px; padding: 48px 36px; background: linear-gradient(180deg, #08132c 0%, #0b1736 100%); border-radius: 18px; color: #fff; text-align: center; }
-  .api-chip { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(251,191,36,0.12); color: #fbbf24; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-  .api-h2 { color: #fff; font-size: 30px; margin: 14px 0 10px; }
-  .api-body { color: #c5cee5; max-width: 640px; margin: 0 auto 22px; font-size: 16px; line-height: 1.55; }
-  .api-mock { background: #061025; color: #c5cee5; padding: 16px 18px; border-radius: 10px; font-family: ui-monospace, monospace; font-size: 14px; max-width: 640px; margin: 0 auto 18px; text-align: left; overflow-x: auto; position: relative; }
+  .api-section { margin: 120px 0 40px; padding: 64px 36px; background: var(--brand); color: #e6dbc7; text-align: center; clip-path: polygon(0 0, 98% 0, 100% 8%, 100% 92%, 98% 100%, 0 100%); }
+  .api-chip { display: inline-block; padding: 6px 14px; border: 1px solid rgba(230,219,199,.5); color: #e6dbc7; font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .api-h2 { color: #e6dbc7; font-size: 30px; margin: 14px 0 10px; }
+  .api-body { color: #d7dfec; max-width: 640px; margin: 0 auto 22px; font-size: 16px; line-height: 1.55; }
+  .api-mock { background: #041f66; color: #d7dfec; padding: 16px 18px; border-radius: 0; font-family: ui-monospace, monospace; /* taste-skill-ignore: code sample */ font-size: 14px; max-width: 640px; margin: 0 auto 18px; text-align: left; overflow-x: auto; position: relative; }
   .api-mock code { white-space: nowrap; }
-  .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.08); color: #c5cee5; border: 0; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.08); color: #d7dfec; border: 0; padding: 4px 10px; border-radius: 0; font-size: 11px; cursor: pointer; }
   .copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
   .api-trust { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
   .trust-pill { padding: 4px 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #c5cee5; font-size: 13px; }
   .api-ctas { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-  .api-cta { padding: 10px 18px; background: #fbbf24; color: #08132c; border-radius: 8px; font-weight: 700; }
+  .api-cta { padding: 10px 18px; background: #e6dbc7; color: var(--brand); border-radius: 0; font-weight: 700; }
   .api-cta:hover { text-decoration: none; background: #fff; }
 
   @media (max-width: 700px) {
-    .hero-inner h1 { font-size: 30px; }
+    .hero { margin: 0 -16px; padding: 58px 16px 42px; }
+    .hero-inner { display: block; }
+    .hero-inner::before { width: 90vw; height: 90vw; right: -45vw; top: -10vw; }
+    .hero-inner h1 { font-size: clamp(3.8rem, 16vw, 6rem); }
+    .hero-converter { margin-top: 44px; padding: 18px; }
+    .hero-meta { display: block; }
+    .hero-chips { justify-content: flex-start; margin-top: 14px; }
+    .daily-callout { margin: 0 -16px; padding: 34px 16px; grid-template-columns: 76px 1fr; gap: 22px; }
+    .daily-stamp { width: 66px; height: 66px; font-size: 11px; }
+    .daily-action { grid-column: 2; justify-self: start; }
     .api-section { padding: 36px 22px; }
     .api-h2 { font-size: 24px; }
   }

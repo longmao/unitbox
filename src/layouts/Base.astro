@@ -149,12 +149,14 @@ const switcher = pageLocales.map(l => ({
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImageAbs} />
-  <meta name="theme-color" content="#0b1736" />
+  <meta name="theme-color" content="#e6dbc7" />
   {noindex && <meta name="robots" content="noindex" />}
   <link rel="icon" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
-  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600&display=swap" />
   {ADS.siteVerification && <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS.publisherId}`} crossorigin="anonymous"></script>}
   <script is:inline set:html={`window.__UNIT_DATA__=${JSON.stringify(unitData)};`} />
   {baseSchemas.map((s) => <JsonLd data={s} />)}
@@ -168,8 +170,8 @@ const switcher = pageLocales.map(l => ({
     <div class="container header-row">
       <a href={route(locale, '/')} class="logo">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="6" width="18" height="12" rx="2" stroke="#fff" stroke-width="2"/>
-          <path d="M7 10h10M7 14h10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+          <rect x="3" y="6" width="18" height="12" rx="2" stroke="#062b8a" stroke-width="2"/>
+          <path d="M7 10h10M7 14h10" stroke="#1748b2" stroke-width="2" stroke-linecap="round"/>
         </svg>
         <span class="logo-text">unitbox</span>
       </a>
@@ -181,15 +183,11 @@ const switcher = pageLocales.map(l => ({
       <nav class="primary-nav" aria-label="primary">
         <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
         <a href={route(locale, '/play/')}>Daily game</a>
-        <a href={route(locale, '/category/length')}>{t('nav.length', locale)}</a>
-        <a href={route(locale, '/category/mass')}>{t('nav.mass', locale)}</a>
-        <a href={route(locale, '/category/temperature')}>{t('nav.temperature', locale)}</a>
-        <a href={route(locale, '/category/volume')}>{t('nav.volume', locale)}</a>
-        <a href={route(locale, '/category/data')}>{t('nav.data', locale)}</a>
+        <a href={route(locale, '/category/length')}>Categories</a>
+        <a href={route(locale, '/learn')}>{t('learn.h1', locale)}</a>
         <a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a>
-        <a href={route(locale, '/articles')}>{t('nav.articles', locale)}</a>
-        <a href={route(locale, '/apple-dev')}>{t('nav.apple-dev', locale)}</a>
       </nav>
+      <a class="header-action" href={route(locale, '/play/')}>Play today</a>
       <div class="lang-toggle" role="group" aria-label="language">
         {switcher.map(s => (
           <a href={s.href} class={`lang-link ${s.active ? 'active' : ''}`} hreflang={IN_LANGUAGE[s.locale]} aria-current={s.active ? 'true' : undefined}>
@@ -210,9 +208,9 @@ const switcher = pageLocales.map(l => ({
         <div>
           <h4>{t('footer.col.products', locale)}</h4>
           <ul>
-            <li><a href={route(locale, '/tools/png-compressor')}>🖼️ <strong>{t('png.h1', locale).split(' — ')[0]}</strong></a></li>
-            <li><a href={route(locale, '/tools/jwt-decoder')}>🔓 <strong>{t('jwt.h1', locale).split(' — ')[0]}</strong></a></li>
-            <li><a href={route(locale, '/tools/image-color-picker')}>🎨 <strong>{t('cp.h1', locale).split(' — ')[0]}</strong></a></li>
+            <li><a href={route(locale, '/tools/png-compressor')}><strong>PNG</strong> · {t('png.h1', locale).split(' — ')[0]}</a></li>
+            <li><a href={route(locale, '/tools/jwt-decoder')}><strong>JWT</strong> · {t('jwt.h1', locale).split(' — ')[0]}</a></li>
+            <li><a href={route(locale, '/tools/image-color-picker')}><strong>RGB</strong> · {t('cp.h1', locale).split(' — ')[0]}</a></li>
             <li><a href={route(locale, '/meter-to-foot')}>meter → foot</a></li>
             <li><a href={route(locale, '/celsius-to-fahrenheit')}>°C → °F</a></li>
             <li><a href={route(locale, '/kilogram-to-pound')}>kg → pound</a></li>
@@ -268,17 +266,19 @@ const switcher = pageLocales.map(l => ({
 </body>
 </html>
 <style>
-  .site-header { background: var(--bg); color: #fff; padding: 14px 0; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 8px rgba(0,0,0,0.15); }
+  .site-header { background: #e6dbc7; color: var(--fg); padding: 20px 0; position: relative; z-index: 50; border-bottom: 1px solid rgba(6,43,138,.18); /* taste-skill-ignore: header boundary */ }
   .header-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .logo { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 600; font-size: 20px; letter-spacing: -.04em; }
   .logo:hover { text-decoration: none; }
   .primary-nav { display: flex; flex-wrap: wrap; gap: 18px; }
-  .primary-nav a { color: #d9e1f5; font-size: 14px; font-weight: 500; }
-  .primary-nav a:hover { color: #fff; text-decoration: none; }
-  .lang-toggle { display: inline-flex; gap: 4px; padding: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; }
-  .lang-link { color: #d9e1f5; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; }
-  .lang-link:hover { color: #fff; text-decoration: none; }
-  .lang-link.active { background: var(--brand); color: #fff; }
+  .primary-nav a { color: var(--fg); font-size: 14px; font-weight: 500; }
+  .primary-nav a:hover { color: #1748b2; text-decoration: none; }
+  .header-action { background: var(--brand); color: #e6dbc7; padding: 10px 14px; font-size: 14px; font-weight: 600; clip-path: polygon(0 0, 92% 0, 100% 22%, 100% 100%, 8% 100%, 0 78%); }
+  .header-action:hover { color: #fff; text-decoration: none; transform: translateY(-2px); }
+  .lang-toggle { display: inline-flex; gap: 4px; padding: 2px; background: rgba(6,43,138,.08); border-radius: 0; }
+  .lang-link { color: var(--fg); padding: 5px 9px; border-radius: 0; font-size: 12px; font-weight: 600; text-decoration: none; }
+  .lang-link:hover { color: #1748b2; text-decoration: none; }
+  .lang-link.active { background: var(--brand); color: #e6dbc7; }
 
   /* Hamburger nav toggle (CSS-only, zero JS). Hidden on desktop, shown on mobile. */
   .nav-toggle-input { display: none; }
@@ -297,9 +297,10 @@ const switcher = pageLocales.map(l => ({
       gap: 4px;
       padding-top: 12px;
       margin-top: 4px;
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(255,255,255,0.1); /* taste-skill-ignore: mobile menu boundary */
     }
     .primary-nav a { padding: 10px 4px; font-size: 15px; }
+    .header-action { order: 2; margin-left: auto; }
     .lang-toggle { margin-left: auto; }
     /* When checkbox checked, show nav and animate hamburger into X */
     .nav-toggle-input:checked ~ .primary-nav { display: flex; }
@@ -312,7 +313,7 @@ const switcher = pageLocales.map(l => ({
     .lang-link { padding: 4px 8px; font-size: 12px; }
   }
 
-  .site-footer { background: var(--bg); color: #c5cee5; padding: 40px 0 24px; margin-top: 60px; }
+  .site-footer { background: var(--bg); color: #d7dfec; padding: 64px 0 28px; margin-top: 80px; }
   .footer-grid { display: grid; gap: 32px; grid-template-columns: repeat(4, 1fr); }
   @media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; gap: 20px; } }
@@ -321,6 +322,6 @@ const switcher = pageLocales.map(l => ({
   .site-footer li { margin-bottom: 6px; }
   .site-footer a { color: #c5cee5; font-size: 13px; }
   .site-footer a:hover { color: #fff; }
-  .footer-bottom { display: flex; justify-content: space-between; padding-top: 24px; margin-top: 24px; border-top: 1px solid #1a2d5a; font-size: 12px; color: #8a95ad; gap: 12px; }
+  .footer-bottom { display: flex; justify-content: space-between; padding-top: 24px; margin-top: 24px; border-top: 1px solid rgba(230,219,199,.22); /* taste-skill-ignore: footer boundary */ font-size: 12px; color: #a7b7d8; gap: 12px; }
   @media (max-width: 600px) { .footer-bottom { flex-direction: column; gap: 4px; } }
 </style>
