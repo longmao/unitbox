@@ -1,0 +1,108 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { getAllCategories } from '~/lib/units';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const categories = getAllCategories();
+const tools = [
+  { mark: 'UNIT', title: 'Unit converter', description: 'Convert any pair across length, mass, temperature, data, energy and more.', href: '/calculator/' },
+  { mark: 'PNG', title: 'PNG compressor', description: 'Reduce PNG files locally in your browser. Nothing is uploaded.', href: '/tools/png-compressor/' },
+  { mark: 'JWT', title: 'JWT decoder', description: 'Inspect claims and token structure without sending the token anywhere.', href: '/tools/jwt-decoder/' },
+  { mark: 'RGB', title: 'Image color picker', description: 'Pick HEX, RGB, HSL and CMYK values from an image in your browser.', href: '/tools/image-color-picker/' },
+];
+const copy = {
+  en: { title: 'Unitbox tools', description: 'A practical directory of free browser tools for conversion, files, images and developer work.', h1: 'Tools that finish the job', intro: 'Start with a conversion, a local file utility or a developer check. Every tool is designed to be useful before it asks you to sign in.' },
+  'zh-hans': { title: 'Unitbox 在线工具', description: '免费的单位换算、文件处理、图片和开发者浏览器工具目录。', h1: '把事情做完的工具', intro: '从单位换算、文件处理或开发者检查开始。所有工具都可以直接使用，无需先注册。' },
+  'zh-hant': { title: 'Unitbox 線上工具', description: '免費的單位換算、檔案處理、圖片與開發者瀏覽器工具目錄。', h1: '把事情做完的工具', intro: '從單位換算、檔案處理或開發者檢查開始。所有工具都可以直接使用，不必先註冊。' },
+  ja: { title: 'Unitbox ツール', description: '換算、ファイル、画像、開発作業に使える無料のブラウザツール一覧。', h1: '作業を終わらせるツール', intro: '単位換算、ローカルファイル処理、開発者向けチェックから始められます。登録なしですぐ使えます。' },
+  ko: { title: 'Unitbox 도구', description: '변환, 파일, 이미지와 개발 작업을 위한 무료 브라우저 도구 모음입니다.', h1: '일을 끝내는 도구', intro: '단위 변환, 로컬 파일 처리 또는 개발자 점검을 바로 시작하세요. 가입 없이 사용할 수 있습니다.' },
+}[locale];
+const homeLabel = locale === 'en' ? 'Home' : locale === 'ja' ? 'ホーム' : locale === 'ko' ? '홈' : locale === 'zh-hant' ? '首頁' : '首页';
+const title = copy.title;
+const description = copy.description;
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: `https://unitbox.online${route(locale, '/tools/')}`,
+};
+---
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+
+  <div class="breadcrumbs"><a href={route(locale, '/')}>{homeLabel}</a> › <span>Tools</span></div>
+  <section class="hub-intro">
+    <div>
+      <h1>{copy.h1}</h1>
+      <p>{copy.intro}</p>
+    </div>
+    <a class="hub-action" href={route(locale, '/play/')}>Play Unitbox Daily ↗</a>
+  </section>
+
+  <section class="tool-list" aria-labelledby="tool-list-title">
+    <div class="section-heading"><h2 id="tool-list-title">Free browser tools</h2><p>Local-first utilities with clear output and no unnecessary account wall.</p></div>
+    <div class="tool-grid">
+      {tools.map(tool => (
+        <a class="tool-entry" href={route(locale, tool.href)}>
+          <span class="tool-mark" aria-hidden="true">{tool.mark}</span>
+          <div><h3>{tool.title}</h3><p>{tool.description}</p><span class="tool-link">Open tool ↗</span></div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="category-band" aria-labelledby="unit-categories-title">
+    <div class="section-heading"><h2 id="unit-categories-title">Unit conversion by category</h2><p>Browse a complete topic cluster instead of starting from a single pair.</p></div>
+    <div class="category-list">
+      {categories.map(cat => (
+        <a href={route(locale, `/category/${cat.slug}/`)}><strong>{cat.name}</strong><span>{cat.description}</span><em>{cat.slug === 'all' ? 'All units' : 'Explore category'} ↗</em></a>
+      ))}
+    </div>
+  </section>
+
+  <section class="next-band">
+    <div><h2>Need the explanation behind the number?</h2><p>Reference guides connect the formula, the real-world context and the exact converter.</p></div>
+    <a class="hub-action" href={route(locale, '/reference/')}>Browse reference ↗</a>
+  </section>
+</Base>
+
+<style>
+  .hub-intro { display:flex; justify-content:space-between; gap:32px; align-items:end; padding:34px 0 58px; border-bottom:4px solid var(--brand); }
+  .hub-intro h1 { max-width: 9ch; font-size: clamp(3.5rem, 8vw, 7rem); line-height:.9; letter-spacing:-.065em; margin:0 0 20px; }
+  .hub-intro p { max-width: 50ch; color:var(--fg-soft); font-size:18px; }
+  .hub-action { display:inline-block; flex:none; background:var(--brand); color:#e6dbc7; padding:14px 18px; font-weight:700; }
+  .hub-action:hover { color:#fff; text-decoration:none; transform:translateY(-2px); }
+  .tool-list, .category-band, .next-band { margin-top:100px; }
+  .section-heading { display:flex; justify-content:space-between; gap:24px; align-items:end; margin-bottom:26px; }
+  .section-heading h2 { margin:0; font-size:clamp(2rem,4vw,4rem); line-height:.95; letter-spacing:-.05em; }
+  .section-heading p { max-width:38ch; color:var(--fg-soft); margin:0; }
+  .tool-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:2px; background:var(--brand); }
+  .tool-entry { display:grid; grid-template-columns:70px 1fr; gap:22px; padding:28px; background:#efe5d3; color:var(--fg); }
+  .tool-entry:hover { background:#d7dfec; text-decoration:none; }
+  .tool-mark { display:grid; place-items:center; width:58px; height:58px; background:var(--brand); color:#e6dbc7; font-size:11px; font-weight:700; letter-spacing:.06em; clip-path:polygon(0 0,86% 0,100% 14%,100% 100%,14% 100%,0 86%); }
+  .tool-entry h3 { margin:0 0 8px; font-size:22px; }
+  .tool-entry p { color:var(--fg-soft); margin:0 0 18px; }
+  .tool-link, .category-list em { color:var(--brand); font-size:13px; font-weight:700; font-style:normal; }
+  .category-band { padding:52px 0; background:var(--brand); color:#e6dbc7; margin-left:-28px; margin-right:-28px; padding-left:28px; padding-right:28px; }
+  .category-band .section-heading p { color:#d7dfec; }
+  .category-band h2 { color:#e6dbc7; }
+  .category-list { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:#3155a0; }
+  .category-list a { display:flex; flex-direction:column; gap:10px; min-height:150px; padding:20px; background:var(--brand); color:#e6dbc7; }
+  .category-list a:hover { background:#1748b2; text-decoration:none; }
+  .category-list strong { font-size:18px; }
+  .category-list span { color:#d7dfec; font-size:13px; line-height:1.45; }
+  .category-list em { margin-top:auto; color:#e6dbc7; }
+  .next-band { display:flex; justify-content:space-between; align-items:center; gap:28px; padding:42px 0; border-top:4px solid var(--brand); }
+  .next-band h2 { margin:0 0 10px; font-size:clamp(2rem,4vw,3.5rem); line-height:.95; letter-spacing:-.05em; }
+  .next-band p { color:var(--fg-soft); }
+  @media (max-width:800px) { .hub-intro, .section-heading, .next-band { display:block; } .hub-action { margin-top:20px; } .tool-grid { grid-template-columns:1fr; } .category-list { grid-template-columns:repeat(2,1fr); } .category-band { margin-left:-16px; margin-right:-16px; padding-left:16px; padding-right:16px; } }
+  @media (max-width:520px) { .category-list { grid-template-columns:1fr; } .tool-entry { grid-template-columns:52px 1fr; padding:20px; gap:16px; } .tool-mark { width:48px; height:48px; } }
+</style>

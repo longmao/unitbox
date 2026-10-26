@@ -101,7 +101,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       <div class="hero-meta">
         <p class="trust-band">{t('home.trustBand', locale)}</p>
         <div class="hero-chips">
-          {featuredChips.slice(0, 4).map(c => {
+          {featuredChips.slice(0, 5).map(c => {
             const href = c.kind === 'category'
               ? route(locale, `/category/${c.slug}`)
               : route(locale, `/${c.slug}`);
@@ -200,7 +200,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     <p class="section-subtitle">Start with a practical measurement guide, then open the exact conversion you need.</p>
     <div class="grid grid-3">
       {scenarios.map(s => (
-        <a class="card scenario-card" href={route(locale, `/scenarios/${s.slug}/`)}>
+        <a class="card scenario-card" href={route('en', `/scenarios/${s.slug}/`)}>
           <h3>{s.title}</h3>
           <p>{s.description}</p>
           <span>Explore guide →</span>

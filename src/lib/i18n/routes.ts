@@ -42,10 +42,14 @@ export const ROOT_PATHS = {
  *  Iterates LOCALES so new locales are picked up automatically. */
 export function hreflangTags(currentPath: string, baseUrl = 'https://unitbox.online') {
   const suffix = stripLocale(currentPath);
+  const canonicalPath = (loc: Locale) => {
+    const path = route(loc, suffix);
+    return path.endsWith('/') ? path : `${path}/`;
+  };
   const tags: Array<{ hreflang: string; href: string }> = LOCALES.map((loc) => ({
     hreflang: IN_LANGUAGE[loc],
-    href: `${baseUrl}${route(loc, suffix)}`,
+    href: `${baseUrl}${canonicalPath(loc)}`,
   }));
-  tags.push({ hreflang: 'x-default', href: `${baseUrl}${route(DEFAULT_LOCALE, suffix)}` });
+  tags.push({ hreflang: 'x-default', href: `${baseUrl}${canonicalPath(DEFAULT_LOCALE)}` });
   return tags;
 }

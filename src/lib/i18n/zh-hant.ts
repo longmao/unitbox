@@ -179,7 +179,7 @@ export const ZH_HANT: Record<string, string> = {
   'privacy.h1': '隱私權政策',
   'privacy.subtitle': '我們收集什麼（幾乎沒有），以及我們永遠不會做的事。',
   'privacy.s1.h': '簡短版',
-  'privacy.s1.p': 'unitbox 當前不設 cookie、不跑分析、不記錄請求。未來可能接入 Google AdSense 展示非個人化廣告以維持免費——屆時會依法規要求徵詢同意。你的換算輸入始終只留在你的裝置。',
+  'privacy.s1.p': 'unitbox 以盡量少收集資料為設計原則。根據目前部署設定，網站可能透過 Google AdSense 顯示非個人化廣告以支援託管；法律要求時會提供同意控制。你的換算輸入始終只留在你的裝置。',
   'privacy.s2.h': '我們永遠不收集的資料',
   'privacy.s2.li1': '不收集姓名、Email、IP、瀏覽器指紋。',
   'privacy.s2.li2': '不收集換算輸入——它們在你的瀏覽器，不在我們的伺服器。',

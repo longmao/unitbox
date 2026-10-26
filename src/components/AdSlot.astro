@@ -8,9 +8,13 @@ interface Props {
 
 const { placement } = Astro.props;
 const slot = import.meta.env[`PUBLIC_ADSENSE_SLOT_${placement.toUpperCase().replaceAll('-', '_')}`] || '';
+// Never render an empty ad container. A configured publisher ID alone is not
+// enough: every placement must have a real slot and sit next to publisher
+// content, otherwise the page can look unfinished during review.
+const canRender = ADS.enabled && Boolean(slot);
 ---
 
-{ADS.enabled && <>
+{canRender && <>
   <aside class={`ad-slot ad-slot-${placement}`} aria-label="Advertisement">
     <span class="ad-label">Advertisement</span>
     <ins class="adsbygoogle"

@@ -319,6 +319,6 @@ The SI unit is the **pascal** (Pa), which is 1 newton per square metre. Atmosphe
 ### Which do you need?
 
 If you're in the US measuring a tire, psi. In Europe, bar. In aviation, kPa or inHg. For scientific work, Pa. For blood pressure, mmHg. The site lets you convert any of these to any other.`,
-    relatedPairs: ['psi-to-bar', 'bar-to-psi', 'pascal-to-bar', 'atm-to-pascal', 'torr-to-pascal', 'mmhg-to-kilopascal', 'kilopascal-to-psi'],
+    relatedPairs: ['psi-to-bar', 'bar-to-psi', 'pascal-to-bar', 'atmosphere-to-pascal', 'torr-to-pascal', 'mmhg-to-kilopascal', 'kilopascal-to-psi'],
   },
 ];

@@ -99,6 +99,19 @@ const noteLabel = t('pair.note', locale);
 const fromLabel = tFmt('pair.about-from', locale, { unit: from.name });
 const toLabel = tFmt('pair.about-to', locale, { unit: to.name });
 const homeLabel = t('pair.breadcrumb-home', locale);
+
+const categoryGuide = from.category === 'temperature'
+  ? `Temperature scales are affine: the result needs both a scale factor and a zero-point offset. That is why ${from.symbol} to ${to.symbol} cannot be reduced to a simple percentage change.`
+  : from.category === 'fuel-economy'
+  ? `Fuel economy can be expressed as distance per fuel or fuel per distance. This page converts through the shared L/100 km reference so that MPG and metric readings do not get accidentally treated as ordinary linear units.`
+  : `Both units belong to ${getCategory(from.category)?.name ?? from.category}. Unitbox first expresses the input in the category reference unit (${getCategory(from.category)?.baseSymbol ?? 'the base unit'}), then expresses that same quantity in ${to.name}.`;
+const useCase = from.category === 'length'
+  ? `Common uses include plans, dimensions, travel distances, screens, and manufacturing specifications.`
+  : from.category === 'mass'
+  ? `Common uses include recipes, packaging, shipping, laboratory measurements, and everyday body-weight references.`
+  : from.category === 'data'
+  ? `Check whether a value uses decimal prefixes such as KB or binary prefixes such as KiB before comparing storage or memory figures.`
+  : `The right unit depends on the convention used by your industry, country, instrument, or source document.`;
 ---
 <Base title={title} description={subtitle} locale={locale}>
   <Fragment slot="head">
@@ -153,6 +166,18 @@ const homeLabel = t('pair.breadcrumb-home', locale);
   </div>
 </section>
 
+<section class="section editorial-block">
+  <h2 class="section-title">How {from.name} to {to.name} conversion works</h2>
+  <p>{categoryGuide}</p>
+  <p>{useCase}</p>
+  <div class="editorial-facts">
+    <div><strong>Reference value</strong><span>1 {from.symbol} = {formatNumber(convert(1, fromSlug, toSlug), 8, locale)} {to.symbol}</span></div>
+    <div><strong>Calculation</strong><span>Browser-side, using Unitbox's shared unit data</span></div>
+    <div><strong>Review note</strong><span>For safety-critical work, verify against the governing standard or instrument manual.</span></div>
+  </div>
+  <p class="muted small">Unit definitions and conversion factors are maintained in the <a href={route(locale, '/methodology/')}>Unitbox methodology</a>. Last reviewed with the current conversion dataset.</p>
+</section>
+
 <section class="section">
   <h2 class="section-title">{faqTitle}</h2>
   <FaqBlock items={faq} />
@@ -180,5 +205,11 @@ const homeLabel = t('pair.breadcrumb-home', locale);
   .two-col h3 { font-size: 18px; margin-bottom: 6px; }
   .two-col p { margin-top: 6px; }
   .small { font-size: 13px; }
+  .editorial-block { max-width: 820px; }
+  .editorial-block p { line-height: 1.7; }
+  .editorial-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  .editorial-facts div { display: grid; gap: 5px; padding: 14px; border: 1px solid var(--border); background: var(--bg-soft); }
+  .editorial-facts span { color: var(--fg-soft); font-size: 13px; line-height: 1.45; }
+  @media (max-width: 700px) { .editorial-facts { grid-template-columns: 1fr; } }
   @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
 </style>

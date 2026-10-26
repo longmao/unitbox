@@ -1,0 +1,90 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { articles } from '~/data/articles';
+import { learnTopics } from '~/data/learn';
+import { LOCALES, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const copy = {
+  en: { title: 'Measurement reference', description: 'Clear explanations, formulas and practical guides for units, conversions and measurement standards.', h1: 'Understand the number, not just the answer', intro: 'Unitbox reference pages explain the standards, formulas and everyday traps behind a conversion. Each guide links back to a working tool.' },
+  'zh-hans': { title: '计量参考', description: '用清晰的解释、公式和实用指南理解单位、换算和计量标准。', h1: '不只知道答案，也理解数字', intro: 'Unitbox 参考内容解释换算背后的标准、公式和常见误区，每篇指南都连接到可直接使用的工具。' },
+  'zh-hant': { title: '計量參考', description: '用清晰的解釋、公式與實用指南理解單位、換算和計量標準。', h1: '不只知道答案，也理解數字', intro: 'Unitbox 參考內容解釋換算背後的標準、公式與常見誤區，每篇指南都連到可直接使用的工具。' },
+  ja: { title: '計量リファレンス', description: '単位、換算、計量標準を理解するための解説、公式、実用ガイド。', h1: '答えだけでなく、数字を理解する', intro: 'Unitbox のリファレンスでは換算の標準、公式、よくある間違いを解説し、各ガイドから実際のツールへ移動できます。' },
+  ko: { title: '측정 참고 자료', description: '단위, 변환과 측정 표준을 이해하기 위한 설명, 공식과 실용 가이드입니다.', h1: '답뿐 아니라 숫자를 이해하세요', intro: 'Unitbox 참고 자료는 변환 뒤의 표준, 공식과 흔한 혼동을 설명하고 실제 도구로 연결합니다.' },
+}[locale];
+const title = copy.title;
+const description = copy.description;
+const featured = [...articles, ...learnTopics].slice(0, 8);
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: `https://unitbox.online${route(locale, '/reference/')}`,
+};
+---
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <span>Reference</span></div>
+  <section class="reference-intro">
+    <h1>{copy.h1}</h1>
+    <p>{copy.intro}</p>
+  </section>
+
+  <section class="reference-map">
+    <a class="reference-feature" href={route(locale, '/learn/')}><span>LEARN</span><h2>Foundations and measurement history</h2><p>Start with SI, base units, prefixes and the ideas behind measurement.</p><strong>Open learning guides ↗</strong></a>
+    <a class="reference-feature" href={route(locale, '/articles/')}><span>ARTICLES</span><h2>Practical conversion explainers</h2><p>Short, useful answers for the questions people actually search.</p><strong>Read articles ↗</strong></a>
+    <a class="reference-feature" href={route(locale, '/faq/')}><span>FAQ</span><h2>Common questions, answered directly</h2><p>Resolve ambiguity around metric, imperial, binary and reciprocal units.</p><strong>Browse FAQ ↗</strong></a>
+  </section>
+
+  <section class="featured-reference">
+    <div class="section-heading"><h2>Featured reference</h2><a href={route(locale, '/articles/')}>All articles ↗</a></div>
+    <div class="reference-list">
+      {featured.map(item => (
+        <a href={route(locale, `${'body' in item ? '/articles/' : '/learn/'}${item.slug}/`)}>
+          <span>{item.category}</span><h3>{item.title}</h3><p>{item.description}</p><strong>Read guide ↗</strong>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="reference-cta"><div><h2>Ready to calculate?</h2><p>Open a converter with the context still fresh.</p></div><a href={route(locale, '/tools/')}>See all tools ↗</a></section>
+</Base>
+
+<style>
+  .reference-intro { padding:36px 0 74px; max-width:900px; }
+  .reference-intro h1 { max-width:10ch; font-size:clamp(3.4rem,8vw,7rem); line-height:.9; letter-spacing:-.065em; margin:0 0 22px; }
+  .reference-intro p { max-width:52ch; color:var(--fg-soft); font-size:19px; }
+  .reference-map { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:2px; background:var(--brand); }
+  .reference-feature { min-height:300px; display:flex; flex-direction:column; padding:28px; background:#efe5d3; color:var(--fg); }
+  .reference-feature:first-child { background:var(--brand); color:#e6dbc7; }
+  .reference-feature:hover { text-decoration:none; transform:translateY(-4px); }
+  .reference-feature span, .reference-list > a > span { font-size:12px; font-weight:700; letter-spacing:.08em; }
+  .reference-feature h2 { margin:38px 0 12px; font-size:clamp(1.8rem,3vw,3rem); line-height:.95; letter-spacing:-.045em; }
+  .reference-feature p { color:var(--fg-soft); }
+  .reference-feature:first-child p { color:#d7dfec; }
+  .reference-feature strong { margin-top:auto; color:var(--brand); font-size:13px; }
+  .reference-feature:first-child strong { color:#e6dbc7; }
+  .featured-reference { margin-top:120px; }
+  .section-heading { display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:24px; }
+  .section-heading h2 { margin:0; font-size:clamp(2rem,4vw,4rem); line-height:.95; letter-spacing:-.05em; }
+  .section-heading a { color:var(--brand); font-weight:700; }
+  .reference-list { display:grid; grid-template-columns:repeat(2,1fr); gap:2px; background:var(--brand); }
+  .reference-list > a { display:flex; flex-direction:column; min-height:210px; padding:24px; background:#efe5d3; color:var(--fg); }
+  .reference-list > a:hover { background:#d7dfec; text-decoration:none; }
+  .reference-list h3 { margin:14px 0 8px; font-size:21px; }
+  .reference-list p { color:var(--fg-soft); margin:0 0 18px; }
+  .reference-list strong { margin-top:auto; color:var(--brand); font-size:13px; }
+  .reference-cta { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:120px; padding:42px 0; border-top:4px solid var(--brand); }
+  .reference-cta h2 { margin:0 0 8px; font-size:clamp(2rem,4vw,3.5rem); line-height:.95; letter-spacing:-.05em; }
+  .reference-cta p { color:var(--fg-soft); }
+  .reference-cta a { background:var(--brand); color:#e6dbc7; padding:14px 18px; font-weight:700; }
+  .reference-cta a:hover { color:#fff; text-decoration:none; }
+  @media (max-width:800px) { .reference-map, .reference-list { grid-template-columns:1fr; } .reference-feature { min-height:220px; } .reference-cta { display:block; } .reference-cta a { display:inline-block; margin-top:18px; } }
+</style>

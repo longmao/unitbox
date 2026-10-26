@@ -193,7 +193,7 @@ export const EN: Record<string, string> = {
   'privacy.h1': 'Privacy policy',
   'privacy.subtitle': 'What we collect (almost nothing), and what we never do.',
   'privacy.s1.h': 'The short version',
-  'privacy.s1.p': 'unitbox does not set cookies, does not run analytics, and does not log requests today. In the future we may display non-personalized ads via Google AdSense to keep the site free — when this changes we will ask for consent where required. Your conversion inputs always stay on your device.',
+  'privacy.s1.p': 'unitbox is designed to minimize data collection. Depending on the current deployment configuration, the site may display non-personalized Google AdSense ads to support hosting. Where required, consent controls are provided. Your conversion inputs always stay on your device.',
   'privacy.s2.h': 'Data we never collect',
   'privacy.s2.li1': 'No names, emails, IP addresses, or browser fingerprints.',
   'privacy.s2.li2': 'No conversion inputs — they live in your browser, not our servers.',

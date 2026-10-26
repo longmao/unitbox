@@ -1,0 +1,65 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { LOCALES, type Locale } from '~/lib/i18n';
+import { route } from '~/lib/i18n/routes';
+
+export async function getStaticPaths() {
+  return LOCALES.map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const copy = {
+  en: { title: 'Unitbox API documentation', description: 'Machine-readable unit conversion documentation for developers, AI agents and integrations.', h1: 'Unit conversion for tools and agents', intro: 'Use the same conversion vocabulary in your app, script or AI workflow. The specification is public, versioned and built around the units already documented on Unitbox.' },
+  'zh-hans': { title: 'Unitbox API 文档', description: '面向开发者、AI Agent 和集成应用的机器可读单位换算文档。', h1: '为工具和 Agent 提供单位换算', intro: '在应用、脚本或 AI 工作流中使用统一的单位词汇。API 规范公开、可读，并与 Unitbox 的单位目录保持一致。' },
+  'zh-hant': { title: 'Unitbox API 文件', description: '面向開發者、AI Agent 與整合應用的機器可讀單位換算文件。', h1: '為工具和 Agent 提供單位換算', intro: '在應用程式、腳本或 AI 工作流程中使用統一的單位詞彙。API 規範公開、可讀，並與 Unitbox 的單位目錄一致。' },
+  ja: { title: 'Unitbox API ドキュメント', description: '開発者、AI エージェント、統合向けの機械可読な単位換算ドキュメント。', h1: 'ツールとエージェントの単位換算', intro: 'アプリ、スクリプト、AI ワークフローで同じ単位語彙を使えます。公開仕様は Unitbox の単位カタログを基準にしています。' },
+  ko: { title: 'Unitbox API 문서', description: '개발자, AI 에이전트와 통합을 위한 기계 판독형 단위 변환 문서입니다.', h1: '도구와 에이전트를 위한 단위 변환', intro: '앱, 스크립트 또는 AI 워크플로에서 같은 단위 어휘를 사용하세요. 공개 사양은 Unitbox 단위 카탈로그를 기준으로 합니다.' },
+}[locale];
+const title = copy.title;
+const description = copy.description;
+const graph = { '@context': 'https://schema.org', '@type': 'TechArticle', name: title, description, url: `https://unitbox.online${route(locale, '/api-docs/')}` };
+---
+<Base title={title} description={description} locale={locale}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <span>API docs</span></div>
+  <section class="api-intro">
+    <h1>{copy.h1}</h1>
+    <p>{copy.intro}</p>
+    <div class="api-actions"><a href="/openapi.json">Open OpenAPI spec ↗</a><a href="/llms.txt">Read llms.txt ↗</a></div>
+  </section>
+  <section class="api-grid">
+    <article><span>SPECIFICATION</span><h2>OpenAPI 3.0</h2><p>Inspect the schemas and planned endpoint shape before integrating. The machine-readable file is the canonical contract.</p><a href="/openapi.json">View openapi.json ↗</a></article>
+    <article><span>AI CONTEXT</span><h2>llms.txt</h2><p>Give an AI assistant the product brief, canonical pages, conversion policy and API shape in one fetch.</p><a href="/llms.txt">View llms.txt ↗</a></article>
+    <article><span>HUMAN GUIDE</span><h2>How to cite Unitbox</h2><p>Use the reference page or exact conversion URL when an answer needs a transparent source and a reproducible number.</p><a href={route(locale, '/llms/')}>Read the guide ↗</a></article>
+  </section>
+  <section class="api-code">
+    <div><h2>A small integration surface</h2><p>Start with the static specification today. The public HTTP endpoint is planned as a later product layer, so no live endpoint is promised here yet.</p></div>
+    <pre><code>GET /v1/convert?from=meter&amp;to=foot&amp;value=1</code></pre>
+  </section>
+  <section class="api-next"><h2>Need a conversion now?</h2><a href={route(locale, '/tools/')}>Browse the tools ↗</a></section>
+</Base>
+
+<style>
+  .api-intro { padding:36px 0 70px; max-width:900px; }
+  .api-intro h1 { max-width:9ch; font-size:clamp(3.4rem,8vw,7rem); line-height:.9; letter-spacing:-.065em; margin:0 0 22px; }
+  .api-intro p { max-width:54ch; color:var(--fg-soft); font-size:19px; }
+  .api-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+  .api-actions a, .api-next a { background:var(--brand); color:#e6dbc7; padding:14px 18px; font-weight:700; }
+  .api-actions a:hover, .api-next a:hover { color:#fff; text-decoration:none; }
+  .api-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--brand); }
+  .api-grid article { min-height:270px; display:flex; flex-direction:column; padding:28px; background:#efe5d3; }
+  .api-grid article:first-child { background:var(--brand); color:#e6dbc7; }
+  .api-grid article:first-child p { color:#d7dfec; }
+  .api-grid span { font-size:12px; font-weight:700; letter-spacing:.08em; }
+  .api-grid h2 { margin:36px 0 10px; font-size:clamp(1.8rem,3vw,3rem); line-height:.95; letter-spacing:-.045em; }
+  .api-grid p { color:var(--fg-soft); }
+  .api-grid a { margin-top:auto; color:var(--brand); font-size:13px; font-weight:700; }
+  .api-grid article:first-child a { color:#e6dbc7; }
+  .api-code { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin-top:120px; padding:42px 0; border-top:4px solid var(--brand); }
+  .api-code h2, .api-next h2 { margin:0 0 10px; font-size:clamp(2rem,4vw,3.5rem); line-height:.95; letter-spacing:-.05em; }
+  .api-code p { color:var(--fg-soft); }
+  pre { margin:0; padding:22px; overflow:auto; background:#041f66; color:#d7dfec; font-size:14px; }
+  .api-next { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:42px 0; }
+  @media (max-width:800px) { .api-grid, .api-code { grid-template-columns:1fr; } .api-code { margin-top:80px; } .api-next { display:block; } .api-next a { display:inline-block; margin-top:18px; } }
+</style>

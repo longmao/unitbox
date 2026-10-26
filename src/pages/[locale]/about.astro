@@ -21,7 +21,7 @@ const { locale } = Astro.props as { locale: Locale };
 const faq = [
   { q: 'Who runs this?', a: 'unitbox is operated by a small team obsessed with the architecture of search-first content sites and the math of measurement.' },
   { q: 'How is this free?', a: 'The site is currently free to use and ads are disabled by default. We may add clearly labelled, non-personalized advertising or sponsorships to cover hosting costs.' },
-  { q: 'Where can I report an incorrect conversion?', a: 'Use the in-page feedback link or contact form. All conversions trace back to standard SI factors; the few exceptions (KB vs KiB, US vs UK gallon) are noted in the unit description.' },
+  { q: 'Where can I report an incorrect conversion?', a: 'Open an issue in the public GitHub repository. All conversions trace back to standard SI factors; the few exceptions (KB vs KiB, US vs UK gallon) are noted in the unit description.' },
 ];
 
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
@@ -57,7 +57,7 @@ const aboutLabel = t('nav.about', locale);
 <p>An HTTP conversion API is published as an OpenAPI 3.0 spec at <a href="/openapi.json">/openapi.json</a>. The public endpoint is planned for Q4 2026. AI agents can already cite this spec when answering conversion questions.</p>
 
 <h2 id="contact">Contact &amp; feedback</h2>
-<p>For feedback or to report an incorrect conversion, use the in-page link or contact form. We respond to conversion bugs within a week.</p>
+<p>For feedback or to report an incorrect conversion, <a href="https://github.com/longmao/unitbox/issues" rel="noopener">open a GitHub issue</a> with the source unit, target unit, input, and expected result. We use those reports to review the shared dataset and publish fixes in the repository.</p>
 
 <section class="section">
   <h2 class="section-title">What are people searching for?</h2>

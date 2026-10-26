@@ -3,13 +3,15 @@ import Base from '~/layouts/Base.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllCategories, getCategory, getUnitsByCategory } from '~/lib/units';
+import { getAllCategories, getAllUnits, getCategory, getUnitsByCategory, getPopularPairs } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import { articles } from '~/data/articles';
+import { scenarios } from '~/data/scenarios';
 
 export async function getStaticPaths() {
-  const cats = getAllCategories();
+  const cats = [{ slug: 'all' }, ...getAllCategories()];
   const out: Array<{ params: { locale: string; category: string }; props: { locale: Locale; slug: string } }> = [];
   for (const locale of LOCALES) {
     for (const c of cats) {
@@ -23,18 +25,17 @@ export async function getStaticPaths() {
 }
 
 const { locale, slug } = Astro.props as { locale: Locale; slug: string };
-const cat = getCategory(slug)!;
-const units = getUnitsByCategory(slug);
+const isAll = slug === 'all';
+const cat = isAll
+  ? { slug: 'all', name: 'All units', description: 'Browse every unit in the Unitbox catalogue, organised by measurement category.', baseSymbol: '—', kind: 'linear' as const }
+  : getCategory(slug)!;
+const units = isAll ? getAllUnits() : getUnitsByCategory(slug);
 
 // Build a popular-pairs grid for this category — top promoted × top promoted
 const promoted = units.slice(0, 8);
-const pairs = [] as { from: string; to: string; url: string }[];
-for (let i = 0; i < promoted.length; i++) {
-  for (let j = 0; j < promoted.length; j++) {
-    if (i === j) continue;
-    pairs.push({ from: promoted[i].slug, to: promoted[j].slug, url: `${promoted[i].slug}-to-${promoted[j].slug}` });
-  }
-}
+const pairs = isAll
+  ? getPopularPairs().slice(0, 24).map(p => ({ from: p.from, to: p.to, url: p.url }))
+  : promoted.flatMap((from, i) => promoted.filter((_, j) => i !== j).map(to => ({ from: from.slug, to: to.slug, url: `${from.slug}-to-${to.slug}` })));
 
 const faq = [
   { q: `What is the SI base unit of ${cat.name.toLowerCase()}?`, a: `The SI base ${cat.slug} unit is ${cat.baseSymbol}. Most conversions factor through it, except temperature which is affine and fuel-economy which is reciprocal.` },
@@ -50,6 +51,8 @@ const otherTitle = t('cat.other', locale);
 const homeLabel = t('pair.breadcrumb-home', locale);
 
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
+const categoryArticles = articles.filter(a => a.category.toLowerCase() === cat.name.toLowerCase()).slice(0, 3);
+const categoryScenario = scenarios.find(s => s.title.toLowerCase().includes(cat.name.toLowerCase()));
 ---
 <Base title={title} description={subtitle} locale={locale}>
   <Fragment slot="head">
@@ -63,6 +66,18 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 
 <h1>{cat.name}</h1>
 <p class="muted">{cat.description}</p>
+
+<section class="category-guide">
+  <div>
+    <h2>{cat.name} as a working topic</h2>
+    <p>Browse the units, compare the pairs people use most, then open a short reference guide when the number needs context.</p>
+  </div>
+  <div class="category-links">
+    <a href={route(locale, '/tools/')}>All tools ↗</a>
+    <a href={route(locale, '/reference/')}>Measurement reference ↗</a>
+    {categoryScenario && <a href={route('en', `/scenarios/${categoryScenario.slug}/`)}>Use this in practice ↗</a>}
+  </div>
+</section>
 
 <section class="section">
   <h2 class="section-title">{allUnitsTitle}</h2>
@@ -90,6 +105,15 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
   </div>
 </section>
 
+{categoryArticles.length > 0 && <section class="section category-reading">
+  <h2 class="section-title">Read before you convert</h2>
+  <div class="reading-grid">
+    {categoryArticles.map(article => (
+      <a class="card" href={route(locale, `/articles/${article.slug}/`)}><strong>{article.title}</strong><p>{article.description}</p><span>Read guide ↗</span></a>
+    ))}
+  </div>
+</section>}
+
 <FaqBlock items={faq} />
 
 <RecommendedList title={otherTitle} items={getAllCategories().filter(c => c.slug !== slug).map(c => ({
@@ -103,9 +127,20 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 <style>
   .unit-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
   .u-name { font-weight: 800; font-size: 16px; }
-  .u-sym { font-family: ui-monospace, monospace; font-size: 13px; color: var(--brand); font-weight: 700; }
+  .u-sym { font-family: ui-monospace, monospace; /* taste-skill-ignore: unit symbols are code-like */ font-size: 13px; color: var(--brand); font-weight: 700; }
   .u-desc { font-size: 12px; color: var(--fg-soft); line-height: 1.5; }
   .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
   .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
   .pair-card .arrow { color: var(--brand); font-weight: 800; }
+  .category-guide { display:grid; grid-template-columns:1fr auto; gap:28px; align-items:end; margin:40px 0 20px; padding:28px 0; border-top:4px solid var(--brand); border-bottom:4px solid var(--brand); }
+  .category-guide h2 { margin:0 0 8px; font-size:clamp(1.8rem,3vw,3rem); line-height:.95; letter-spacing:-.04em; }
+  .category-guide p { max-width:52ch; color:var(--fg-soft); }
+  .category-links { display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+  .category-links a, .reading-grid span { color:var(--brand); font-size:13px; font-weight:700; }
+  .reading-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .reading-grid .card { display:flex; flex-direction:column; min-height:170px; }
+  .reading-grid strong { font-size:17px; line-height:1.2; }
+  .reading-grid p { color:var(--fg-soft); font-size:13px; }
+  .reading-grid span { margin-top:auto; }
+  @media (max-width:800px) { .category-guide { display:block; } .category-links { align-items:flex-start; margin-top:18px; } .reading-grid { grid-template-columns:1fr; } }
 </style>

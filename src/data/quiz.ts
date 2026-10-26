@@ -108,7 +108,7 @@ export const quizQuestions: QuizQuestion[] = [
     explanation: 'Large blue whales can weigh around 100–180 tonnes. A middle estimate of 150 tonnes is a sensible guess.',
     sourceName: 'NOAA Fisheries — Blue Whale',
     sourceUrl: 'https://www.fisheries.noaa.gov/species/blue-whale',
-    relatedConversions: ['tonne-to-kilogram', 'kilogram-to-pound'],
+    relatedConversions: ['metric-ton-to-kilogram', 'kilogram-to-pound'],
   },
   {
     id: 'everest-height',

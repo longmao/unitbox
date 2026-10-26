@@ -179,7 +179,7 @@ export const ZH_HANS: Record<string, string> = {
   'privacy.h1': '隐私权政策',
   'privacy.subtitle': '我们收集什么（几乎没有），以及我们永远不会做的事。',
   'privacy.s1.h': '简短版',
-  'privacy.s1.p': 'unitbox 当前不设 cookie、不跑分析、不记录请求。未来可能接入 Google AdSense 展示非个性化广告以维持免费——届时会按法规要求征询同意。你的换算输入始终只留在你的设备。',
+  'privacy.s1.p': 'unitbox 以尽量少收集数据为设计原则。根据当前部署配置，网站可能通过 Google AdSense 展示非个性化广告以支持托管；法律要求时会提供同意控制。你的换算输入始终只留在你的设备。',
   'privacy.s2.h': '我们永不收集的资料',
   'privacy.s2.li1': '不收集姓名、Email、IP、浏览器指纹。',
   'privacy.s2.li2': '不收集换算输入——它们在你的浏览器，不在我们的服务器。',

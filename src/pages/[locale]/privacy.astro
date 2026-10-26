@@ -5,6 +5,7 @@ import JsonLd from '~/components/JsonLd.astro';
 import { buildFaqPage } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
+import { ADS } from '~/lib/ads';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
@@ -19,7 +20,7 @@ const { locale } = Astro.props as { locale: Locale };
 const faq = [
   { q: 'Do you set cookies?', a: 'No. unitbox runs zero cookies — no session cookie, no analytics cookie, no preference cookie.' },
   { q: 'Do you log my conversion inputs?', a: 'No. Every conversion happens client-side in your browser. Your inputs never reach a server.' },
-  { q: 'Do you run ads?', a: 'Today: no ads. unitbox may display non-personalized ads via Google AdSense in the future to keep the site free. When this changes we will announce it on this page and ask for cookie consent where required (GDPR/CCPA).' },
+  { q: 'Do you run ads?', a: ADS.enabled ? 'unitbox currently loads Google AdSense on configured placements. Google may use cookies or similar technologies as described in its publisher disclosures; consent controls are shown where required by law.' : 'unitbox does not currently load Google AdSense in this build. If ads are enabled in the future, this page will be updated before serving them and consent controls will be added where required.' },
   { q: 'What about Cloudflare logs and analytics?', a: 'Cloudflare (our CDN) keeps edge access logs for 24 hours, then deletes them — used for security/abuse detection only. We also enable Cloudflare Web Analytics, a cookieless, IP-free, fingerprint-free aggregate counter, to see how popular the site is. It does not track individual visitors.' },
 ];
 
@@ -56,7 +57,7 @@ const navAbout = t('nav.about', locale);
 </ul>
 
 <h2>{t('privacy.s4.h', locale)}</h2>
-<p>{t('privacy.s4.p', locale)}</p>
+<p>{t('privacy.s4.p', locale)} For Google advertising disclosures, see <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">How Google uses information from sites or apps that use its services</a>.</p>
 
 <FaqBlock items={faq} />
 

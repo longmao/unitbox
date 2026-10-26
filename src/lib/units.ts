@@ -139,7 +139,7 @@ export function formatNumber(n: number | null | undefined, precision = 6): strin
  * Popular unit order is implicit (declared order of units.json — first ones get promoted first).
  */
 const PAIR_PROMOTION_CAP: Record<string, number> = {
-  length: 12,
+  length: 13,         // include ångström so every unit-page table link resolves
   mass: 10,
   temperature: 5,   // all 5 — they all pair interestingly
   area: 11,         // 11 area units incl. tsubo/jo — promote all so unit-page links resolve

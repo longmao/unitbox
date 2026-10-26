@@ -9,7 +9,7 @@ import JsonLd from '~/components/JsonLd.astro';
 import '~/styles/global.css';
 import { ADS } from '~/lib/ads';
 
-const adsensePublisherId = import.meta.env.PUBLIC_ADSENSE_PUBLISHER_ID || 'ca-pub-3192343269250623';
+const adsensePublisherId = ADS.siteVerification ? ADS.publisherId : '';
 
 export interface Props {
   title?: string;
@@ -92,9 +92,9 @@ const hreflangs = altLocales
   ? [
       ...pageLocales.map((loc) => ({
         hreflang: IN_LANGUAGE[loc],
-        href: `${SITE.url}${route(loc, suffixPath)}`,
+        href: canonicalUrl(route(loc, suffixPath)),
       })),
-      { hreflang: 'x-default', href: `${SITE.url}${route(pageLocales[0], suffixPath)}` },
+      { hreflang: 'x-default', href: canonicalUrl(route(pageLocales[0], suffixPath)) },
     ]
   : hreflangTags(Astro.url.pathname);
 
@@ -121,7 +121,7 @@ const switcher = pageLocales.map(l => ({
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
-  <meta name="google-adsense-account" content={adsensePublisherId} />
+  {adsensePublisherId && <meta name="google-adsense-account" content={adsensePublisherId} />}
   {keywords && <meta name="keywords" content={keywords} />}
   <link rel="canonical" href={canonical} />
   {hreflangs.map(h => (
@@ -183,9 +183,9 @@ const switcher = pageLocales.map(l => ({
       <nav class="primary-nav" aria-label="primary">
         <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
         <a href={route(locale, '/play/')}>Daily game</a>
+        <a href={route(locale, '/tools/')}>Tools</a>
         <a href={route(locale, '/category/length')}>Categories</a>
-        <a href={route(locale, '/learn')}>{t('learn.h1', locale)}</a>
-        <a href={route(locale, '/calculator')}>{t('nav.calculator', locale)}</a>
+        <a href={route(locale, '/reference/')}>Reference</a>
       </nav>
       <a class="header-action" href={route(locale, '/play/')}>Play today</a>
       <div class="lang-toggle" role="group" aria-label="language">
@@ -252,6 +252,7 @@ const switcher = pageLocales.map(l => ({
             <li><a href="https://www.npmjs.com/~longmao" rel="noopener">npm</a></li>
             <li><a href="/openapi.json">OpenAPI 3.0</a></li>
             <li><a href="/llms.txt">AI / LLM guide</a></li>
+            <li><a href={route(locale, '/api-docs/')}>API documentation</a></li>
             <li><a class="sponsor-link" href="https://buymeacoffee.com/unitbox" target="_blank" rel="noopener noreferrer">Support Unitbox ↗</a></li>
           </ul>
         </div>

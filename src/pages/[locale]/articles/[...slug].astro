@@ -67,6 +67,7 @@ const articleSchema = buildArticle({
     <div class="meta">
       <span class="cat">{article.category}</span>
       <span class="rt">{article.readTime} read</span>
+      <span>By Unitbox Editorial Team · Updated {dateModified}</span>
     </div>
   <p class="lead">{article.description}</p>
   </header>
@@ -105,6 +106,7 @@ const articleSchema = buildArticle({
   .meta { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
   .meta .cat { background: var(--brand); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
   .meta .rt { font-size: 13px; color: var(--fg-muted); }
+  .meta span:last-child { font-size: 13px; color: var(--fg-muted); }
   .body p { font-size: 16px; line-height: 1.7; color: var(--fg); margin: 14px 0; }
   .body h2 { font-size: 22px; margin-top: 26px; }
   .math { font-family: ui-monospace, monospace; background: var(--bg-soft); color: #fff; padding: 14px 18px; border-radius: 8px; }
