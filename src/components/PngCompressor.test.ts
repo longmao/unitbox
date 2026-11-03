@@ -106,13 +106,14 @@ describe('PNG compressor page', () => {
     }
   });
 
-  it('home page has 5 hero chips (3 categories + 2 tools) in all locales', () => {
+  it('home page has 3 scenario-focused hero chips in all locales', () => {
     for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
       const file = path.join(DIST, locale, 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       const chips = (html.match(/<a [^>]*class="hero-chip/g) ?? []).length;
-      expect(chips, `${locale} home should have 5 hero chips`).toBe(5);
-      expect(html).toMatch(/class="hero-chip[^"]*hero-chip-tool/);
+      expect(chips, `${locale} home should have 3 hero chips`).toBe(3);
+      expect(html).toContain('/category/data');
+      expect(html).toContain('/category/fuel-economy');
     }
   });
 

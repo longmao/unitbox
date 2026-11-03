@@ -4,14 +4,14 @@ import ConverterWidget from '~/components/ConverterWidget.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import ArticlesBlock from '~/components/ArticlesBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllCategories, getUnitsByCategory } from '~/lib/units';
+import { getAllCategories, getUnitsByCategory, getUnit } from '~/lib/units';
 import { SITE_COVERAGE, SITE_STATS } from '~/lib/site';
 import AdSlot from '~/components/AdSlot.astro';
 import { articles } from '~/data/articles';
 import { buildFaqPage } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
-import { scenarios } from '~/data/scenarios';
+import { scenarios, featuredScenarioSlugs } from '~/data/scenarios';
 
 export async function getStaticPaths() {
   const out: Array<{ params: { locale: string }; props: { locale: Locale } }> = [];
@@ -27,30 +27,27 @@ const categories = getAllCategories();
 const heroFromSlug = 'meter';
 const heroToSlug = 'foot';
 
-// 4 hero chips: 3 categories + the viral PNG compressor tool (v0.4 launch).
-type HeroChip = { kind: 'category' | 'tool'; slug: string; label: string; meta: string; mark?: string };
+// The home page now makes the measurement work visible first; unrelated local
+// utilities remain available in /tools without competing with this promise.
+type HeroChip = { slug: string; label: string; meta: string };
 const featuredChips: HeroChip[] = [
-  { kind: 'category', slug: 'length', label: 'Length', meta: '13 units' },
-  { kind: 'category', slug: 'temperature', label: 'Temperature', meta: '5 scales' },
-  { kind: 'category', slug: 'data', label: 'Data', meta: '12 prefixes' },
-  { kind: 'tool', slug: 'tools/png-compressor', label: 'PNG compressor', meta: 'no upload', mark: 'PNG' },
-  { kind: 'tool', slug: 'tools/image-color-picker', label: 'Image color picker', meta: 'HEX / RGB / HSL', mark: 'RGB' },
+  { slug: 'category/data', label: 'Data storage', meta: 'decimal ↔ binary' },
+  { slug: 'category/fuel-economy', label: 'Fuel economy', meta: 'MPG ↔ L/100 km' },
+  { slug: 'category/length', label: 'Construction', meta: 'metric ↔ imperial' },
 ];
 
-// Popular 36 pairs to surface — first 3 from each category
-const popularPairs = [
-  'meter-to-foot', 'foot-to-meter', 'kilometer-to-mile', 'mile-to-kilometer',
-  'inch-to-centimeter', 'centimeter-to-inch', 'mile-to-foot', 'yard-to-meter',
-  'kilogram-to-pound', 'pound-to-kilogram', 'gram-to-ounce', 'ounce-to-gram',
-  'celsius-to-fahrenheit', 'fahrenheit-to-celsius', 'celsius-to-kelvin',
-  'liter-to-gallon-us', 'gallon-us-to-liter', 'liter-to-milliliter',
-  'square-meter-to-square-foot', 'square-foot-to-square-meter', 'hectare-to-acre', 'acre-to-hectare',
-  'kilometer-per-hour-to-mile-per-hour', 'mile-per-hour-to-kilometer-per-hour',
-  'knot-to-mile-per-hour', 'knot-to-kilometer-per-hour', 'mach-to-kilometer-per-hour',
-  'hour-to-minute', 'minute-to-second', 'day-to-hour', 'week-to-day', 'year-to-day',
-  'byte-to-kilobyte', 'kilobyte-to-byte', 'kilobyte-to-kibibyte', 'kibibyte-to-kilobyte',
-  'gigabyte-to-megabyte', 'terabyte-to-gigabyte', 'megabyte-to-mebibyte', 'gigabyte-to-gibibyte',
+// Keep the first screen and the popular list useful. Slugs are stored as pairs,
+// not parsed from a hyphenated URL, so names such as gallon-us never render as
+// "gallon → to".
+const popularPairs: Array<[string, string]> = [
+  ['meter', 'foot'], ['kilometer', 'mile'], ['inch', 'centimeter'],
+  ['kilogram', 'pound'], ['gram', 'ounce'], ['celsius', 'fahrenheit'],
+  ['liter', 'gallon-us'], ['square-meter', 'square-foot'], ['psi', 'bar'],
+  ['kilobyte', 'kibibyte'], ['gigabyte', 'gibibyte'], ['mpg-us', 'liter-per-100km'],
 ];
+const featuredScenarios = featuredScenarioSlugs
+  .map(slug => scenarios.find(scenario => scenario.slug === slug))
+  .filter((scenario): scenario is NonNullable<typeof scenario> => Boolean(scenario));
 
 // Home page FAQ is page-local English content for v0.4. The "Build-Time
 // assertion" rule (no new dict keys) keeps it page-local until they earn
@@ -101,13 +98,10 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       <div class="hero-meta">
         <p class="trust-band">{t('home.trustBand', locale)}</p>
         <div class="hero-chips">
-          {featuredChips.slice(0, 5).map(c => {
-            const href = c.kind === 'category'
-              ? route(locale, `/category/${c.slug}`)
-              : route(locale, `/${c.slug}`);
+          {featuredChips.map(c => {
+            const href = route(locale, `/${c.slug}`);
             return (
-              <a class={`hero-chip ${c.kind === 'tool' ? 'hero-chip-tool' : ''}`} href={href}>
-                {c.mark && <span class="chip-mark" aria-hidden="true">{c.mark}</span>}
+              <a class="hero-chip" href={href}>
                 <span class="chip-label">{c.label}</span>
                 <span class="chip-meta">{c.meta}</span>
               </a>
@@ -119,16 +113,6 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   </section>
 
   <AdSlot placement="after-hero" locale={locale} />
-
-  <section class="daily-callout">
-    <div class="daily-stamp">TODAY</div>
-    <div>
-    <p class="daily-note">Unitbox Daily</p>
-      <h2>How good is your sense of scale?</h2>
-      <p>Five quick questions about real-world size, weight, distance and data. Guess first. Learn the number after.</p>
-    </div>
-    <a class="daily-action" href={route(locale, '/play/')}>Play today <span>↗</span></a>
-  </section>
 
   <!-- LAYER 2: 3-step how-it-works -->
   <section class="section">
@@ -152,60 +136,27 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     </ol>
   </section>
 
-  <!-- LAYER 2.5: Tools (v0.4 launch — viral PNG compressor above the fold category grid) -->
-  <section class="section tools-section">
-    <h2 class="section-title">{t('home.tools-section.title', locale)}</h2>
-    <p class="section-subtitle">{t('home.tools-section.sub', locale)}</p>
-    <div class="grid grid-2 tools-grid">
-      <a class="card tool-card tool-card-png" href={route(locale, '/tools/png-compressor')}>
-        <div class="tool-card-head">
-          <span class="tool-mark" aria-hidden="true">PNG</span>
-          <span class="tool-badge">v0.4</span>
-        </div>
-        <h3 class="tool-title">{t('home.tools-section.tool-png.title', locale)}</h3>
-        <p class="tool-body">{t('home.tools-section.tool-png.body', locale)}</p>
-        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
-      </a>
-      <a class="card tool-card tool-card-jwt" href={route(locale, '/tools/jwt-decoder')}>
-        <div class="tool-card-head">
-          <span class="tool-mark" aria-hidden="true">JWT</span>
-          <span class="tool-badge">new</span>
-        </div>
-        <h3 class="tool-title">{t('home.tools-section.tool-jwt.title', locale)}</h3>
-        <p class="tool-body">{t('home.tools-section.tool-jwt.body', locale)}</p>
-        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
-      </a>
-      <a class="card tool-card tool-card-cp" href={route(locale, '/tools/image-color-picker')}>
-        <div class="tool-card-head">
-          <span class="tool-mark" aria-hidden="true">RGB</span>
-          <span class="tool-badge">new</span>
-        </div>
-        <h3 class="tool-title">{t('home.tools-section.tool-cp.title', locale)}</h3>
-        <p class="tool-body">{t('home.tools-section.tool-cp.body', locale)}</p>
-        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
-      </a>
-      <a class="card tool-card" href={route(locale, '/calculator')}>
-        <div class="tool-card-head">
-          <span class="tool-mark" aria-hidden="true">CALC</span>
-        </div>
-        <h3 class="tool-title">{t('home.tools-section.tool-calc.title', locale)}</h3>
-        <p class="tool-body">{t('home.tools-section.tool-calc.body', locale)}</p>
-        <span class="tool-cta">{t('home.tools-section.cta', locale)} →</span>
-      </a>
-    </div>
-  </section>
-
   <section class="section">
-    <h2 class="section-title">Unit converters for real-world work</h2>
-    <p class="section-subtitle">Start with a practical measurement guide, then open the exact conversion you need.</p>
+    <h2 class="section-title">Conversion for real work</h2>
+    <p class="section-subtitle">Start from the job in front of you. Each guide includes a live calculation, the convention behind it, and the exact related conversions.</p>
     <div class="grid grid-3">
-      {scenarios.map(s => (
+      {featuredScenarios.map(s => (
         <a class="card scenario-card" href={route('en', `/scenarios/${s.slug}/`)}>
           <h3>{s.title}</h3>
           <p>{s.description}</p>
           <span>Explore guide →</span>
         </a>
       ))}
+    </div>
+  </section>
+
+  <section class="section tools-section tools-section-secondary">
+    <h2 class="section-title">More local tools</h2>
+    <p class="section-subtitle">Separate browser utilities for files, images and developer checks. They stay local to your device.</p>
+    <div class="grid grid-3 tools-grid">
+      <a class="card tool-card tool-card-png" href={route(locale, '/tools/png-compressor')}><h3 class="tool-title">PNG compressor</h3><p class="tool-body">Reduce PNG files in your browser without uploading them.</p><span class="tool-cta">Open tool →</span></a>
+      <a class="card tool-card tool-card-jwt" href={route(locale, '/tools/jwt-decoder')}><h3 class="tool-title">JWT decoder</h3><p class="tool-body">Inspect token claims and structure locally.</p><span class="tool-cta">Open tool →</span></a>
+      <a class="card tool-card tool-card-cp" href={route(locale, '/tools/image-color-picker')}><h3 class="tool-title">Image color picker</h3><p class="tool-body">Read HEX, RGB, HSL and CMYK values from an image.</p><span class="tool-cta">Open tool →</span></a>
     </div>
   </section>
 
@@ -232,15 +183,14 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     <h2 class="section-title">{t('home.popular', locale)}</h2>
     <p class="section-subtitle">{t('home.popular-sub', locale)}</p>
     <div class="grid grid-3">
-      {popularPairs.map(slug => {
-        const [fromSlug, , toSlug] = slug.split('-');
-        const fromUnit = fromSlug.replace(/-/g, ' ');
-        const toUnit = toSlug.replace(/-/g, ' ');
+      {popularPairs.map(([fromSlug, toSlug]) => {
+        const fromUnit = getUnit(fromSlug)!;
+        const toUnit = getUnit(toSlug)!;
         return (
-          <a class="card pair-card" href={route(locale, `/${slug}`)}>
-            <span class="from">{fromUnit}</span>
+          <a class="card pair-card" href={route(locale, `/${fromSlug}-to-${toSlug}`)}>
+            <span class="from">{fromUnit.name}</span>
             <span class="arrow">→</span>
-            <span class="to">{toUnit}</span>
+            <span class="to">{toUnit.name}</span>
           </a>
         );
       })}
@@ -326,7 +276,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .hero-inner { max-width: 1280px; margin: 0 auto; padding: 0; background: transparent; color: var(--fg); border: 0; display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(32px, 7vw, 110px); align-items: center; position: relative; }
   .hero-inner::before { content: ''; position: absolute; width: min(70vw, 760px); height: min(70vw, 760px); right: -190px; top: -150px; background: var(--brand); clip-path: polygon(14% 0, 100% 0, 100% 86%, 86% 100%, 0 100%, 0 14%); z-index: 0; }
   .hero-copy, .hero-converter, .hero-meta { position: relative; z-index: 1; }
-  .hero-note, .daily-note { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-soft); }
+  .hero-note { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-soft); }
   .hero-inner h1 { color: var(--fg); font-size: clamp(3.8rem, 8vw, 8rem); line-height: .88; letter-spacing: -.065em; margin-bottom: 24px; max-width: 7ch; }
   .hero-sub { color: var(--fg-soft); font-size: 18px; line-height: 1.5; margin-bottom: 24px; max-width: 34ch; }
   .hero-converter { padding: 26px; background: #efe5d3; border: 1px solid var(--brand); clip-path: polygon(0 0, 96% 0, 100% 8%, 100% 100%, 4% 100%, 0 92%); }
@@ -344,23 +294,11 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .hero-chip:hover { background: var(--brand); color: #e6dbc7; text-decoration: none; }
   .hero-chip .chip-meta { color: var(--fg-soft); font-size: 12px; font-weight: 500; }
   .hero-chip:hover .chip-meta { color: #d7dfec; }
-  .daily-callout { margin: 0 -28px; padding: 42px max(28px, calc((100vw - 1280px) / 2 + 28px)); background: var(--brand); color: #e6dbc7; display: grid; grid-template-columns: 120px 1fr auto; gap: 32px; align-items: center; }
-  .daily-stamp { width: 92px; height: 92px; border: 1px solid #e6dbc7; display: grid; place-items: center; font-weight: 600; font-size: 14px; transform: rotate(-7deg); }
-  .daily-callout h2 { color: #e6dbc7; font-size: clamp(2rem, 4vw, 4rem); line-height: .95; letter-spacing: -.05em; margin: 0 0 10px; max-width: 12ch; }
-  .daily-callout p { color: #d7dfec; max-width: 52ch; }
-  .daily-action { background: #e6dbc7; color: var(--brand); padding: 14px 18px; font-weight: 600; white-space: nowrap; }
-  .daily-action:hover { color: var(--brand); text-decoration: none; transform: translateY(-2px); }
-  .daily-action span { margin-left: 18px; font-size: 20px; }
   .scenario-card h3 { margin: 0 0 8px; }
   .scenario-card p { color: var(--fg-soft); font-size: 13px; line-height: 1.5; min-height: 58px; }
   .scenario-card span { color: var(--brand); font-size: 13px; font-weight: 700; }
-  .tool-card { min-height: 220px; display: flex; flex-direction: column; background: #efe5d3; }
+  .tool-card { min-height: 190px; display: flex; flex-direction: column; background: #efe5d3; }
   .tool-card:hover { transform: translateY(-4px); border-color: var(--brand); text-decoration: none; }
-  .tool-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .tool-mark, .chip-mark { display: inline-grid; place-items: center; background: var(--brand); color: #e6dbc7; font-size: 11px; font-weight: 700; letter-spacing: .06em; }
-  .tool-mark { width: 52px; height: 52px; clip-path: polygon(0 0, 86% 0, 100% 14%, 100% 100%, 14% 100%, 0 86%); }
-  .chip-mark { min-width: 26px; height: 20px; padding: 0 4px; }
-  .tool-badge { color: var(--fg-soft); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
   .tool-title { margin-top: 0; }
   .tool-body { color: var(--fg-soft); font-size: 14px; }
   .tool-cta { margin-top: auto; color: var(--brand); font-size: 13px; font-weight: 700; }
@@ -399,17 +337,27 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .api-cta { padding: 10px 18px; background: #e6dbc7; color: var(--brand); border-radius: 0; font-weight: 700; }
   .api-cta:hover { text-decoration: none; background: #fff; }
 
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy { animation: hero-rise .56s ease-out both; }
+    .hero-converter { animation: hero-rise .62s .1s ease-out both; }
+    .hero-meta { animation: hero-rise .54s .2s ease-out both; }
+    .hero-chip, .tool-card, .scenario-card { transition: transform .2s ease, background-color .2s ease, border-color .2s ease; }
+    .scenario-card:hover { transform: translateY(-4px); }
+  }
+
+  @keyframes hero-rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   @media (max-width: 700px) {
     .hero { margin: 0 -16px; padding: 58px 16px 42px; }
     .hero-inner { display: block; }
-    .hero-inner::before { width: 90vw; height: 90vw; right: -45vw; top: -10vw; }
+    .hero-inner::before { display: none; }
     .hero-inner h1 { font-size: clamp(3.8rem, 16vw, 6rem); }
     .hero-converter { margin-top: 44px; padding: 18px; }
     .hero-meta { display: block; }
     .hero-chips { justify-content: flex-start; margin-top: 14px; }
-    .daily-callout { margin: 0 -16px; padding: 34px 16px; grid-template-columns: 76px 1fr; gap: 22px; }
-    .daily-stamp { width: 66px; height: 66px; font-size: 11px; }
-    .daily-action { grid-column: 2; justify-self: start; }
     .api-section { padding: 36px 22px; }
     .api-h2 { font-size: 24px; }
   }

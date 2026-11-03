@@ -11,7 +11,7 @@
 
 set -uo pipefail
 DATE=$(date -u +%Y-%m-%d)
-ROOT="/Users/vincent/work/experimental/unit-now"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="$ROOT/.observe/$DATE"
 
 if [[ "${1:-}" == "--dry-run" ]]; then

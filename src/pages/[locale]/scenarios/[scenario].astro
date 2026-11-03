@@ -3,9 +3,10 @@ import Base from '~/layouts/Base.astro';
 import AdSlot from '~/components/AdSlot.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
+import ConverterWidget from '~/components/ConverterWidget.astro';
 import { scenarios } from '~/data/scenarios';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
+import { IN_LANGUAGE, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
@@ -25,8 +26,24 @@ const description = scenario.description;
   <Fragment slot="head"><JsonLd data={faqLd} /></Fragment>
 
   <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <span>{scenario.title}</span></div>
-  <h1>{scenario.title}</h1>
-  <p class="lead">{scenario.intro}</p>
+  <section class={`scenario-hero ${scenario.primaryPair ? 'scenario-hero-live' : ''}`}>
+    <div class="scenario-copy">
+      <h1>{scenario.title}</h1>
+      <p class="lead">{scenario.intro}</p>
+      <a class="scenario-action" href={route(locale, '/calculator/')}>Open the full calculator →</a>
+    </div>
+    {scenario.primaryPair && (
+      <div class="scenario-instrument" data-ui>
+        <p>Try a real conversion</p>
+        <ConverterWidget fromSlug={scenario.primaryPair[0]} toSlug={scenario.primaryPair[1]} mode="full" defaultValue={scenario.defaultValue ?? 1} />
+      </div>
+    )}
+  </section>
+
+  {scenario.workingNotes && <section class="working-notes" aria-labelledby="work-with-it">
+    <div><h2 id="work-with-it">Use the result in context.</h2><p>These checks are what turn a quick conversion into a dependable working number.</p></div>
+    <ol>{scenario.workingNotes.map(note => <li>{note}</li>)}</ol>
+  </section>}
 
   <section class="section card scenario-units">
     <h2 class="section-title">Units covered</h2>
@@ -44,6 +61,11 @@ const description = scenario.description;
     </div>
   </section>
 
+  {scenario.reference && <section class="reference-next">
+    <div><h2>{scenario.reference.label}</h2><p>{scenario.reference.description}</p></div>
+    <a href={scenario.reference.href}>Open reference →</a>
+  </section>}
+
   <AdSlot placement="after-result" locale={locale} />
   <section class="section"><h2 class="section-title">Frequently asked questions</h2><FaqBlock items={scenario.faqs} /></section>
 
@@ -55,11 +77,40 @@ const description = scenario.description;
 </Base>
 
 <style>
-  .lead { max-width: 760px; color: var(--fg-soft); font-size: 18px; line-height: 1.65; }
+  .scenario-hero { padding: 42px 0 84px; }
+  .scenario-hero-live { display:grid; grid-template-columns:minmax(0,.8fr) minmax(420px,1.2fr); gap:clamp(32px,7vw,110px); align-items:end; }
+  .scenario-copy h1 { max-width:11ch; font-size:clamp(3.4rem,7vw,7rem); line-height:.9; letter-spacing:-.065em; margin:0 0 22px; }
+  .lead { max-width:52ch; color: var(--fg-soft); font-size: 18px; line-height: 1.65; }
+  .scenario-action { display:inline-block; margin-top:12px; padding:13px 17px; background:var(--brand); color:#e6dbc7; font-weight:700; }
+  .scenario-action:hover { color:#fff; text-decoration:none; transform:translateY(-2px); }
+  .scenario-instrument { padding:24px; background:#d7dfec; }
+  .scenario-instrument > p { margin:0 0 14px; font-size:16px; font-weight:700; color:var(--fg); }
+  .scenario-instrument :global(.cw) { border:0; border-radius:0; box-shadow:none; }
+  .working-notes { margin:0 -28px; padding:72px max(28px, calc((100vw - 1280px) / 2 + 28px)); background:var(--brand); color:#e6dbc7; display:grid; grid-template-columns:.8fr 1.2fr; gap:clamp(32px,8vw,130px); }
+  .working-notes h2 { color:#e6dbc7; font-size:clamp(2.3rem,4.5vw,5rem); line-height:.94; letter-spacing:-.055em; margin:0 0 14px; max-width:8ch; }
+  .working-notes p { color:#d7dfec; max-width:34ch; }
+  .working-notes ol { margin:0; padding:0; list-style:none; display:grid; gap:20px; align-content:start; }
+  .working-notes li { color:#e6dbc7; font-size:17px; line-height:1.55; padding:0 0 20px; border-bottom:2px solid rgba(230,219,199,.25); }
+  .working-notes li:last-child { border:0; padding-bottom:0; }
   .scenario-units { margin-top: 24px; }
   .unit-list { display: flex; flex-wrap: wrap; gap: 8px; }
   .unit-list span { background: var(--brand-soft); border-radius: 999px; color: var(--brand); padding: 6px 11px; font-size: 13px; font-weight: 600; }
   .pair-card { display: flex; justify-content: space-between; gap: 10px; color: var(--fg); }
   .pair-card b { color: var(--brand); }
   .next-step { text-align: center; }
+  .reference-next { display:flex; justify-content:space-between; align-items:end; gap:32px; padding:42px 0; border-top:4px solid var(--brand); border-bottom:4px solid var(--brand); }
+  .reference-next h2 { font-size:clamp(2rem,4vw,4rem); line-height:.95; letter-spacing:-.05em; margin:0 0 10px; }
+  .reference-next p { max-width:55ch; color:var(--fg-soft); margin:0; }
+  .reference-next a { flex:none; padding:13px 17px; background:var(--brand); color:#e6dbc7; font-weight:700; }
+  .reference-next a:hover { color:#fff; text-decoration:none; transform:translateY(-2px); }
+  @media (prefers-reduced-motion: no-preference) {
+    .scenario-copy { animation: scenario-rise .56s ease-out both; }
+    .scenario-instrument { animation: scenario-rise .62s .1s ease-out both; }
+    .scenario-action, .reference-next a { transition: transform .2s ease, background-color .2s ease; }
+  }
+  @keyframes scenario-rise {
+    from { opacity:0; transform:translateY(16px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  @media (max-width:800px) { .scenario-hero-live, .working-notes, .reference-next { display:block; } .scenario-instrument { margin-top:40px; } .working-notes { margin-left:-16px; margin-right:-16px; padding:56px 16px; } .working-notes ol { margin-top:34px; } .reference-next a { display:inline-block; margin-top:22px; } }
 </style>

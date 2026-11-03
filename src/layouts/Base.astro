@@ -182,12 +182,12 @@ const switcher = pageLocales.map(l => ({
       </label>
       <nav class="primary-nav" aria-label="primary">
         <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
-        <a href={route(locale, '/play/')}>Daily game</a>
+        <a href={route(locale, '/calculator/')}>Calculator</a>
         <a href={route(locale, '/tools/')}>Tools</a>
         <a href={route(locale, '/category/length')}>Categories</a>
         <a href={route(locale, '/reference/')}>Reference</a>
       </nav>
-      <a class="header-action" href={route(locale, '/play/')}>Play today</a>
+      <a class="header-action" href={route(locale, '/calculator/')}>Convert a unit</a>
       <div class="lang-toggle" role="group" aria-label="language">
         {switcher.map(s => (
           <a href={s.href} class={`lang-link ${s.active ? 'active' : ''}`} hreflang={IN_LANGUAGE[s.locale]} aria-current={s.active ? 'true' : undefined}>
