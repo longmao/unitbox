@@ -1,0 +1,78 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllCategories } from '~/lib/units';
+import { route } from '~/lib/i18n/routes';
+import type { Locale } from '~/lib/i18n';
+
+export async function getStaticPaths() {
+  return [{ params: { locale: 'en' }, props: { locale: 'en' as Locale } }];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const categories = getAllCategories();
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'How Unitbox conversion factors work',
+  description: 'A practical explanation of linear, temperature and fuel-economy conversion methods used by Unitbox.',
+  url: 'https://unitbox.online/en/reference/conversion-factors/',
+  author: { '@type': 'Organization', name: 'Unitbox Editorial Team' },
+  dateModified: '2026-11-05',
+};
+---
+
+<Base title="How Unitbox conversion factors work" description="A practical explanation of linear, temperature and fuel-economy conversion methods used by Unitbox." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <a href={route(locale, '/reference/')}>Reference</a> › <span>Conversion factors</span></div>
+  <article class="reference-article">
+    <h1>How a conversion factor becomes a result.</h1>
+    <p class="lead">Most conversions are a simple ratio. Temperature and fuel economy are the useful exceptions: one changes the zero point, and the other reverses the relationship. Unitbox keeps those models separate so a number is not merely plausible, but traceable.</p>
+
+    <section>
+      <h2>Linear units: factor through a shared base</h2>
+      <p>Length, mass, area, volume, speed, time, data, energy, pressure and angle use a category base unit. To convert, Unitbox first expresses the input in that base and then expresses the same quantity in the target unit. For example, a metre is the length base and a foot is exactly 0.3048 metres.</p>
+      <pre><code>target value = input × source factor ÷ target factor</code></pre>
+      <p>This is also why square and cubic units need their own factors. Area is length squared and volume is length cubed; their relationships cannot reuse an ordinary length factor.</p>
+    </section>
+
+    <section>
+      <h2>Temperature: scale and zero point</h2>
+      <p>Celsius, Fahrenheit and Kelvin do not share the same zero. A temperature conversion therefore uses a slope and an offset rather than a single multiplier. For Celsius to Fahrenheit, multiply by 9/5 and add 32.</p>
+      <p><a href={route(locale, '/reference/temperature-formulas/')}>Read the temperature formula reference →</a></p>
+    </section>
+
+    <section>
+      <h2>Fuel economy: reciprocal measurements</h2>
+      <p>MPG and kilometres per litre measure distance per fuel. Litres per 100 kilometres measures fuel per distance. They move in opposite directions, so Unitbox converts through the appropriate reciprocal model instead of applying a straight factor.</p>
+      <p><a href={route('en', '/scenarios/fuel-economy-converter/')}>Use the fuel-economy guide →</a></p>
+    </section>
+
+    <section>
+      <h2>Categories currently covered</h2>
+      <ul class="category-list">{categories.map(category => <li><strong>{category.name}</strong><span>{category.description}</span><code>{category.kind}</code></li>)}</ul>
+    </section>
+
+    <section class="source-note">
+      <h2>Check the source when the decision matters</h2>
+      <p>Unitbox documents its factors in the <a href="/unit-conversion-factors.json">open conversion dataset</a> and its standard references in the <a href={route(locale, '/methodology/')}>methodology</a>. For regulated, medical, safety-critical or contractual work, verify the governing standard and the source document before relying on a converted result.</p>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .reference-article { max-width:820px; padding:42px 0 90px; }
+  h1 { max-width:12ch; margin:0 0 24px; font-size:clamp(2.8rem,7vw,6rem); line-height:.92; letter-spacing:-.065em; }
+  h2 { margin:62px 0 16px; font-size:clamp(1.8rem,4vw,3.2rem); line-height:.96; letter-spacing:-.05em; }
+  .lead, p { line-height:1.75; }
+  .lead { color:var(--fg-soft); font-size:19px; }
+  a { color:var(--brand); font-weight:700; }
+  pre { margin:24px 0; padding:18px; overflow:auto; background:var(--brand); color:#e6dbc7; }
+  code { font-size:14px; }
+  .category-list { display:grid; gap:2px; margin:24px 0; padding:0; list-style:none; background:var(--brand); }
+  .category-list li { display:grid; grid-template-columns:180px 1fr auto; gap:16px; align-items:baseline; padding:16px; background:#efe5d3; }
+  .category-list span { color:var(--fg-soft); line-height:1.5; }
+  .category-list code { color:var(--brand); font-weight:700; }
+  .source-note { margin-top:72px; padding-top:28px; border-top:4px solid var(--brand); }
+  @media (max-width:650px) { .category-list li { grid-template-columns:1fr; gap:5px; } }
+</style>

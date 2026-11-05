@@ -1,0 +1,83 @@
+---
+import { convert, formatNumber, getUnit } from '~/lib/units';
+
+export function getStaticPaths() {
+  const embeds = [
+    ['meter', 'foot'],
+    ['celsius', 'fahrenheit'],
+    ['kilogram', 'pound'],
+    ['mile', 'kilometer'],
+    ['liter', 'gallon-us'],
+    ['kilobyte', 'kibibyte'],
+  ];
+  return embeds.map(([fromSlug, toSlug]) => ({ params: { from: `${fromSlug}`, to: `${toSlug}` }, props: { fromSlug, toSlug } }));
+}
+
+const { fromSlug, toSlug } = Astro.props as { fromSlug: string; toSlug: string };
+const from = getUnit(fromSlug)!;
+const to = getUnit(toSlug)!;
+const sample = convert(1, fromSlug, toSlug);
+const title = `${from.name} to ${to.name} converter`;
+const fullUrl = `https://unitbox.online/en/${fromSlug}-to-${toSlug}/`;
+const conversion = {
+  kind: from.category === 'temperature' ? 'affine' : 'linear',
+  fromFactor: (from as any).factor ?? 1,
+  fromSlope: (from as any).slope ?? 1,
+  fromOffset: (from as any).offset ?? 0,
+  toFactor: (to as any).factor ?? 1,
+  toSlope: (to as any).slope ?? 1,
+  toOffset: (to as any).offset ?? 0,
+};
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title} · Unitbox</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f5efe5; color: #14213d; }
+      .card { max-width: 620px; margin: 0 auto; padding: 18px; border: 1px solid #d8cdbc; border-radius: 16px; background: #fffaf2; box-shadow: 0 8px 24px rgb(20 33 61 / 10%); }
+      .eyebrow { margin: 0 0 5px; color: #1748b2; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: clamp(1.25rem, 3vw, 1.7rem); letter-spacing: -.03em; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 10px; }
+      label { display: grid; gap: 5px; color: #566178; font-size: 12px; font-weight: 700; }
+      input { width: 100%; min-height: 45px; border: 1px solid #b8c2d3; border-radius: 9px; padding: 9px 11px; color: #14213d; background: #fff; font: inherit; font-size: 1.05rem; }
+      input:focus { outline: 3px solid rgb(23 72 178 / 22%); border-color: #1748b2; }
+      .result { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 13px 14px; border-radius: 10px; background: #e4ebf6; }
+      output { color: #062b8a; font-size: clamp(1.35rem, 4vw, 2rem); font-weight: 800; overflow-wrap: anywhere; }
+      .unit { color: #566178; font-size: .85rem; }
+      .foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; color: #667087; font-size: 12px; }
+      a { color: #1748b2; font-weight: 700; }
+      @media (max-width: 460px) { .grid { grid-template-columns: 1fr; } .foot { display: block; } .foot a { display: inline-block; margin-top: 8px; } }
+      @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">Unitbox embed</p>
+      <h1>{title}</h1>
+      <div class="grid">
+        <label for="amount">Amount ({from.symbol})<input id="amount" type="number" inputmode="decimal" value="1" step="any" /></label>
+        <div class="result"><span class="unit">Result ({to.symbol})</span><output id="result" for="amount">{formatNumber(sample, 8)}</output></div>
+      </div>
+      <div class="foot"><span>1 {from.symbol} = {formatNumber(sample, 8)} {to.symbol}</span><a href={fullUrl} target="_blank" rel="noopener">Open full converter ↗</a></div>
+    </main>
+    <script define:vars={{ conversion }}>
+      const input = document.querySelector('#amount');
+      const output = document.querySelector('#result');
+      const calculate = (value) => conversion.kind === 'affine'
+        ? ((value * conversion.fromSlope + conversion.fromOffset) - conversion.toOffset) / conversion.toSlope
+        : (value * conversion.fromFactor) / conversion.toFactor;
+      input?.addEventListener('input', () => {
+        const value = Number(input.value);
+        if (!Number.isFinite(value)) { output.textContent = '—'; return; }
+        const result = calculate(value);
+        output.textContent = Number.isFinite(result) ? result.toLocaleString('en-US', { maximumFractionDigits: 8 }) : '—';
+      });
+    </script>
+  </body>
+</html>

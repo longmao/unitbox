@@ -72,8 +72,6 @@ const articleSchema = buildArticle({
   <p class="lead">{article.description}</p>
   </header>
 
-  <AdSlot placement="article-top" locale={locale} />
-
   <div class="body">
     {paragraphs.map(p => {
       const segments = formatInline(p);

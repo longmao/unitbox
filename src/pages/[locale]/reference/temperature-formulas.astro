@@ -1,0 +1,57 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { route } from '~/lib/i18n/routes';
+import type { Locale } from '~/lib/i18n';
+
+export async function getStaticPaths() {
+  return [{ params: { locale: 'en' }, props: { locale: 'en' as Locale } }];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const graph = { '@context': 'https://schema.org', '@type': 'Article', headline: 'Temperature conversion formulas explained', description: 'Celsius, Fahrenheit and Kelvin formulas with practical reference points.', url: 'https://unitbox.online/en/reference/temperature-formulas/', author: { '@type': 'Organization', name: 'Unitbox Editorial Team' } };
+---
+<Base title="Temperature conversion formulas explained" description="Celsius, Fahrenheit and Kelvin formulas with practical reference points." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <a href={route(locale, '/reference/')}>Reference</a> › <span>Temperature formulas</span></div>
+  <article class="reference-article">
+    <p class="resource-label">FORMULA REFERENCE</p>
+    <h1>Temperature conversion is not just multiplication.</h1>
+    <p class="lead">Celsius, Fahrenheit, and Kelvin use different zero points. The conversion therefore needs a scale factor and an offset. This is called an affine conversion.</p>
+    <section class="formula-grid">
+      <div><strong>°C → °F</strong><code>°F = (°C × 9/5) + 32</code></div>
+      <div><strong>°F → °C</strong><code>°C = (°F − 32) × 5/9</code></div>
+      <div><strong>°C → K</strong><code>K = °C + 273.15</code></div>
+      <div><strong>K → °C</strong><code>°C = K − 273.15</code></div>
+    </section>
+    <h2>Reference points</h2>
+    <table><thead><tr><th>Celsius</th><th>Fahrenheit</th><th>Kelvin</th><th>Context</th></tr></thead><tbody>
+      <tr><td>−40 °C</td><td>−40 °F</td><td>233.15 K</td><td>The two common scales meet</td></tr>
+      <tr><td>0 °C</td><td>32 °F</td><td>273.15 K</td><td>Water freezes at standard pressure</td></tr>
+      <tr><td>20 °C</td><td>68 °F</td><td>293.15 K</td><td>Typical room-temperature reference</td></tr>
+      <tr><td>100 °C</td><td>212 °F</td><td>373.15 K</td><td>Water boils at standard pressure</td></tr>
+    </tbody></table>
+    <h2>Why Kelvin is different</h2>
+    <p>Kelvin begins at absolute zero, so it does not use the degree symbol and does not have negative values in ordinary thermodynamic calculations. A temperature interval of 1 °C has the same size as an interval of 1 K; only the zero point changes.</p>
+    <p>For quick calculations, open the <a href={route(locale, '/celsius-to-fahrenheit/')}>Celsius to Fahrenheit converter</a> or the <a href={route(locale, '/calculator/')}>universal calculator</a>.</p>
+    <p class="source-note">The formulas and factors are documented in the <a href={route(locale, '/methodology/')}>Unitbox methodology</a>. For laboratory or safety-critical use, verify the pressure and scale assumptions in the relevant standard.</p>
+  </article>
+</Base>
+
+<style>
+  .reference-article { max-width:820px; padding:42px 0 80px; }
+  .resource-label { color:var(--brand); font-size:12px; font-weight:800; letter-spacing:.1em; }
+  h1 { font-size:clamp(2.8rem,7vw,6rem); line-height:.92; letter-spacing:-.065em; margin:16px 0 22px; }
+  h2 { margin:54px 0 14px; font-size:clamp(1.8rem,4vw,3rem); line-height:.95; letter-spacing:-.05em; }
+  .lead, .reference-article p { line-height:1.75; }
+  .lead { color:var(--fg-soft); font-size:19px; }
+  .formula-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:2px; background:var(--brand); margin:32px 0; }
+  .formula-grid div { display:grid; gap:13px; padding:22px; background:#efe5d3; }
+  code { font-size:17px; color:var(--brand); white-space:normal; }
+  table { width:100%; border-collapse:collapse; margin-top:20px; }
+  th { background:var(--bg); color:#fff; text-align:left; padding:13px; }
+  td { padding:13px; border-bottom:1px solid var(--border); }
+  .reference-article a, .source-note a { color:var(--brand); font-weight:700; }
+  .source-note { color:var(--fg-soft); font-size:14px; border-top:1px solid var(--border); /* taste-skill-ignore: source boundary */ padding-top:20px; margin-top:42px; }
+  @media (max-width:600px) { .formula-grid { grid-template-columns:1fr; } table { font-size:13px; } th, td { padding:9px 7px; } }
+</style>

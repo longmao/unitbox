@@ -1,0 +1,112 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { getAllCategories, getAllUnits } from '~/lib/units';
+import { route } from '~/lib/i18n/routes';
+import type { Locale } from '~/lib/i18n';
+
+export async function getStaticPaths() {
+  return [{ params: { locale: 'en' }, props: { locale: 'en' as Locale } }];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const categories = getAllCategories();
+const units = getAllUnits();
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'Unitbox unit conversion factors',
+  description: 'A downloadable reference dataset of units, symbols, categories and conversion factors for developers and educators.',
+  url: 'https://unitbox.online/en/reference/data-units/',
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Unitbox', url: 'https://unitbox.online/en/about/' },
+  distribution: [
+    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://unitbox.online/unit-conversion-factors.json' },
+    { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: 'https://unitbox.online/unit-conversion-factors.csv' },
+  ],
+};
+---
+<Base title="Open unit conversion factors dataset" description="Download Unitbox unit names, symbols and conversion factors as JSON or CSV. Useful for developers, educators and data projects." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+
+  <header class="resource-hero">
+    <h1>Download Unitbox's conversion dataset.</h1>
+    <p class="lead">A transparent reference dataset for applications, teaching materials, spreadsheets, and AI tools. Each record includes the unit's symbol, category, description, and the parameters used by the Unitbox calculator.</p>
+    <div class="actions"><a class="btn" role="button" href="/unit-conversion-factors.json" download>Download JSON</a><a class="btn secondary" role="button" href="/unit-conversion-factors.csv" download>Download CSV</a></div>
+  </header>
+
+  <figure class="dataset-image"><img src="../../../../og-default.png" alt="Unitbox open conversion dataset resource" /><figcaption>Unitbox publishes the same canonical unit data used by its browser converter.</figcaption></figure>
+
+  <section class="resource-grid">
+    <div><strong>{units.length}</strong><span>units in the current dataset</span></div>
+    <div><strong>{categories.length}</strong><span>measurement categories</span></div>
+    <div><strong>CC BY 4.0</strong><span>reuse with attribution</span></div>
+  </section>
+
+  <section class="prose-section">
+    <h2>What is included?</h2>
+    <p>The JSON and CSV downloads contain the same canonical records used to render Unitbox's converter pages. Linear units expose a factor relative to their category base unit. Temperature units expose a slope and offset. Fuel-economy units also include their direction and reciprocal constant because MPG and litres per 100 kilometres are inverse measurements.</p>
+    <p>The dataset is designed for inspection rather than blind copy-and-paste. Check the category, symbol, regional convention, and description before using a value in a safety-critical, legal, medical, or engineering workflow.</p>
+  </section>
+
+  <section class="quick-start" data-ui>
+    <div><h2>Quick start for developers</h2><p>Fetch the JSON endpoint directly, inspect the category and unit fields, then apply the matching linear, affine, or reciprocal model.</p></div>
+    <pre><code>fetch('https://unitbox.online/unit-conversion-factors.json')
+  .then(response =&gt; response.json())
+  .then(dataset =&gt; console.log(dataset.units));</code></pre>
+  </section>
+
+  <section class="table-section">
+    <div class="section-heading"><h2>Categories covered</h2><a href="https://github.com/longmao/unitbox" rel="noopener">View source ↗</a></div>
+    <div class="category-table">
+      {categories.map(category => <div><strong>{category.name}</strong><span>{category.description}</span><small>{units.filter(unit => unit.category === category.slug).length} units · base {category.baseSymbol}</small></div>)}
+    </div>
+  </section>
+
+  <section class="prose-section source-note">
+    <h2>Method and attribution</h2>
+    <p>Unitbox maintains the data in an open-source repository and documents the calculation model in its <a href={route(locale, '/methodology/')}>conversion methodology</a>. For standards work, verify the relevant primary source, including NIST, BIPM, IEC, or the governing specification for your field.</p>
+    <p>You may link to this page when publishing a tutorial, spreadsheet, classroom resource, or open-source project that uses the dataset. Please keep the dataset version and attribution with your implementation.</p>
+  </section>
+</Base>
+
+<style>
+  .resource-hero { max-width: 900px; padding: 42px 0 64px; }
+  h1 { max-width: 850px; font-size: clamp(2.8rem, 7vw, 6.5rem); line-height: .92; letter-spacing: -.065em; margin: 16px 0 24px; }
+  .lead { max-width: 720px; color: var(--fg-soft); font-size: 19px; line-height: 1.6; }
+  .resource-hero a, .prose-section a, .table-section a { color:var(--brand); }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+  .btn { display:inline-block; padding:13px 17px; background:#062b8a; color:#fff; font-weight:700; }
+  .btn:hover { color:#fff; text-decoration:none; transform:translateY(-2px); }
+  .btn.secondary { background:#d7dfec; color:#062b8a; }
+  .dataset-image { margin:0 0 76px; max-width:900px; }
+  .dataset-image img { display:block; width:100%; height:auto; border:2px solid var(--brand); }
+  .dataset-image figcaption { margin-top:10px; color:var(--fg-soft); font-size:13px; }
+  .resource-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--brand); margin:0 0 84px; }
+  .resource-grid div { display:grid; gap:8px; min-height:140px; padding:24px; background:#efe5d3; }
+  .resource-grid strong { font-size:30px; color:var(--brand); }
+  .resource-grid span { color:var(--fg-soft); }
+  .prose-section { max-width:760px; margin:0 0 72px; }
+  .prose-section h2, .table-section h2 { font-size:clamp(2rem,4vw,3.7rem); line-height:.95; letter-spacing:-.05em; margin:0 0 18px; }
+  .prose-section p { line-height:1.75; }
+  .section-heading { display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:22px; }
+  .section-heading a { color:var(--brand); font-weight:700; }
+  .category-table { display:grid; grid-template-columns:repeat(2,1fr); gap:2px; background:var(--brand); }
+  .category-table div { display:grid; gap:8px; padding:20px; background:#efe5d3; }
+  .category-table span { color:var(--fg-soft); line-height:1.5; }
+  .category-table small { color:var(--brand); font-weight:700; }
+  .source-note { border-top:4px solid var(--brand); padding-top:28px; margin-top:76px; }
+  .quick-start { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin:72px 0; background:var(--brand); }
+  .quick-start > * { margin:0; padding:26px; background:#d7dfec; }
+  .quick-start h2 { margin:0 0 12px; font-size:clamp(1.8rem,4vw,3rem); line-height:.95; letter-spacing:-.05em; }
+  .quick-start p { line-height:1.6; }
+  .quick-start pre { overflow:auto; background:#062b8a; color:#fff; line-height:1.6; }
+  .quick-start code { font-size:13px; }
+  .resource-hero, .dataset-image, .resource-grid, .prose-section, .quick-start, .table-section { animation: resource-rise .55s ease both; }
+  .dataset-image { animation-delay:.08s; }
+  .resource-grid { animation-delay:.14s; }
+  .quick-start { animation-delay:.2s; }
+  @keyframes resource-rise { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { .resource-hero, .dataset-image, .resource-grid, .prose-section, .quick-start, .table-section { animation:none; } }
+  @media (max-width:700px) { .resource-grid, .category-table, .quick-start { grid-template-columns:1fr; } .section-heading { display:block; } .section-heading a { display:inline-block; margin-top:10px; } }
+</style>

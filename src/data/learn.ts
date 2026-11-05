@@ -118,7 +118,7 @@ $$ F = C \\times \\frac{9}{5} + 32 $$
 
 That term +32 is the offset (the zero points differ). You can't convert temperature correctly with a single multiplication factor.
 
-Convert on this site: [celsius to fahrenheit](/celsius-to-fahrenheit).`,
+Convert on this site: [celsius to fahrenheit](/en/celsius-to-fahrenheit/).`,
     relatedPairs: ['celsius-to-fahrenheit', 'fahrenheit-to-celsius', 'celsius-to-kelvin', 'kelvin-to-celsius', 'fahrenheit-to-kelvin', 'rankine-to-celsius', 'reaumur-to-celsius'],
   },
 

@@ -39,6 +39,7 @@ const navAbout = t('nav.about', locale);
 
 <h1>{title}</h1>
 <p class="muted">{description}</p>
+<p class="muted small">Last reviewed: November 5, 2026.</p>
 
 <h2>{t('privacy.s1.h', locale)}</h2>
 <p>{t('privacy.s1.p', locale)}</p>
@@ -56,9 +57,17 @@ const navAbout = t('nav.about', locale);
   <li>{t('privacy.s3.li2', locale)}</li>
 </ul>
 
+<h2>Advertising, cookies, and consent</h2>
+<p>When Google AdSense is enabled, Google and its advertising partners may use cookies, IP addresses, web beacons, or similar technologies to serve and measure ads. Unitbox does not use conversion inputs to build advertising audiences, and ads are not shown inside the calculator interaction itself.</p>
+<p>Where consent is required by law, Unitbox will request it before serving personalized advertising. Visitors can also review <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites and apps that use its services</a>.</p>
+
 <h2>{t('privacy.s4.h', locale)}</h2>
 <p>{t('privacy.s4.p', locale)} For Google advertising disclosures, see <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">How Google uses information from sites or apps that use its services</a>.</p>
 
 <FaqBlock items={faq} />
 
 </Base>
+
+<style>
+  .small { font-size: 14px; }
+</style>

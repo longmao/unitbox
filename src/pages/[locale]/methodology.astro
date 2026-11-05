@@ -38,6 +38,7 @@ const navAbout = t('nav.about', locale);
 
 <h1>{title}</h1>
 <p class="muted">{description}</p>
+<p class="muted small">Last reviewed: November 5, 2026. The calculator is maintained from the same unit dataset published in the reference section.</p>
 
 <h2>{t('methodology.s1.h', locale)}</h2>
 <p>{t('methodology.s1.p', locale)}</p>
@@ -54,6 +55,14 @@ const navAbout = t('nav.about', locale);
 <h2>{t('methodology.s5.h', locale)}</h2>
 <p>{t('methodology.s5.p', locale)}</p>
 
+<h2>Sources and review</h2>
+<p>For standard linear factors, Unitbox follows the <a href="https://www.nist.gov/pml/special-publication-811" rel="noopener">NIST Guide for the Use of the International System of Units</a> and the <a href="https://www.bipm.org/en/publications/si-brochure" rel="noopener">BIPM SI Brochure</a>. Binary prefixes follow IEC 80000-13. The public <a href="/unit-conversion-factors.json">conversion dataset</a> exposes the values used by the calculator for inspection and reuse.</p>
+<p>Every change to a factor, formula, or unit description should be reviewed against its source and made in the shared dataset so the calculator, pair pages, and reference material remain consistent.</p>
+
 <FaqBlock items={faq} />
 
 </Base>
+
+<style>
+  .small { font-size:14px; }
+</style>

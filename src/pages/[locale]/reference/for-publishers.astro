@@ -1,0 +1,53 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { route } from '~/lib/i18n/routes';
+import { LOCALES, type Locale } from '~/lib/i18n';
+
+export function getStaticPaths() {
+  return LOCALES.filter(locale => locale === 'en').map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Free measurement resources for publishers',
+  description: 'Open datasets, embeds and reference material for people teaching or explaining measurement.',
+  url: 'https://unitbox.online/en/reference/for-publishers/',
+};
+---
+<Base title="Free measurement resources for publishers" description="Open datasets, embeds and reference material for people teaching or explaining measurement." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <a href={route(locale, '/reference/')}>Reference</a> › <span>For publishers</span></div>
+  <article class="publisher-guide">
+    <p class="eyebrow">OPEN RESOURCES</p>
+    <h1>Useful measurement references, ready to reuse.</h1>
+    <p class="lead">Unitbox is an independent browser-based conversion tool. These resources are designed for educators, developers, spreadsheet authors and technical writers who need a transparent calculation they can point readers to.</p>
+
+    <section class="resource-block"><span class="number">01</span><div><h2>Download the data</h2><p>The conversion-factor dataset is available as readable JSON and CSV. It includes unit names, symbols, categories, factors and notes so a reader can reproduce a result or build a small local tool.</p><p><a href="/unit-conversion-factors.json">JSON dataset ↗</a> <a href="/unit-conversion-factors.csv">CSV dataset ↗</a> <a href={route(locale, '/reference/data-units/')}>Dataset notes ↗</a></p></div></section>
+    <section class="resource-block"><span class="number">02</span><div><h2>Embed a calculator</h2><p>Use a focused converter inside a lesson or documentation page. The embed is responsive, keyboard-friendly and intentionally free of advertising.</p><p><a href={route(locale, '/reference/embed/')}>Embed instructions ↗</a></p></div></section>
+    <section class="resource-block"><span class="number">03</span><div><h2>Cite the exact answer</h2><p>For an explanation, link to the relevant conversion page or the formulas in the reference section. A good citation says what was converted, which direction was used and when the page was checked.</p><p><a href={route(locale, '/reference/metric-imperial/')}>Metric / imperial guide ↗</a> <a href={route(locale, '/reference/temperature-formulas/')}>Temperature formulas ↗</a></p></div></section>
+
+    <aside class="citation"><h2>Suggested attribution</h2><p>“Conversion calculated with <a href="https://unitbox.online/">Unitbox</a>, an open browser-based unit conversion tool.”</p><p class="small">Please keep the attribution accurate. Unitbox is not affiliated with a government, standards body or any brand mentioned in a conversion example.</p></aside>
+    <p class="note">Building something useful with these resources? <a href="https://github.com/longmao/unitbox/issues" target="_blank" rel="noopener">Share it with the project</a>. We may feature genuinely useful educational or developer projects, but we do not exchange links or guarantee placement.</p>
+  </article>
+</Base>
+
+<style>
+  .publisher-guide { max-width: 900px; padding: 42px 0 90px; }
+  .eyebrow { color: var(--brand); font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+  h1 { max-width: 12ch; margin: 16px 0 24px; font-size: clamp(3rem, 8vw, 6rem); line-height: .92; letter-spacing: -.065em; }
+  h2 { margin: 0 0 12px; font-size: clamp(1.7rem, 3vw, 2.7rem); line-height: 1; letter-spacing: -.045em; }
+  .lead { max-width: 62ch; color: var(--fg-soft); font-size: 20px; line-height: 1.6; }
+  .publisher-guide p { line-height: 1.7; }
+  .publisher-guide a { color: var(--brand); font-weight: 700; }
+  .resource-block { display: grid; grid-template-columns: 70px 1fr; gap: 20px; margin-top: 56px; padding-top: 22px; border-top: 2px solid var(--brand); }
+  .number { color: var(--brand); font-size: 13px; font-weight: 800; letter-spacing: .08em; }
+  .resource-block p { color: var(--fg-soft); }
+  .citation { margin-top: 70px; padding: 28px; background: #d7dfec; }
+  .citation h2 { font-size: 1.7rem; }
+  .citation .small { color: var(--fg-soft); font-size: 13px; }
+  .note { margin-top: 38px; padding-top: 24px; border-top: 2px solid var(--brand); }
+  @media (max-width: 600px) { .resource-block { grid-template-columns: 1fr; gap: 8px; } }
+</style>

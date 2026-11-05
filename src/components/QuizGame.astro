@@ -1,6 +1,5 @@
 ---
 import type { QuizQuestion } from '~/data/quiz';
-import AdSlot from '~/components/AdSlot.astro';
 
 interface Props {
   questions: QuizQuestion[];
@@ -66,8 +65,6 @@ const { questions } = Astro.props;
     <p class="game-note">Five questions. One daily score. No account needed.</p>
   </aside>
 </section>
-
-<AdSlot placement="after-result" />
 
 <script define:vars={{ questions }}>
   const root = document.querySelector('[data-quiz-game]');

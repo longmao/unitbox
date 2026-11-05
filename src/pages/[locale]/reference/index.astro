@@ -43,6 +43,18 @@ const graph = {
     <a class="reference-feature" href={route(locale, '/faq/')}><span>FAQ</span><h2>Common questions, answered directly</h2><p>Resolve ambiguity around metric, imperial, binary and reciprocal units.</p><strong>Browse FAQ ↗</strong></a>
   </section>
 
+  <section class="reference-map resources-map">
+    <a class="reference-feature" href={route('en', '/reference/data-units/')}><span>DATASET</span><h2>Open conversion factors</h2><p>Download the unit data as JSON or CSV for apps, spreadsheets, teaching and AI tools.</p><strong>Download the dataset ↗</strong></a>
+    <a class="reference-feature" href={route('en', '/reference/metric-imperial/')}><span>CHEAT SHEET</span><h2>Metric vs Imperial</h2><p>A practical reference for the conversions people use most often.</p><strong>Open reference ↗</strong></a>
+    <a class="reference-feature" href={route('en', '/reference/temperature-formulas/')}><span>FORMULAS</span><h2>Temperature formulas</h2><p>Understand the scale factor and offset behind Celsius, Fahrenheit and Kelvin.</p><strong>Read formulas ↗</strong></a>
+  </section>
+
+  <section class="reference-map resources-map">
+    <a class="reference-feature" href={route('en', '/reference/embed/')}><span>EMBED</span><h2>Put a converter on your site</h2><p>Add a small, accessible Unitbox converter to a tutorial, classroom page or documentation site.</p><strong>View embed options ↗</strong></a>
+    <a class="reference-feature" href={route('en', '/reference/for-publishers/')}><span>FOR PUBLISHERS</span><h2>Free measurement resources</h2><p>Reusable datasets, formulas and citation guidance for educators, developers and technical writers.</p><strong>See publisher resources ↗</strong></a>
+    <a class="reference-feature" href={route('en', '/reference/conversion-factors/')}><span>METHOD</span><h2>How conversion factors work</h2><p>See why linear units, temperature scales and fuel economy need different calculation models.</p><strong>Read calculation method ↗</strong></a>
+  </section>
+
   <section class="featured-reference">
     <div class="section-heading"><h2>Featured reference</h2><a href={route(locale, '/articles/')}>All articles ↗</a></div>
     <div class="reference-list">
@@ -62,6 +74,7 @@ const graph = {
   .reference-intro h1 { max-width:10ch; font-size:clamp(3.4rem,8vw,7rem); line-height:.9; letter-spacing:-.065em; margin:0 0 22px; }
   .reference-intro p { max-width:52ch; color:var(--fg-soft); font-size:19px; }
   .reference-map { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:2px; background:var(--brand); }
+  .resources-map { grid-template-columns:repeat(3,1fr); margin-top:2px; }
   .reference-feature { min-height:300px; display:flex; flex-direction:column; padding:28px; background:#efe5d3; color:var(--fg); }
   .reference-feature:first-child { background:var(--brand); color:#e6dbc7; }
   .reference-feature:hover { text-decoration:none; transform:translateY(-4px); }

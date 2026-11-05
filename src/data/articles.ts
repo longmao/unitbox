@@ -115,7 +115,7 @@ Today, knots are used for:
 - **Marine navigation** — boats, ships, sea state forecasts.
 - **Aviation** — air traffic control, flight plans. Most airlines display airspeed in knots on the cockpit displays, even though passengers see km/h on the seat-back screen.
 
-Converting knots to mph: 1 kn = 1.15078 mph. To km/h: 1 kn = 1.852 km/h. To m/s: 1 kn = 0.5144 m/s. The conversion page ([knot to mph](/knot-to-mile-per-hour)) gives instant values across 6 units.`,
+Converting knots to mph: 1 kn = 1.15078 mph. To km/h: 1 kn = 1.852 km/h. To m/s: 1 kn = 0.5144 m/s. The conversion page ([knot to mph](/en/knot-to-mile-per-hour/)) gives instant values across 6 units.`,
   },
 
   {

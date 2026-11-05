@@ -12,10 +12,10 @@ export NVM_DIR="$HOME/.nvm"
 NODE_BIN=$(ls -1d "$NVM_DIR"/versions/node/*/bin 2>/dev/null | tail -1)
 [ -n "$NODE_BIN" ] && export PATH="$NODE_BIN:$PATH"
 
-ROOT=/Users/vincent/work/experimental/unit-now
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DATE=$(date +%Y-%m-%d)
 TS=$(date +%H:%M:%S)
-LOG=/Users/vincent/work/experimental/unit-now/.observe/${DATE}/loop-${TS}.log
+LOG="$ROOT/.observe/${DATE}/loop-${TS}.log"
 mkdir -p "$(dirname "$LOG")"
 
 cd "$ROOT" || exit 1

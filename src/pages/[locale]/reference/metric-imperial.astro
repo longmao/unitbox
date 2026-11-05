@@ -1,0 +1,56 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { route } from '~/lib/i18n/routes';
+import type { Locale } from '~/lib/i18n';
+import { convert } from '~/lib/units';
+
+export async function getStaticPaths() {
+  return [{ params: { locale: 'en' }, props: { locale: 'en' as Locale } }];
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const rows: Array<[string, number, string, string]> = [
+  ['1 inch', convert(1, 'inch', 'centimeter') ?? 0, 'cm', '/inch-to-centimeter/'],
+  ['1 foot', convert(1, 'foot', 'meter') ?? 0, 'm', '/foot-to-meter/'],
+  ['1 mile', convert(1, 'mile', 'kilometer') ?? 0, 'km', '/mile-to-kilometer/'],
+  ['1 pound', convert(1, 'pound', 'kilogram') ?? 0, 'kg', '/pound-to-kilogram/'],
+  ['1 ounce', convert(1, 'ounce', 'gram') ?? 0, 'g', '/ounce-to-gram/'],
+  ['1 US gallon', convert(1, 'gallon-us', 'liter') ?? 0, 'L', '/gallon-us-to-liter/'],
+];
+const graph = { '@context': 'https://schema.org', '@type': 'Article', headline: 'Metric vs Imperial conversion reference', description: 'A practical reference for common metric and US customary conversions.', url: 'https://unitbox.online/en/reference/metric-imperial/', author: { '@type': 'Organization', name: 'Unitbox Editorial Team' } };
+---
+<Base title="Metric vs Imperial conversion reference" description="A practical metric and imperial conversion reference for length, mass and volume." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <a href={route(locale, '/reference/')}>Reference</a> › <span>Metric vs Imperial</span></div>
+  <article class="reference-article">
+    <p class="resource-label">PRINTABLE REFERENCE</p>
+    <h1>Metric vs Imperial: the conversions people actually need.</h1>
+    <p class="lead">Metric uses powers of ten. US customary units use historical relationships such as 12 inches to a foot and 16 ounces to a pound. The two systems describe the same physical quantities, but the regional convention matters.</p>
+    <div class="callout"><strong>Quick rule:</strong> choose the unit used by the document, instrument, recipe, road sign, or customer you are working with. Do not silently assume that “gallon”, “ton”, or “ounce” has one universal meaning.</div>
+    <h2>Common reference values</h2>
+    <table><thead><tr><th>Starting value</th><th>Exact conversion</th><th>Open tool</th></tr></thead><tbody>{rows.map(([label, value, symbol, href]) => <tr><td>{label}</td><td><strong>{value}</strong> {symbol}</td><td><a href={route(locale, href)}>Calculate ↗</a></td></tr>)}</tbody></table>
+    <h2>Where confusion usually happens</h2>
+    <p>The word “ounce” can describe mass or fluid volume. A US gallon is different from an Imperial gallon. A short ton is different from a metric tonne. In technical work, include the region or symbol in the label instead of relying on a shortened word.</p>
+    <p>Unitbox keeps these variants as separate units. That is why the converter asks you to select a specific unit rather than guessing from an ambiguous alias.</p>
+    <h2>Continue with the calculator</h2>
+    <p>Use the <a href={route(locale, '/calculator/')}>universal unit calculator</a> when your pair is not listed above, or browse the <a href={route(locale, '/category/all/')}>full unit catalogue</a>.</p>
+    <p class="source-note">Conversion factors are maintained in the <a href="/unit-conversion-factors.json">open Unitbox dataset</a>. For regulated or safety-critical work, check the governing standard.</p>
+  </article>
+</Base>
+
+<style>
+  .reference-article { max-width:820px; padding:42px 0 80px; }
+  .resource-label { color:var(--brand); font-size:12px; font-weight:800; letter-spacing:.1em; }
+  h1 { font-size:clamp(2.8rem,7vw,6rem); line-height:.92; letter-spacing:-.065em; margin:16px 0 22px; }
+  h2 { margin:54px 0 14px; font-size:clamp(1.8rem,4vw,3rem); line-height:.95; letter-spacing:-.05em; }
+  .lead, .reference-article p { line-height:1.75; }
+  .lead { color:var(--fg-soft); font-size:19px; }
+  .callout { margin:30px 0; padding:20px; border-left:5px solid var(--brand); background:#efe5d3; line-height:1.6; }
+  table { width:100%; border-collapse:collapse; margin-top:20px; }
+  th { background:var(--bg); color:#fff; text-align:left; padding:13px; }
+  td { padding:13px; border-bottom:1px solid var(--border); }
+  td a, .source-note a { color:var(--brand); font-weight:700; }
+  .source-note { color:var(--fg-soft); font-size:14px; border-top:1px solid var(--border); /* taste-skill-ignore: source boundary */ padding-top:20px; margin-top:42px; }
+  @media (max-width:600px) { table { font-size:14px; } th, td { padding:10px 8px; } }
+</style>

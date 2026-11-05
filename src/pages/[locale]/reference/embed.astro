@@ -1,0 +1,82 @@
+---
+import Base from '~/layouts/Base.astro';
+import JsonLd from '~/components/JsonLd.astro';
+import { route } from '~/lib/i18n/routes';
+import { LOCALES, type Locale } from '~/lib/i18n';
+
+export function getStaticPaths() {
+  return LOCALES.filter(locale => locale === 'en').map(locale => ({ params: { locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const graph = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: 'Embed a free unit converter',
+  description: 'Add an accessible Unitbox conversion widget to documentation, lessons and technical articles.',
+  url: 'https://unitbox.online/en/reference/embed/',
+  author: { '@type': 'Organization', name: 'Unitbox Editorial Team' },
+};
+const examples = [
+  ['Meter to foot', 'meter-to-foot'],
+  ['Celsius to Fahrenheit', 'celsius-to-fahrenheit'],
+  ['Kilogram to pound', 'kilogram-to-pound'],
+  ['Mile to kilometer', 'mile-to-kilometer'],
+  ['Liter to US gallon', 'liter-to-gallon-us'],
+  ['Kilobyte to kibibyte', 'kilobyte-to-kibibyte'],
+];
+---
+<Base title="Embed a free unit converter" description="Add an accessible Unitbox conversion widget to documentation, lessons and technical articles." locale={locale} altLocales={['en']}>
+  <Fragment slot="head"><JsonLd data={graph} /></Fragment>
+  <div class="breadcrumbs"><a href={route(locale, '/')}>Home</a> › <a href={route(locale, '/reference/')}>Reference</a> › <span>Embed</span></div>
+  <article class="embed-guide">
+    <p class="eyebrow">FOR DEVELOPERS & EDUCATORS</p>
+    <h1>Put a useful converter where the question is asked.</h1>
+    <p class="lead">Unitbox embeds are small, responsive and free to use in tutorials, classroom pages, documentation and technical articles. They do not require an API key and they do not show advertising.</p>
+
+    <h2>Copy one iframe</h2>
+    <p>Choose a supported pair below, then paste the snippet into a page that accepts HTML. Keep the visible Unitbox credit so readers can verify the calculation and open the full reference tool.</p>
+    <pre><code>&lt;iframe
+  src="https://unitbox.online/embed/meter-to-foot/"
+  title="Meter to foot converter"
+  loading="lazy"
+  width="100%"
+  height="220"
+  style="border:0"
+  referrerpolicy="strict-origin-when-cross-origin"&gt;
+&lt;/iframe&gt;</code></pre>
+
+    <h2>Supported embeds</h2>
+    <div class="embed-list">
+      {examples.map(([label, slug]) => (
+        <a href={`/embed/${slug}/`} target="_blank" rel="noopener"><strong>{label}</strong><code>/embed/{slug}/</code><span>Open preview ↗</span></a>
+      ))}
+    </div>
+
+    <h2>Attribution and limits</h2>
+    <ul>
+      <li>Use the widget for helpful, relevant content; do not place it on doorway pages or pages made only to generate links.</li>
+      <li>Do not modify the result, hide the Unitbox link or frame the widget as an official government, standards-body or brand calculator.</li>
+      <li>For bulk integrations, download the <a href="/unit-conversion-factors.json">open conversion dataset</a> or read the <a href={route(locale, '/api-docs/')}>API documentation</a>.</li>
+    </ul>
+    <p class="note">Need another pair? <a href={route(locale, '/api-docs/')}>Read the API documentation</a> or open a request in the <a href="https://github.com/longmao/unitbox/issues" target="_blank" rel="noopener">public repository</a>.</p>
+  </article>
+</Base>
+
+<style>
+  .embed-guide { max-width: 820px; padding: 42px 0 90px; }
+  .eyebrow { color: var(--brand); font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+  h1 { max-width: 12ch; margin: 16px 0 24px; font-size: clamp(3rem, 8vw, 6rem); line-height: .92; letter-spacing: -.065em; }
+  h2 { margin: 58px 0 14px; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1; letter-spacing: -.045em; }
+  .lead { max-width: 62ch; color: var(--fg-soft); font-size: 20px; line-height: 1.6; }
+  .embed-guide p, .embed-guide li { line-height: 1.7; }
+  .embed-guide a { color: var(--brand); font-weight: 700; }
+  pre { overflow-x: auto; margin: 22px 0; padding: 22px; border: 1px solid #b8c2d3; border-radius: 12px; background: #14213d; color: #e6dbc7; font-size: 13px; line-height: 1.6; }
+  .embed-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: var(--brand); }
+  .embed-list a { display: grid; gap: 8px; padding: 18px; background: #efe5d3; color: var(--fg); }
+  .embed-list a:hover { background: #d7dfec; text-decoration: none; }
+  .embed-list code { color: var(--fg-soft); font-size: 12px; }
+  .embed-list span { color: var(--brand); font-size: 12px; }
+  .note { margin-top: 38px; padding-top: 24px; border-top: 2px solid var(--brand); }
+  @media (max-width: 650px) { .embed-list { grid-template-columns: 1fr; } }
+</style>

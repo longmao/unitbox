@@ -9,6 +9,7 @@ import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 import AdSlot from '~/components/AdSlot.astro';
+import { getPriorityConversionGuide } from '~/data/priority-conversions';
 
 export async function getStaticPaths() {
   const popular = getPopularPairs();
@@ -112,6 +113,7 @@ const useCase = from.category === 'length'
   : from.category === 'data'
   ? `Check whether a value uses decimal prefixes such as KB or binary prefixes such as KiB before comparing storage or memory figures.`
   : `The right unit depends on the convention used by your industry, country, instrument, or source document.`;
+const priorityGuide = getPriorityConversionGuide(fromSlug, toSlug);
 ---
 <Base title={title} description={subtitle} locale={locale}>
   <Fragment slot="head">
@@ -131,8 +133,6 @@ const useCase = from.category === 'length'
 <div id="converter">
   <ConverterWidget fromSlug={fromSlug} toSlug={toSlug} mode="full" defaultValue={1} />
 </div>
-
-<AdSlot placement="after-result" locale={locale} />
 
 <section class="section">
   <h2 class="section-title">{tableTitle}</h2>
@@ -178,6 +178,18 @@ const useCase = from.category === 'length'
   <p class="muted small">Unit definitions and conversion factors are maintained in the <a href={route(locale, '/methodology/')}>Unitbox methodology</a>. Last reviewed with the current conversion dataset.</p>
 </section>
 
+{priorityGuide && <section class="section priority-guide">
+  <h2 class="section-title">{priorityGuide.title}</h2>
+  {priorityGuide.paragraphs.map(paragraph => <p>{paragraph}</p>)}
+  <aside class="pitfall"><strong>Check before you use the result:</strong> {priorityGuide.pitfall}</aside>
+  <div class="guide-links">
+    <a href={route('en', priorityGuide.reference.href)}>{priorityGuide.reference.label} →</a>
+    {priorityGuide.scenario && <a href={route('en', priorityGuide.scenario.href)}>{priorityGuide.scenario.label} →</a>}
+  </div>
+</section>}
+
+<AdSlot placement="before-faq" locale={locale} />
+
 <section class="section">
   <h2 class="section-title">{faqTitle}</h2>
   <FaqBlock items={faq} />
@@ -208,8 +220,13 @@ const useCase = from.category === 'length'
   .editorial-block { max-width: 820px; }
   .editorial-block p { line-height: 1.7; }
   .editorial-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
-  .editorial-facts div { display: grid; gap: 5px; padding: 14px; border: 1px solid var(--border); background: var(--bg-soft); }
+  .editorial-facts div { display: grid; gap: 5px; padding: 14px; background: var(--bg-soft); }
   .editorial-facts span { color: var(--fg-soft); font-size: 13px; line-height: 1.45; }
+  .priority-guide { max-width: 820px; }
+  .priority-guide p { line-height: 1.75; }
+  .pitfall { margin: 22px 0; padding: 18px 20px; background: var(--brand-soft); color: var(--fg); line-height: 1.6; }
+  .guide-links { display: flex; flex-wrap: wrap; gap: 10px 24px; }
+  .guide-links a { color: var(--brand); font-weight: 700; }
   @media (max-width: 700px) { .editorial-facts { grid-template-columns: 1fr; } }
   @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
 </style>
