@@ -1,9 +1,11 @@
-// Locale registry for unitbox. Each locale is an independent static-rendered
-// HTML tree under `/[locale]/`. Same URL, different content surface so
-// Google crawlers (no JS) see locale-correct <html lang> + hreflang.
-
-export const LOCALES = ['en', 'zh-hant', 'zh-hans', 'ja', 'ko'] as const;
-export type Locale = typeof LOCALES[number];
+// Unitbox is deliberately English-first while its editorial library is being
+// built. The old locale trees contained English template copy behind non-English
+// URLs, which is misleading to visitors and creates duplicate/thin pages.
+// Keep the full locale type for the translation helpers, but publish only the
+// language whose product and editorial pages are currently maintained.
+const ALL_LOCALES = ['en', 'zh-hant', 'zh-hans', 'ja', 'ko'] as const;
+export type Locale = typeof ALL_LOCALES[number];
+export const LOCALES: readonly Locale[] = ['en'];
 
 export const DEFAULT_LOCALE: Locale = 'en';
 
@@ -44,5 +46,5 @@ export const IN_LANGUAGE: Record<Locale, string> = {
 };
 
 export function isLocale(s: string | null | undefined): s is Locale {
-  return typeof s === 'string' && (LOCALES as readonly string[]).includes(s);
+  return typeof s === 'string' && (ALL_LOCALES as readonly string[]).includes(s);
 }

@@ -10,7 +10,7 @@ import path from 'path';
 const DIST = path.join(process.cwd(), 'dist');
 
 describe('PNG compressor page', () => {
-  const locales = ['en', 'zh-hant', 'zh-hans', 'ja', 'ko'] as const;
+  const locales = ['en'] as const;
 
   for (const locale of locales) {
     it(`renders at /${locale}/tools/png-compressor/`, () => {
@@ -57,11 +57,11 @@ describe('PNG compressor page', () => {
       expect(html).toContain('id="png-input"');
     });
 
-    it(`/${locale}/ has 6 hreflang alternate tags (5 locales + x-default)`, () => {
+    it(`/${locale}/ declares one maintained locale plus x-default`, () => {
       const file = path.join(DIST, locale, 'tools', 'png-compressor', 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       const hreflangCount = (html.match(/rel="alternate" hreflang="/g) ?? []).length;
-      expect(hreflangCount).toBe(6);
+      expect(hreflangCount).toBe(2);
     });
 
     it(`/${locale}/ has the i18n JSON for the client component`, () => {
@@ -89,42 +89,22 @@ describe('PNG compressor page', () => {
     });
   }
 
-  it('sitemap includes all 5 PNG compressor URLs', () => {
+  it('keeps the off-topic utility out of the public sitemap', () => {
     const sitemap = fs.readFileSync(path.join(DIST, 'sitemap-0.xml'), 'utf8');
-    expect(sitemap).toContain('https://unitbox.online/en/tools/png-compressor/');
-    expect(sitemap).toContain('https://unitbox.online/zh-hant/tools/png-compressor/');
-    expect(sitemap).toContain('https://unitbox.online/zh-hans/tools/png-compressor/');
-    expect(sitemap).toContain('https://unitbox.online/ja/tools/png-compressor/');
-    expect(sitemap).toContain('https://unitbox.online/ko/tools/png-compressor/');
+    expect(sitemap).not.toContain('https://unitbox.online/en/tools/png-compressor/');
   });
 
-  it('PNG compressor link is in the footer Products list of all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
-      const file = path.join(DIST, locale, 'index.html');
-      const html = fs.readFileSync(file, 'utf8');
-      expect(html, `${locale} home should link to PNG compressor`).toContain(`/${locale}/tools/png-compressor`);
-    }
+  it('does not promote PNG compression from the converter home page', () => {
+    const html = fs.readFileSync(path.join(DIST, 'en', 'index.html'), 'utf8');
+    expect(html).not.toContain('/en/tools/png-compressor');
   });
 
-  it('home page has 3 scenario-focused hero chips in all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
-      const file = path.join(DIST, locale, 'index.html');
-      const html = fs.readFileSync(file, 'utf8');
-      const chips = (html.match(/<a [^>]*class="hero-chip/g) ?? []).length;
-      expect(chips, `${locale} home should have 3 hero chips`).toBe(3);
-      expect(html).toContain('/category/data');
-      expect(html).toContain('/category/fuel-economy');
-    }
-  });
-
-  it('home page has Tools section in all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
-      const file = path.join(DIST, locale, 'index.html');
-      const html = fs.readFileSync(file, 'utf8');
-      expect(html).toContain('tools-section');
-      expect(html).toContain('tool-card-png');
-      expect(html).toContain('tool-card');
-    }
+  it('home page keeps three scenario-focused hero chips', () => {
+    const html = fs.readFileSync(path.join(DIST, 'en', 'index.html'), 'utf8');
+    const chips = (html.match(/<a [^>]*class="hero-chip/g) ?? []).length;
+    expect(chips).toBe(3);
+    expect(html).toContain('/en/category/data');
+    expect(html).toContain('/en/category/fuel-economy');
   });
 
   it('SoftwareApplication schema has price=0 and isAccessibleForFree', () => {

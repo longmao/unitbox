@@ -4,6 +4,7 @@ import FaqBlock from '~/components/FaqBlock.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import { compareTopics } from '~/data/compare';
 import { formatInline } from '~/lib/format';
+import { isCuratedPair } from '~/lib/units';
 import { LOCALES, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
@@ -61,12 +62,12 @@ const recommended = [
   </header>
 
   <section class="cards">
-    <a class="card cmp-card" href={route(locale, `/${topic.pairA.url}/`)}>
+    <a class="card cmp-card" href={isCuratedPair(topic.pairA.from, topic.pairA.to) ? route(locale, `/${topic.pairA.url}/`) : route(locale, '/calculator/')}>
       <div class="cat">{optionALabel}</div>
       <h2>{topic.pairA.summary}</h2>
       <div class="ar">{openALabel}</div>
     </a>
-    <a class="card cmp-card" href={route(locale, `/${topic.pairB.url}/`)}>
+    <a class="card cmp-card" href={isCuratedPair(topic.pairB.from, topic.pairB.to) ? route(locale, `/${topic.pairB.url}/`) : route(locale, '/calculator/')}>
       <div class="cat">{optionBLabel}</div>
       <h2>{topic.pairB.summary}</h2>
       <div class="ar">{openBLabel}</div>

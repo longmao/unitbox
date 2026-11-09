@@ -4,12 +4,10 @@ import ConverterWidget from '~/components/ConverterWidget.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import ArticlesBlock from '~/components/ArticlesBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllCategories, getUnitsByCategory, getUnit } from '~/lib/units';
-import { SITE_COVERAGE, SITE_STATS } from '~/lib/site';
-import AdSlot from '~/components/AdSlot.astro';
+import { getAllCategories, getUnitsByCategory, getUnit, getCuratedPairs } from '~/lib/units';
 import { articles } from '~/data/articles';
 import { buildFaqPage } from '~/lib/seo';
-import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
+import { LOCALES, IN_LANGUAGE, t, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 import { scenarios, featuredScenarioSlugs } from '~/data/scenarios';
 
@@ -39,12 +37,11 @@ const featuredChips: HeroChip[] = [
 // Keep the first screen and the popular list useful. Slugs are stored as pairs,
 // not parsed from a hyphenated URL, so names such as gallon-us never render as
 // "gallon → to".
-const popularPairs: Array<[string, string]> = [
-  ['meter', 'foot'], ['kilometer', 'mile'], ['inch', 'centimeter'],
-  ['kilogram', 'pound'], ['gram', 'ounce'], ['celsius', 'fahrenheit'],
-  ['liter', 'gallon-us'], ['square-meter', 'square-foot'], ['psi', 'bar'],
-  ['kilobyte', 'kibibyte'], ['gigabyte', 'gibibyte'], ['mpg-us', 'liter-per-100km'],
-];
+const popularPairs = getCuratedPairs().filter(pair => [
+  'meter-to-foot', 'kilometer-to-mile', 'inch-to-centimeter',
+  'kilogram-to-pound', 'celsius-to-fahrenheit', 'liter-to-gallon-us',
+  'square-meter-to-square-foot', 'kilobyte-to-kibibyte', 'mpg-us-to-liter-per-100km',
+].includes(pair.url));
 const featuredScenarios = featuredScenarioSlugs
   .map(slug => scenarios.find(scenario => scenario.slug === slug))
   .filter((scenario): scenario is NonNullable<typeof scenario> => Boolean(scenario));
@@ -53,12 +50,12 @@ const featuredScenarios = featuredScenarioSlugs
 // assertion" rule (no new dict keys) keeps it page-local until they earn
 // keys in en/zh-hant/zh-hans.
 const faq = [
-  { q: 'What is unitbox?', a: 'unitbox is a network of unit-conversion pages: every popular unit gets a detail page, and every popular pair gets a converter. Length, mass, temperature, area, volume, speed, time, data, energy, pressure, angle, and fuel-economy.' },
+  { q: 'What is Unitbox?', a: 'Unitbox is a practical unit converter and measurement reference. It focuses on the conversions people use in everyday work: construction dimensions, data storage, fuel economy, weight, temperature and volume.' },
   { q: 'How accurate are the conversions?', a: 'All conversions use the standard SI conversion factors. For mass, length, time, the values match NIST to the precision shown. Temperature uses the affine offset/scale formulas; the precision is 2 decimal places by default.' },
   { q: 'What is the difference between KB and KiB?', a: 'KB (kilobyte) = 1000 bytes — the SI decimal prefix. KiB (kibibyte) = 1024 bytes — the binary prefix designed to remove ambiguity. Disk drives advertise KB; RAM and operating systems often show KiB. For more, see the learn page on data units.' },
   { q: 'How do you handle fuel economy?', a: 'We treat fuel-economy as a reciprocal quantity. The base unit is L/100 km (lower is better); MPG-US, MPG-UK, and km/L are stored as reciprocals. Converting 30 MPG-US gives 7.84 L/100km.' },
-  { q: 'Does this work offline?', a: 'Yes — every page is statically generated. Once loaded, the converter widget runs without a network roundtrip. Bookmark any pair page.' },
-  { q: 'Can AI agents cite unitbox?', a: 'Yes — point your agent at https://unitbox.online/llms.txt and /openapi.json. The site is built to be AI-friendly by default: JSON-LD, schema.org, and a machine-readable product brief.' },
+  { q: 'Does this work offline?', a: 'Yes. The calculation runs in your browser once the page has loaded, so a normal conversion does not require an account or a server request.' },
+  { q: 'When should I verify a result elsewhere?', a: 'For legal, safety-critical, medical, scientific or contractual work, check the governing standard, instrument manual or source document. Unitbox is a practical reference, not a substitute for those requirements.' },
 ];
 
 const featuredArticles = articles.slice(0, 4);
@@ -67,8 +64,8 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 // 8/5 loop: 补导航式 query 关键词（unit converter / free / online / tool），
 // 对齐 AI 可见度战场（7-31 baseline）。H1 不动（"any unit, instantly" 保品牌调性）；
 // title/desc 是 SEO 元数据，用户和 AI 搜索时看。
-const title = 'Convert Any Unit — Free Online Unit Converter';
-const description = `${SITE_COVERAGE}. Free online unit converter tool — convert length, mass, temperature & more, instantly. No signup, no tracking.`;
+const title = 'Practical Unit Converter & Measurement Reference';
+const description = 'A practical unit converter for construction dimensions, data storage, fuel economy, weight, temperature and volume. Free, browser-based and no signup required.';
 ---
 <Base title={title} description={description} locale={locale} noBreadcrumb>
 
@@ -82,7 +79,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       <div class="hero-copy">
         <p class="hero-note">A measuring desk for the web</p>
         <h1>{t('home.h1', locale)}</h1>
-        <p class="hero-sub">{tFmt('home.subtitle', locale, { categories: SITE_STATS.categories, units: SITE_STATS.units, pairs: SITE_STATS.pairs.toLocaleString('en-US') })}</p>
+        <p class="hero-sub">Convert everyday measurements with a live calculator, then check the convention behind the number.</p>
       </div>
       <div class="hero-converter">
         <div class="hero-measure" aria-hidden="true"><strong>1</strong><span>meter</span><i>→</i><strong>3.28084</strong><span>feet</span></div>
@@ -91,12 +88,12 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
           <span>{t('home.try', locale)}</span>
           <a href={route(locale, '/kilogram-to-pound')}>1 kg → lb</a>
           <a href={route(locale, '/celsius-to-fahrenheit')}>0 °C → °F</a>
-          <a href={route(locale, '/gigabyte-to-megabyte')}>1 GB → MB</a>
+          <a href={route(locale, '/gigabyte-to-gibibyte')}>1 GB → GiB</a>
           <a href={route(locale, '/mpg-us-to-liter-per-100km')}>30 MPG → L/100km</a>
         </div>
       </div>
       <div class="hero-meta">
-        <p class="trust-band">{t('home.trustBand', locale)}</p>
+        <p class="trust-band">Private browser calculation · clearly labelled conventions</p>
         <div class="hero-chips">
           {featuredChips.map(c => {
             const href = route(locale, `/${c.slug}`);
@@ -111,8 +108,6 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       </div>
     </div>
   </section>
-
-  <AdSlot placement="after-hero" locale={locale} />
 
   <!-- LAYER 2: 3-step how-it-works -->
   <section class="section">
@@ -150,16 +145,6 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     </div>
   </section>
 
-  <section class="section tools-section tools-section-secondary">
-    <h2 class="section-title">More local tools</h2>
-    <p class="section-subtitle">Separate browser utilities for files, images and developer checks. They stay local to your device.</p>
-    <div class="grid grid-3 tools-grid">
-      <a class="card tool-card tool-card-png" href={route(locale, '/tools/png-compressor')}><h3 class="tool-title">PNG compressor</h3><p class="tool-body">Reduce PNG files in your browser without uploading them.</p><span class="tool-cta">Open tool →</span></a>
-      <a class="card tool-card tool-card-jwt" href={route(locale, '/tools/jwt-decoder')}><h3 class="tool-title">JWT decoder</h3><p class="tool-body">Inspect token claims and structure locally.</p><span class="tool-cta">Open tool →</span></a>
-      <a class="card tool-card tool-card-cp" href={route(locale, '/tools/image-color-picker')}><h3 class="tool-title">Image color picker</h3><p class="tool-body">Read HEX, RGB, HSL and CMYK values from an image.</p><span class="tool-cta">Open tool →</span></a>
-    </div>
-  </section>
-
   <!-- LAYER 3: category matrix -->
   <section class="section">
     <h2 class="section-title">{t('home.browse-by-cat', locale)}</h2>
@@ -183,7 +168,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     <h2 class="section-title">{t('home.popular', locale)}</h2>
     <p class="section-subtitle">{t('home.popular-sub', locale)}</p>
     <div class="grid grid-3">
-      {popularPairs.map(([fromSlug, toSlug]) => {
+      {popularPairs.map(({ from: fromSlug, to: toSlug }) => {
         const fromUnit = getUnit(fromSlug)!;
         const toUnit = getUnit(toSlug)!;
         return (
@@ -196,7 +181,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
       })}
     </div>
     <p style="text-align:center; margin-top:18px;">
-      <a href={route(locale, '/compare')} class="btn btn-outline">{t('home.all-pairs', locale)}</a>
+      <a href={route(locale, '/calculator')} class="btn btn-outline">Open the full calculator</a>
     </p>
   </section>
 
@@ -214,62 +199,7 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
     <FaqBlock items={faq} title={t('home.faq-title', locale)} />
   </section>
 
-  <!-- LAYER 7: KEYWORD FOOTPRINT -->
-  <section class="section keyword-footprint">
-    <h2 class="section-title">{t('home.also-ask', locale)}</h2>
-    <div class="grid grid-3">
-      <a class="pill" href={route(locale, '/meter-to-foot')}>metres to feet</a>
-      <a class="pill" href={route(locale, '/celsius-to-fahrenheit')}>celsius to fahrenheit</a>
-      <a class="pill" href={route(locale, '/kilogram-to-pound')}>kg to lbs</a>
-      <a class="pill" href={route(locale, '/mile-to-kilometer')}>miles to km</a>
-      <a class="pill" href={route(locale, '/liter-to-gallon-us')}>litres to gallons</a>
-      <a class="pill" href={route(locale, '/inch-to-centimeter')}>inches to cm</a>
-      <a class="pill" href={route(locale, '/gigabyte-to-megabyte')}>GB to MB</a>
-      <a class="pill" href={route(locale, '/hour-to-minute')}>hours to minutes</a>
-      <a class="pill" href={route(locale, '/psi-to-bar')}>psi to bar</a>
-      <a class="pill" href={route(locale, '/joule-to-calorie')}>joules to calories</a>
-      <a class="pill" href={route(locale, '/hectare-to-acre')}>hectares to acres</a>
-      <a class="pill" href={route(locale, '/kelvin-to-celsius')}>kelvin to celsius</a>
-      <a class="pill" href={route(locale, '/knot-to-mile-per-hour')}>knots to mph</a>
-      <a class="pill" href={route(locale, '/degree-to-radian')}>degrees to radians</a>
-      <a class="pill" href={route(locale, '/mpg-us-to-liter-per-100km')}>mpg to l/100km</a>
-    </div>
-  </section>
-
-  <!-- LAYER 8: Open Conversion API (openfate MCP-style attribution-first section) -->
-  <section class="api-section">
-    <span class="api-chip">{t('home.api.chip', locale)}</span>
-    <h2 class="api-h2">{t('home.api.h2', locale)}</h2>
-    <p class="api-body">{t('home.api.body', locale)}</p>
-    <pre class="api-mock"><code>$ curl 'https://api.unitbox.online/v1/convert?from=meter&amp;to=foot&amp;value=1'</code><button class="copy-btn" type="button" data-copy="curl 'https://api.unitbox.online/v1/convert?from=meter&to=foot&value=1'">Copy</button></pre>
-    <div class="api-trust">
-      <span class="trust-pill">{t('home.api.spec', locale)}</span>
-      <span class="trust-pill">MIT licensed</span>
-      <span class="trust-pill">{t('home.api.uptime', locale)}</span>
-    </div>
-    <div class="api-ctas">
-      <a class="api-cta" href="https://github.com/longmao/unitbox" rel="noopener">{t('home.api.cta.github', locale)}</a>
-      <a class="api-cta" href="https://www.npmjs.com/~longmao" rel="noopener">{t('home.api.cta.npm', locale)}</a>
-      <a class="api-cta" href="/openapi.json">{t('home.api.cta.openapi', locale)}</a>
-      <a class="api-cta" href={route(locale, '/llms')}>{t('home.api.cta.docs', locale)}</a>
-      <a class="api-cta api-cta-support" href="https://buymeacoffee.com/unitbox" target="_blank" rel="noopener noreferrer">Support Unitbox ↗</a>
-    </div>
-  </section>
-
 </Base>
-
-<script is:inline>
-  document.addEventListener('click', (e) => {
-    const t = e.target;
-    if (t && t.matches && t.matches('button.copy-btn[data-copy]')) {
-      navigator.clipboard?.writeText(t.getAttribute('data-copy') || '').then(() => {
-        const orig = t.textContent;
-        t.textContent = 'Copied';
-        setTimeout(() => { t.textContent = orig; }, 1200);
-      });
-    }
-  });
-</script>
 
 <style>
   .hero { margin: 0 -28px; padding: 86px 28px 60px; background: #e6dbc7; overflow: hidden; }
@@ -297,11 +227,6 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .scenario-card h3 { margin: 0 0 8px; }
   .scenario-card p { color: var(--fg-soft); font-size: 13px; line-height: 1.5; min-height: 58px; }
   .scenario-card span { color: var(--brand); font-size: 13px; font-weight: 700; }
-  .tool-card { min-height: 190px; display: flex; flex-direction: column; background: #efe5d3; }
-  .tool-card:hover { transform: translateY(-4px); border-color: var(--brand); text-decoration: none; }
-  .tool-title { margin-top: 0; }
-  .tool-body { color: var(--fg-soft); font-size: 14px; }
-  .tool-cta { margin-top: auto; color: var(--brand); font-size: 13px; font-weight: 700; }
 
   /* 3-step */
   .steps { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); padding: 0; list-style: none; margin: 16px 0; }
@@ -320,28 +245,12 @@ const description = `${SITE_COVERAGE}. Free online unit converter tool — conve
   .pair-card { padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
   .pair-card .from, .pair-card .to { flex: 1; font-size: 14px; }
   .pair-card .arrow { color: var(--brand); font-weight: 800; }
-  .keyword-footprint .pill { font-weight: 600; padding: 8px 14px; font-size: 13px; }
-
-  /* API section (openfate-style dark) */
-  .api-section { margin: 120px 0 40px; padding: 64px 36px; background: var(--brand); color: #e6dbc7; text-align: center; clip-path: polygon(0 0, 98% 0, 100% 8%, 100% 92%, 98% 100%, 0 100%); }
-  .api-chip { display: inline-block; padding: 6px 14px; border: 1px solid rgba(230,219,199,.5); color: #e6dbc7; font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-  .api-h2 { color: #e6dbc7; font-size: 30px; margin: 14px 0 10px; }
-  .api-body { color: #d7dfec; max-width: 640px; margin: 0 auto 22px; font-size: 16px; line-height: 1.55; }
-  .api-mock { background: #041f66; color: #d7dfec; padding: 16px 18px; border-radius: 0; font-family: ui-monospace, monospace; /* taste-skill-ignore: code sample */ font-size: 14px; max-width: 640px; margin: 0 auto 18px; text-align: left; overflow-x: auto; position: relative; }
-  .api-mock code { white-space: nowrap; }
-  .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.08); color: #d7dfec; border: 0; padding: 4px 10px; border-radius: 0; font-size: 11px; cursor: pointer; }
-  .copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
-  .api-trust { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-  .trust-pill { padding: 4px 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; color: #c5cee5; font-size: 13px; }
-  .api-ctas { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-  .api-cta { padding: 10px 18px; background: #e6dbc7; color: var(--brand); border-radius: 0; font-weight: 700; }
-  .api-cta:hover { text-decoration: none; background: #fff; }
 
   @media (prefers-reduced-motion: no-preference) {
     .hero-copy { animation: hero-rise .56s ease-out both; }
     .hero-converter { animation: hero-rise .62s .1s ease-out both; }
     .hero-meta { animation: hero-rise .54s .2s ease-out both; }
-    .hero-chip, .tool-card, .scenario-card { transition: transform .2s ease, background-color .2s ease, border-color .2s ease; }
+    .hero-chip, .scenario-card { transition: transform .2s ease, background-color .2s ease, border-color .2s ease; }
     .scenario-card:hover { transform: translateY(-4px); }
   }
 

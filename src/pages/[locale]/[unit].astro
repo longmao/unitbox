@@ -6,6 +6,7 @@ import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import {
   getAllUnits,
+  getCuratedPairs,
   getUnit,
   getUnitsByCategory,
   getCategory,
@@ -16,7 +17,8 @@ import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, narrativeInline, type Loca
 import { route } from '~/lib/i18n/routes';
 
 export async function getStaticPaths() {
-  const units = getAllUnits();
+  const curatedSlugs = new Set(getCuratedPairs().flatMap(pair => [pair.from, pair.to]));
+  const units = getAllUnits().filter(unit => curatedSlugs.has(unit.slug));
   const out: Array<{ params: { locale: string; unit: string }; props: { locale: Locale; slug: string } }> = [];
   for (const locale of LOCALES) {
     for (const u of units) {
@@ -34,16 +36,15 @@ const unit = getUnit(slug);
 if (!unit) throw new Error(`Unit page requested unknown unit: ${slug}`);
 const cat = getCategory(unit.category);
 const sameCat = getUnitsByCategory(unit.category);
+const curatedPairs = getCuratedPairs();
 // Siblings to show as converter cards — skip self.
 const featured = sameCat.filter(s => s.slug !== slug).slice(0, 3);
 
 // Pair pages linking to every sibling in the category (forward direction).
-const relatedPairs = sameCat.filter(s => s.slug !== slug).slice(0, 8).map(s => ({
-  from: slug,
-  to: s.slug,
-  url: `${slug}-to-${s.slug}`,
-  label: `${unit.symbol} → ${s.symbol}`,
-}));
+const relatedPairs = curatedPairs
+  .filter(pair => pair.from === slug)
+  .slice(0, 8)
+  .map(pair => ({ ...pair, label: `${unit.symbol} → ${getUnit(pair.to)?.symbol ?? ''}` }));
 
 const table = sameCat.filter(s => s.slug !== slug).map(s => ({
   to: s,
@@ -86,7 +87,7 @@ const reverseHeader = tFmt('unit.reverse-h', locale, { symbol: unit.symbol });
 
 const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 ---
-<Base title={title} description={subtitle} locale={locale}>
+<Base title={title} description={subtitle} locale={locale} altLocales={['en']}>
   <Fragment slot="head">
     <JsonLd data={faqLd} />
   </Fragment>
@@ -130,7 +131,9 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
     <tbody>
       {table.map(row => (
         <tr>
-          <td><a href={route(locale, `/${row.to.slug}-to-${slug}/`)}>{row.to.name} ({row.to.symbol})</a></td>
+          <td>{curatedPairs.some(pair => pair.from === row.to.slug && pair.to === slug)
+            ? <a href={route(locale, `/${row.to.slug}-to-${slug}/`)}>{row.to.name} ({row.to.symbol})</a>
+            : <>{row.to.name} ({row.to.symbol})</>}</td>
           <td><strong>{formatNumber(row.forward, 8, locale)}</strong> {row.to.symbol}</td>
           <td><strong>{formatNumber(row.reverse, 8, locale)}</strong> {unit.symbol}</td>
         </tr>

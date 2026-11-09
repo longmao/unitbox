@@ -3,6 +3,7 @@ import Base from '~/layouts/Base.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import { learnTopics } from '~/data/learn';
 import { formatInline } from '~/lib/format';
+import { isCuratedPair } from '~/lib/units';
 import { LOCALES, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
@@ -27,10 +28,11 @@ if (!topic) throw new Error(`Learn topic not found: ${slug}`);
 const paragraphs = topic.body.split(/\n\n+/);
 const related = (topic.relatedPairs ?? []).map(url => {
   const [from, , to] = url.split('-');
+  const isMaintainedGuide = isCuratedPair(from, to);
   return {
     name: `${from.replace(/-/g, ' ')} → ${to.replace(/-/g, ' ')}`,
-    description: `Direct conversion page`,
-    href: route(locale, `/${url}/`),
+    description: isMaintainedGuide ? 'Maintained conversion guide' : 'Open this pair in the full calculator',
+    href: isMaintainedGuide ? route(locale, `/${url}/`) : route(locale, '/calculator/'),
   };
 });
 

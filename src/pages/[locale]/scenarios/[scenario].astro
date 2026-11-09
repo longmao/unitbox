@@ -5,6 +5,7 @@ import FaqBlock from '~/components/FaqBlock.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import ConverterWidget from '~/components/ConverterWidget.astro';
 import { scenarios } from '~/data/scenarios';
+import { isCuratedPair } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
 import { IN_LANGUAGE, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
@@ -61,7 +62,7 @@ const description = scenario.description;
     <h2 class="section-title">Popular conversions</h2>
     <div class="grid grid-3">
       {scenario.pairs.map(([from, to]) => (
-        <a class="card pair-card" href={route(locale, `/${from}-to-${to}/`)}>
+        <a class="card pair-card" href={isCuratedPair(from, to) ? route(locale, `/${from}-to-${to}/`) : route(locale, '/calculator/')}>
           <span>{from.replaceAll('-', ' ')}</span><b>→</b><span>{to.replaceAll('-', ' ')}</span>
         </a>
       ))}

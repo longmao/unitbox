@@ -3,7 +3,7 @@ import Base from '~/layouts/Base.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllCategories, getAllUnits, getCategory, getUnitsByCategory, getPopularPairs } from '~/lib/units';
+import { getAllCategories, getAllUnits, getCategory, getUnit, getUnitsByCategory, getCuratedPairs } from '~/lib/units';
 import { buildFaqPage } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
@@ -29,13 +29,11 @@ const isAll = slug === 'all';
 const cat = isAll
   ? { slug: 'all', name: 'All units', description: 'Browse every unit in the Unitbox catalogue, organised by measurement category.', baseSymbol: '—', kind: 'linear' as const }
   : getCategory(slug)!;
-const units = isAll ? getAllUnits() : getUnitsByCategory(slug);
+const curatedUnitSlugs = new Set(getCuratedPairs().flatMap(pair => [pair.from, pair.to]));
+const units = (isAll ? getAllUnits() : getUnitsByCategory(slug)).filter(unit => curatedUnitSlugs.has(unit.slug));
 
-// Build a popular-pairs grid for this category — top promoted × top promoted
-const promoted = units.slice(0, 8);
-const pairs = isAll
-  ? getPopularPairs().slice(0, 24).map(p => ({ from: p.from, to: p.to, url: p.url }))
-  : promoted.flatMap((from, i) => promoted.filter((_, j) => i !== j).map(to => ({ from: from.slug, to: to.slug, url: `${from.slug}-to-${to.slug}` })));
+// Only link to maintained conversion guides; the calculator covers all other pairs.
+const pairs = getCuratedPairs().filter(pair => isAll || getCategory(getUnit(pair.from)?.category ?? '')?.slug === slug);
 
 const faq = [
   { q: `What is the SI base unit of ${cat.name.toLowerCase()}?`, a: `The SI base ${cat.slug} unit is ${cat.baseSymbol}. Most conversions factor through it, except temperature which is affine and fuel-economy which is reciprocal.` },
@@ -54,7 +52,7 @@ const faqLd = buildFaqPage(faq, { inLanguage: IN_LANGUAGE[locale] });
 const categoryArticles = articles.filter(a => a.category.toLowerCase() === cat.name.toLowerCase()).slice(0, 3);
 const categoryScenario = scenarios.find(s => s.title.toLowerCase().includes(cat.name.toLowerCase()));
 ---
-<Base title={title} description={subtitle} locale={locale}>
+<Base title={title} description={subtitle} locale={locale} altLocales={['en']}>
   <Fragment slot="head">
     <JsonLd data={faqLd} />
   </Fragment>

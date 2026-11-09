@@ -24,6 +24,11 @@ function walk(dir, out = []) {
 }
 
 function pathToUrl(file) {
+  // Utility interfaces remain available to direct users but are deliberately
+  // excluded from search while Unitbox focuses its public information surface
+  // on maintained conversion and reference content.
+  const html = fs.readFileSync(file, 'utf8');
+  if (/<meta name="robots" content="noindex"\s*\/?\s*>/i.test(html)) return null;
   const rel = path.relative(DIST, file).replace(/index\.html$/, '').replace(/\\/g, '/');
   // Root: dist/index.html (the meta-refresh redirect) — emit as a single-slash root URL.
   if (rel === '' || rel === '.') return SITE_URL + '/';

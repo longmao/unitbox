@@ -10,7 +10,7 @@ import path from 'path';
 const DIST = path.join(process.cwd(), 'dist');
 
 describe('JWT decoder page', () => {
-  const locales = ['en', 'zh-hant', 'zh-hans', 'ja', 'ko'] as const;
+  const locales = ['en'] as const;
 
   for (const locale of locales) {
     it(`renders at /${locale}/tools/jwt-decoder/`, () => {
@@ -58,11 +58,11 @@ describe('JWT decoder page', () => {
       expect(html).toContain('id="jwt-sample-btn"');
     });
 
-    it(`/${locale}/ has 6 hreflang alternate tags (5 locales + x-default)`, () => {
+    it(`/${locale}/ declares one maintained locale plus x-default`, () => {
       const file = path.join(DIST, locale, 'tools', 'jwt-decoder', 'index.html');
       const html = fs.readFileSync(file, 'utf8');
       const hreflangCount = (html.match(/rel="alternate" hreflang="/g) ?? []).length;
-      expect(hreflangCount).toBe(6);
+      expect(hreflangCount).toBe(2);
     });
 
     it(`/${locale}/ has the i18n JSON for the client component`, () => {
@@ -86,31 +86,14 @@ describe('JWT decoder page', () => {
     });
   }
 
-  it('sitemap includes all 5 JWT decoder URLs', () => {
+  it('keeps the off-topic utility out of the public sitemap', () => {
     const sitemap = fs.readFileSync(path.join(DIST, 'sitemap-0.xml'), 'utf8');
-    expect(sitemap).toContain('https://unitbox.online/en/tools/jwt-decoder/');
-    expect(sitemap).toContain('https://unitbox.online/zh-hant/tools/jwt-decoder/');
-    expect(sitemap).toContain('https://unitbox.online/zh-hans/tools/jwt-decoder/');
-    expect(sitemap).toContain('https://unitbox.online/ja/tools/jwt-decoder/');
-    expect(sitemap).toContain('https://unitbox.online/ko/tools/jwt-decoder/');
+    expect(sitemap).not.toContain('https://unitbox.online/en/tools/jwt-decoder/');
   });
 
-  it('JWT decoder link is in the footer Products list of all locales', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
-      const file = path.join(DIST, locale, 'index.html');
-      const html = fs.readFileSync(file, 'utf8');
-      expect(html, `${locale} home should link to JWT decoder`).toContain(`/${locale}/tools/jwt-decoder`);
-    }
-  });
-
-  it('home page has a JWT tool card in the tools section', () => {
-    for (const locale of ['en', 'zh-hant', 'zh-hans', 'ja', 'ko']) {
-      const file = path.join(DIST, locale, 'index.html');
-      const html = fs.readFileSync(file, 'utf8');
-      expect(html).toContain('tools-section');
-      expect(html).toContain('tool-card-jwt');
-      expect(html).toContain('tool-card');
-    }
+  it('does not promote JWT decoding from the converter home page', () => {
+    const html = fs.readFileSync(path.join(DIST, 'en', 'index.html'), 'utf8');
+    expect(html).not.toContain('/en/tools/jwt-decoder');
   });
 
   it('SoftwareApplication schema has price=0 and isAccessibleForFree', () => {

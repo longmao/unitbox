@@ -2,6 +2,7 @@
 import Base from '~/layouts/Base.astro';
 import JsonLd from '~/components/JsonLd.astro';
 import { quizQuestions } from '~/data/quiz';
+import { isCuratedPair } from '~/lib/units';
 import { LOCALES, IN_LANGUAGE, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
 
@@ -51,7 +52,10 @@ const description = `${question.explanation} Explore the related unit conversion
     <section>
       <h2>Check the units</h2>
       <div class="related-links">
-        {question.relatedConversions.map((slug) => <a href={route(locale, `/${slug}`)}>{slug.replaceAll('-', ' ')} <span>→</span></a>)}
+        {question.relatedConversions.map((slug) => {
+          const [from, , to] = slug.split('-');
+          return <a href={isCuratedPair(from, to) ? route(locale, `/${slug}`) : route(locale, '/calculator/')}>{slug.replaceAll('-', ' ')} <span>→</span></a>;
+        })}
       </div>
     </section>
 

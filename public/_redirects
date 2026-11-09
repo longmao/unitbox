@@ -23,5 +23,13 @@
 /zh-cn  /zh-hans/  301
 /zh-CN  /zh-hans/  301
 
+# Older translated URL trees were not fully localised. Consolidate them into
+# the maintained English reference rather than presenting English copy under a
+# Japanese, Korean or Chinese URL.
+/zh-hant/*  /en/:splat  301!
+/zh-hans/*  /en/:splat  301!
+/ja/*       /en/:splat  301!
+/ko/*       /en/:splat  301!
+
 # Unprefixed static assets (/llms.txt, /openapi.json) are served directly
 # from public/llms.txt and public/openapi.json — no redirect needed.

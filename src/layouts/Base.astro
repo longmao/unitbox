@@ -4,7 +4,7 @@ import { getAllUnits } from '~/lib/units';
 import { t, OG_LOCALE, IN_LANGUAGE, type Locale } from '~/lib/i18n';
 import { LOCALES, DEFAULT_LOCALE, LOCALE_LABELS } from '~/lib/i18n/locales';
 import { globalGraph, buildBreadcrumb, canonicalUrl } from '~/lib/seo';
-import { route, hreflangTags, stripLocale } from '~/lib/i18n/routes';
+import { route, stripLocale } from '~/lib/i18n/routes';
 import JsonLd from '~/components/JsonLd.astro';
 import '~/styles/global.css';
 import { ADS } from '~/lib/ads';
@@ -61,6 +61,9 @@ const locale: Locale =
 
 const fullTitle = title.includes(SITE.name) ? title : `${title} — ${SITE.name}`;
 const canonical = canonicalUrl(Astro.url.pathname);
+const lowValueUtilityPath = /^\/en\/(?:tools(?:\/|$)|compare(?:\/|$)|stats(?:\/|$)|api-docs(?:\/|$)|apple-dev(?:\/|$)|llms(?:\/|$))/.test(Astro.url.pathname);
+const legacyLocalePath = /^\/(?:zh-hant|zh-hans|ja|ko)(?:\/|$)/.test(Astro.url.pathname);
+const shouldNoindex = Boolean(noindex || lowValueUtilityPath || legacyLocalePath);
 const ogImageAbs = ogImage.startsWith('http') ? ogImage : `${SITE.url}${ogImage}`;
 const ogLocaleAlt = LOCALES
   .filter(l => l !== locale)
@@ -86,21 +89,19 @@ const unitData = Object.fromEntries(
 // Locale-aware hreflang alternates + canonical.
 // For single/few-locale landing pages (altLocales), emit alternates only for the
 // locales the page actually builds in — otherwise the tags would point at 404s.
-const pageLocales: readonly Locale[] = altLocales && altLocales.length > 0 ? altLocales : LOCALES;
+const pageLocales: readonly Locale[] = altLocales && altLocales.length > 0 ? altLocales : [locale];
 const suffixPath = stripLocale(Astro.url.pathname);
-const hreflangs = altLocales
-  ? [
-      ...pageLocales.map((loc) => ({
-        hreflang: IN_LANGUAGE[loc],
-        href: canonicalUrl(route(loc, suffixPath)),
-      })),
-      { hreflang: 'x-default', href: canonicalUrl(route(pageLocales[0], suffixPath)) },
-    ]
-  : hreflangTags(Astro.url.pathname);
+const hreflangs = [
+  ...pageLocales.map((loc) => ({
+    hreflang: IN_LANGUAGE[loc],
+    href: canonicalUrl(route(loc, suffixPath)),
+  })),
+  { hreflang: 'x-default', href: canonicalUrl(route(pageLocales[0], suffixPath)) },
+];
 
 // Base-level structured data: WebSite + Organization + (BreadcrumbList if not suppressed)
 const baseSchemas: unknown[] = [
-  globalGraph({ description, inLanguage: [IN_LANGUAGE[locale], ...LOCALES.map(l => IN_LANGUAGE[l])] }),
+  globalGraph({ description, inLanguage: [...new Set([IN_LANGUAGE[locale], ...LOCALES.map(l => IN_LANGUAGE[l])])] }),
 ];
 if (!noBreadcrumb) {
   baseSchemas.push(buildBreadcrumb(Astro.url.pathname, { title }));
@@ -150,7 +151,7 @@ const switcher = pageLocales.map(l => ({
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImageAbs} />
   <meta name="theme-color" content="#e6dbc7" />
-  {noindex && <meta name="robots" content="noindex" />}
+  {shouldNoindex && <meta name="robots" content="noindex" />}
   <link rel="icon" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
@@ -183,18 +184,17 @@ const switcher = pageLocales.map(l => ({
       <nav class="primary-nav" aria-label="primary">
         <a href={route(locale, '/')}>{t('nav.home', locale)}</a>
         <a href={route(locale, '/calculator/')}>Calculator</a>
-        <a href={route(locale, '/tools/')}>Tools</a>
         <a href={route(locale, '/category/length')}>Categories</a>
         <a href={route(locale, '/reference/')}>Reference</a>
       </nav>
       <a class="header-action" href={route(locale, '/calculator/')}>Convert a unit</a>
-      <div class="lang-toggle" role="group" aria-label="language">
+      {switcher.length > 1 && <div class="lang-toggle" role="group" aria-label="language">
         {switcher.map(s => (
           <a href={s.href} class={`lang-link ${s.active ? 'active' : ''}`} hreflang={IN_LANGUAGE[s.locale]} aria-current={s.active ? 'true' : undefined}>
             {s.label}
           </a>
         ))}
-      </div>
+      </div>}
     </div>
   </header>
   <main class="page">
@@ -206,18 +206,13 @@ const switcher = pageLocales.map(l => ({
     <div class="container">
       <div class="footer-grid">
         <div>
-          <h4>{t('footer.col.products', locale)}</h4>
+          <h4>Converters</h4>
           <ul>
-            <li><a href={route(locale, '/tools/png-compressor')}><strong>PNG</strong> · {t('png.h1', locale).split(' — ')[0]}</a></li>
-            <li><a href={route(locale, '/tools/jwt-decoder')}><strong>JWT</strong> · {t('jwt.h1', locale).split(' — ')[0]}</a></li>
-            <li><a href={route(locale, '/tools/image-color-picker')}><strong>RGB</strong> · {t('cp.h1', locale).split(' — ')[0]}</a></li>
             <li><a href={route(locale, '/meter-to-foot')}>meter → foot</a></li>
             <li><a href={route(locale, '/celsius-to-fahrenheit')}>°C → °F</a></li>
             <li><a href={route(locale, '/kilogram-to-pound')}>kg → pound</a></li>
             <li><a href={route(locale, '/mpg-us-to-liter-per-100km')}>MPG → L/100km</a></li>
             <li><a href={route(locale, '/liter-to-gallon-us')}>liter → gallon (US)</a></li>
-            <li><a href={route(locale, '/psi-to-bar')}>psi → bar</a></li>
-            <li><a href={route(locale, '/km-per-liter-to-mpg-us')}>km/L → MPG (US)</a></li>
             <li><a href={route(locale, '/kilobyte-to-kibibyte')}>KB → KiB</a></li>
           </ul>
         </div>
@@ -226,7 +221,6 @@ const switcher = pageLocales.map(l => ({
           <ul>
             <li><a href={route(locale, '/learn')}>{t('learn.h1', locale)}</a></li>
             <li><a href={route(locale, '/faq')}>{t('nav.faq', locale)}</a></li>
-            <li><a href={route(locale, '/compare')}>{t('home.all-pairs', locale)}</a></li>
             <li><a href={route(locale, '/articles')}>{t('nav.articles', locale)}</a></li>
           </ul>
         </div>
@@ -246,13 +240,8 @@ const switcher = pageLocales.map(l => ({
           </ul>
         </div>
         <div>
-          <h4>{t('footer.col.open', locale)}</h4>
+          <h4>Support</h4>
           <ul>
-            <li><a href="https://github.com/longmao/unitbox" rel="noopener">GitHub</a></li>
-            <li><a href="https://www.npmjs.com/~longmao" rel="noopener">npm</a></li>
-            <li><a href="/openapi.json">OpenAPI 3.0</a></li>
-            <li><a href="/llms.txt">AI / LLM guide</a></li>
-            <li><a href={route(locale, '/api-docs/')}>API documentation</a></li>
             <li><a class="sponsor-link" href="https://buymeacoffee.com/unitbox" target="_blank" rel="noopener noreferrer">Support Unitbox ↗</a></li>
           </ul>
         </div>

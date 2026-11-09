@@ -30,7 +30,7 @@ export function getSiteStats() {
   return {
     categories: categories.length,
     units: units.length,
-    pairs: getAllPairs().length,
+    pairs: getCuratedPairs().length,
   };
 }
 
@@ -158,6 +158,36 @@ export interface Pair {
   to: string;
   /** URL slug like "meter-to-feet" */
   url: string;
+}
+
+/**
+ * Pages deliberately maintained as public conversion landing pages. The
+ * calculator supports every compatible unit pair, but only these conversion
+ * pages have an accompanying editorial guide and are eligible for indexing.
+ */
+const CURATED_PAIR_DEFINITIONS: Array<[string, string]> = [
+  ['meter', 'foot'], ['foot', 'meter'],
+  ['kilometer', 'mile'], ['mile', 'kilometer'],
+  ['inch', 'centimeter'], ['centimeter', 'inch'],
+  ['kilogram', 'pound'], ['pound', 'kilogram'],
+  ['gram', 'ounce'], ['ounce', 'gram'],
+  ['celsius', 'fahrenheit'], ['fahrenheit', 'celsius'],
+  ['liter', 'gallon-us'], ['gallon-us', 'liter'],
+  ['square-meter', 'square-foot'], ['square-foot', 'square-meter'],
+  ['kilobyte', 'kibibyte'], ['kibibyte', 'kilobyte'],
+  ['gigabyte', 'gibibyte'], ['gibibyte', 'gigabyte'],
+  ['mpg-us', 'liter-per-100km'], ['liter-per-100km', 'mpg-us'],
+  ['psi', 'bar'], ['bar', 'psi'],
+];
+
+export function getCuratedPairs(): Pair[] {
+  return CURATED_PAIR_DEFINITIONS
+    .filter(([from, to]) => Boolean(getUnit(from)) && Boolean(getUnit(to)))
+    .map(([from, to]) => ({ from, to, url: `${from}-to-${to}` }));
+}
+
+export function isCuratedPair(from: string, to: string): boolean {
+  return CURATED_PAIR_DEFINITIONS.some(([a, b]) => a === from && b === to);
 }
 
 /**

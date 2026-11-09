@@ -4,7 +4,7 @@ import ConverterWidget from '~/components/ConverterWidget.astro';
 import FaqBlock from '~/components/FaqBlock.astro';
 import RecommendedList from '~/components/RecommendedList.astro';
 import JsonLd from '~/components/JsonLd.astro';
-import { getAllPairs, getPopularPairs, getUnit, convert, getUnitsByCategory, getCategory, PAIR_PAGE_OVERRIDES } from '~/lib/units';
+import { getCuratedPairs, getUnit, convert, getUnitsByCategory, getCategory, isCuratedPair } from '~/lib/units';
 import { buildFaqPage, buildHowTo, canonicalUrl } from '~/lib/seo';
 import { LOCALES, IN_LANGUAGE, t, tFmt, formatNumber, type Locale } from '~/lib/i18n';
 import { route } from '~/lib/i18n/routes';
@@ -12,20 +12,10 @@ import AdSlot from '~/components/AdSlot.astro';
 import { getPriorityConversionGuide } from '~/data/priority-conversions';
 
 export async function getStaticPaths() {
-  const popular = getPopularPairs();
-  const generated = getAllPairs();
-  const seen = new Set<string>();
-  const all = [] as { from: string; to: string; url: string }[];
-  for (const p of [...popular, ...generated]) {
-    if (seen.has(p.url)) continue;
-    seen.add(p.url);
-    all.push(p);
-  }
+  const all = getCuratedPairs();
   const out: Array<{ params: { locale: string; from: string; to: string }; props: { locale: Locale; from: string; to: string } }> = [];
   for (const locale of LOCALES) {
     for (const p of all) {
-      // Skip pairs that have a dedicated hand-written landing page in this locale.
-      if (PAIR_PAGE_OVERRIDES[p.url]?.includes(locale)) continue;
       out.push({
         params: { locale, from: p.from, to: p.to },
         props: { locale, from: p.from, to: p.to },
@@ -49,12 +39,10 @@ const table = sampleValues.map(v => ({
 }));
 
 const categorySlugs = getUnitsByCategory(from.category).map(u => u.slug);
-const siblings = categorySlugs.filter(s => s !== fromSlug && s !== toSlug);
-const relatedPairs = siblings.slice(0, 8).map(s => ({
-  from: fromSlug, to: s, url: `${fromSlug}-to-${s}`,
-})).concat(
-  siblings.slice(0, 8).map(s => ({ from: s, to: fromSlug, url: `${s}-to-${fromSlug}` })),
-);
+const relatedPairs = getCuratedPairs()
+  .filter(pair => pair.url !== `${fromSlug}-to-${toSlug}`)
+  .filter(pair => pair.from === fromSlug || pair.to === fromSlug || getUnit(pair.from)?.category === from.category)
+  .slice(0, 8);
 
 const reverseUrl = `${toSlug}-to-${fromSlug}`;
 
@@ -73,7 +61,7 @@ const faq = [
 ];
 
 const recommended = [
-  { name: 'Convert the other direction', description: `Use the reverse converter: ${to.name} → ${from.name}`, href: route(locale, `${reverseUrl}/`) },
+  ...(isCuratedPair(toSlug, fromSlug) ? [{ name: 'Convert the other direction', description: `Use the reverse converter: ${to.name} → ${from.name}`, href: route(locale, `${reverseUrl}/`) }] : []),
   { name: 'Browse all units in this category', description: `${getCategory(from.category)?.name ?? 'Category'} has ${categorySlugs.length} units.`, href: route(locale, `/category/${from.category}/`) },
   { name: 'All units converter', description: `Free-form calculator that handles any pair in any category.`, href: route(locale, '/calculator/') },
 ];
@@ -115,7 +103,7 @@ const useCase = from.category === 'length'
   : `The right unit depends on the convention used by your industry, country, instrument, or source document.`;
 const priorityGuide = getPriorityConversionGuide(fromSlug, toSlug);
 ---
-<Base title={title} description={subtitle} locale={locale}>
+<Base title={title} description={subtitle} locale={locale} altLocales={['en']}>
   <Fragment slot="head">
     <JsonLd data={faqLd} />
     <JsonLd data={howtoLd} />

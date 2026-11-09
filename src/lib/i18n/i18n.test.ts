@@ -10,8 +10,8 @@ import { JA } from './ja';
 import { KO } from './ko';
 
 describe('i18n locale registry', () => {
-  it('declares exactly five locales', () => {
-    expect(LOCALES).toEqual(['en', 'zh-hant', 'zh-hans', 'ja', 'ko']);
+  it('publishes English until every content surface is truly localised', () => {
+    expect(LOCALES).toEqual(['en']);
   });
 
   it('defaults to English', () => {

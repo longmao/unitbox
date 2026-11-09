@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { priorityConversionCount } from '~/data/priority-conversions';
+import { getCuratedPairs } from '~/lib/units';
 
 const dist = path.resolve(process.cwd(), 'dist', 'en');
 const priorityPages = [
@@ -15,6 +16,7 @@ const priorityPages = [
 describe('priority conversion pages', () => {
   it('keeps an editorial guide on every promoted conversion', () => {
     expect(priorityConversionCount).toBe(priorityPages.length);
+    expect(getCuratedPairs().map(pair => pair.url)).toEqual(expect.arrayContaining(priorityPages));
     for (const slug of priorityPages) {
       const html = fs.readFileSync(path.join(dist, slug, 'index.html'), 'utf8');
       expect(html, `${slug} should have contextual guidance`).toContain('priority-guide');
